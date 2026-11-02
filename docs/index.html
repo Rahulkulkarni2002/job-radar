@@ -81,6 +81,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <select id="roleType"><option value="all">AI + non-AI</option><option value="ai">AI roles only</option><option value="nonai">Non-AI only</option></select>
     <select id="minMatch"><option value="80">Skill match ≥ 80%</option><option value="90">≥ 90%</option><option value="0">Any match</option></select>
     <label class="ck"><input type="checkbox" id="hideApplied" checked> Hide applied</label>
+    <button class="btn" id="showApplied" title="Jobs you marked as applied">Applied (0)</button>
     <button class="btn" id="showHidden" title="Jobs you dismissed with ✕">Hidden (0)</button>
     <button class="btn" id="copyFb" title="Copy your dismissed jobs + reasons to paste to Claude">Copy feedback for Claude</button>
     <label class="ck"><input type="checkbox" id="onlyNew"> New since my last visit</label>
@@ -219,8 +220,9 @@ function chance(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",true
   if(need)p*={no:.02,open:.85,strong:.9,some:.6,none:.3,unknown:.55}[sponsorRating(j)];
   if(j.years!=null)p*=j.years<=yoe+1?1:j.years<=yoe+2?.6:.3;return Math.min(p,.6)}
 // ---------- data ----------
-let DATA={jobs:[]},RESUME="",sortKey="fit",sortDir=-1;const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
+let DATA={jobs:[]},RESUME="",sortKey="fit",sortDir=-1;const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false,SHOW_APPLIED=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
+fetch("data/applied.json?"+Date.now()).then(r=>r.ok?r.json():{applied:{}}).then(a=>{Object.keys(a.applied||{}).forEach(id=>applied.add(id));render()}).catch(()=>{});
 fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.getElementById("meta").textContent=
   `${d.count} open roles · updated ${d.updated} · ${d.boards} company career sites scanned every 3 h`;fillPicker();render()})
   .catch(()=>document.getElementById("meta").textContent="Could not load jobs.json");
@@ -230,11 +232,12 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
     if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
-    if(hideA&&applied.has(j.id))return false;if(SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
+    if(SHOW_APPLIED){if(!applied.has(j.id))return false}else if(hideA&&applied.has(j.id))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
   const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,fit:r=>r.j.fit??-1,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
   document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
   const nh=Object.keys(DISMISSED).length;const sh=document.getElementById("showHidden");sh.textContent=SHOW_HIDDEN?`← Back to jobs`:`Hidden (${nh})`;sh.classList.toggle("pri",SHOW_HIDDEN);
+  const sa=document.getElementById("showApplied");const na=DATA.jobs.filter(j=>applied.has(j.id)).length;sa.textContent=SHOW_APPLIED?"← Back to jobs":`Applied (${na})`;sa.classList.toggle("pri",SHOW_APPLIED);
   const tb=document.getElementById("rows");tb.innerHTML="";document.getElementById("empty").hidden=rows.length>0;
   for(const r of rows.slice(0,600)){const j=r.j,d=daysAgo(j.posted),isNew=Date.now()-new Date(j.first_seen)<864e5,[sl,sc]=SP[r.spon];
     const tr=document.createElement("tr");if(applied.has(j.id))tr.className="applied";
@@ -272,7 +275,8 @@ xm.onclick=e=>{const b=e.target.closest("button");if(!b||!xJob)return;const j=DA
   DISMISSED[xJob]={reason:b.dataset.r,title:j?j.title:"",company:j?j.company:"",url:j?j.url:"",when:new Date().toISOString().slice(0,10)};
   S.set("dismissed",DISMISSED);xm.hidden=true;xJob=null;render()};
 document.addEventListener("click",e=>{if(!xm.hidden&&!e.target.closest("#xmenu")&&!e.target.closest("[data-x]"))xm.hidden=true});
-document.getElementById("showHidden").onclick=()=>{SHOW_HIDDEN=!SHOW_HIDDEN;render()};
+document.getElementById("showHidden").onclick=()=>{SHOW_HIDDEN=!SHOW_HIDDEN;SHOW_APPLIED=false;render()};
+document.getElementById("showApplied").onclick=()=>{SHOW_APPLIED=!SHOW_APPLIED;SHOW_HIDDEN=false;render()};
 document.getElementById("copyFb").onclick=async()=>{const rows=Object.values(DISMISSED);
   if(!rows.length){alert("You haven't hidden any jobs yet.");return}
   const by={};rows.forEach(r=>(by[r.reason]=by[r.reason]||[]).push(r));
