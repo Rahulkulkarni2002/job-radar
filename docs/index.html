@@ -43,6 +43,11 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 @media (max-width:760px){.grid{grid-template-columns:1fr}thead{display:none}tr{display:block;border-bottom:1px solid var(--line);padding:8px 0}
  td{display:flex;justify-content:space-between;gap:10px;border:0;padding:4px 12px}td::before{content:attr(data-l);color:var(--muted);font-size:12px}
  td.first{display:block}td.first::before{content:none}.tabs{margin-left:0}}
+.seg{display:flex;gap:0;margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;width:max-content;max-width:100%;flex-wrap:wrap}
+.seg button{border:0;border-right:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 16px;font:inherit;font-weight:600;cursor:pointer}
+.seg button:last-child{border-right:0}.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.b-kind{background:var(--chip);color:var(--muted)}
+@media (max-width:760px){.seg{display:grid;grid-template-columns:1fr 1fr;width:100%}.seg button{border-right:0;border-bottom:1px solid var(--line)}}
 </style>
 </head>
 <body>
@@ -54,11 +59,17 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 <main class="wrap">
 <!-- JOBS -->
 <section id="jobs">
+  <div class="seg" id="kindSeg" role="tablist" aria-label="Role type">
+    <button data-k="all" class="on">All roles</button>
+    <button data-k="technical" title="Heavy Python / SQL / ML / statistics">🧮 Technical</button>
+    <button data-k="balanced" title="Mix of analysis tools and communication">⚖️ Balanced</button>
+    <button data-k="non-technical" title="More communication, stakeholders, strategy, operations — little coding">🗣️ Non-technical</button>
+  </div>
   <div class="bar">
     <input type="search" id="q" placeholder="Search role, company, location, skill…">
     <select id="spon"><option value="ok">Sponsorship: hide "won't sponsor"</option><option value="all">Sponsorship: show all</option><option value="good">Only likely sponsors</option></select>
     <select id="age"><option value="15">Posted ≤ 15 days</option><option value="7">≤ 7 days</option><option value="3">≤ 3 days</option><option value="1">Last 24 h</option></select>
-    <select id="roleType"><option value="all">All roles</option><option value="ai">AI roles only</option><option value="nonai">Non-AI roles</option></select>
+    <select id="roleType"><option value="all">AI + non-AI</option><option value="ai">AI roles only</option><option value="nonai">Non-AI only</option></select>
     <select id="minMatch"><option value="80">Skill match ≥ 80%</option><option value="90">≥ 90%</option><option value="0">Any match</option></select>
     <label class="ck"><input type="checkbox" id="hideApplied" checked> Hide applied</label>
     <label class="ck"><input type="checkbox" id="onlyNew"> New since my last visit</label>
@@ -128,6 +139,16 @@ function terms(text){const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" 
   [["dashboard","dashboards"],["kpi","kpis"],["llm","llms"],["forecast","forecasting"],["budget","budgeting"],["etl","etl/elt"],["elt","etl/elt"]].forEach(([a,b])=>{if(h.has(a)&&h.has(b))h.delete(a)});return h}
 function ats(resume,jd){const want=terms(jd),have=terms(resume);if(want.size<3)return null;const hit=[],miss=[];
   want.forEach(k=>((have.has(k)||(SYN[k]||[]).some(s=>have.has(s)))?hit:miss).push(k));return{score:Math.round(100*hit.length/want.size),hit:hit.sort(),miss:miss.sort(),n:want.size}}
+// ---------- technical vs non-technical ----------
+const TECH_RX=/\b(python|sql|r programming|machine learning|ml\b|statistic\w*|regression|pyspark|spark|etl|elt|dbt|airflow|snowflake|databricks|bigquery|redshift|aws|azure|gcp|api|scikit|tensorflow|pytorch|nlp|llms?|data model\w*|predictive model\w*|coding|programming|scripting|git\b|a\/b test\w*|experiment\w*|data pipeline\w*|algorithm\w*|causal|forecasting model\w*|pandas|numpy|jupyter|tableau|power bi|looker)\b/gi;
+const COMM_RX=/\b(communicat\w*|stakeholder\w*|present\w*|client\w*|customer\w*|relationship\w*|collaborat\w*|cross-functional|storytelling|influenc\w*|negotiat\w*|partner\w*|workshops?|facilitat\w*|consult\w*|strateg\w*|business development|sales|account management|leadership|executive\w*|verbal|interpersonal|coordinat\w*|outreach|advis\w*|vendor\w*)\b/gi;
+const TECH_TITLE=/data scien|engineer|developer|machine learning|\bml\b|quant|statistician|analytics engineer|\bai (applied )?scien|researcher/i;
+const NONTECH_TITLE=/strategy|operations|consult|program|marketing|sales|customer|client|account|business analyst|product analyst|associate, |policy|governance|project|planning/i;
+function roleKind(j){if(j._kind)return j._kind;const t=j.title+" "+(j.jd||"");
+  const tech=new Set((t.match(TECH_RX)||[]).map(x=>x.toLowerCase()));if(/\bR\b/.test(t))tech.add("R");
+  const comm=new Set((t.match(COMM_RX)||[]).map(x=>x.toLowerCase().slice(0,8)));const r=tech.size/Math.max(tech.size+comm.size,1);
+  j._kind=TECH_TITLE.test(j.title)||(tech.size>=6&&r>=.5)?"technical":(tech.size<=3||r<=.35||(NONTECH_TITLE.test(j.title)&&r<.45))?"non-technical":"balanced";return j._kind}
+let KIND=S.get("kind","all");
 // ---------- chance estimate ----------
 function daysAgo(d){return Math.max(0,Math.round((Date.now()-new Date(d+"T12:00:00Z"))/864e5))}
 function sponsorRating(j){if(j.sponsor_jd==="no")return"no";if(j.sponsor_jd==="yes")return"open";const a=j.h1b_approvals;
@@ -147,7 +168,7 @@ const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong
 function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
-    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
+    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
     if(hideA&&applied.has(j.id))return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
   const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,ats:r=>r.match??-1,rats:r=>JOBATS[r.j.id]?JOBATS[r.j.id].score:(r.ats?r.ats.score:-1)};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
@@ -155,7 +176,7 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
   const tb=document.getElementById("rows");tb.innerHTML="";document.getElementById("empty").hidden=rows.length>0;
   for(const r of rows.slice(0,600)){const j=r.j,d=daysAgo(j.posted),isNew=Date.now()-new Date(j.first_seen)<864e5,[sl,sc]=SP[r.spon];
     const tr=document.createElement("tr");if(applied.has(j.id))tr.className="applied";
-    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${j.ai?'<span class="badge b-good">AI</span> ':""}${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}<br><span title="Scraped from the company\'s own careers page">🏢 ${h(j.company)} careers page · ${h(j.source)}</span></div></td>
+    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${j.ai?'<span class="badge b-good">AI</span> ':""}<span class="badge b-kind">${{"technical":"🧮 Technical","balanced":"⚖️ Balanced","non-technical":"🗣️ Non-technical"}[roleKind(j)]}</span> ${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}<br><span title="Scraped from the company\'s own careers page">🏢 ${h(j.company)} careers page · ${h(j.source)}</span></div></td>
      <td data-l="Posted">${d===0?"today":d+"d ago"}</td><td data-l="Salary">${h(j.salary||"—")}</td>
      <td data-l="Sponsorship"><span class="badge ${sc}" title="${j.h1b_approvals!=null?"USCIS H-1B approvals: "+j.h1b_approvals:"JD wording"}">${sl}</span></td>
      <td data-l="My chance"><span class="num">${(r.chance*100).toFixed(r.chance<.1?1:0)}%</span></td>
@@ -168,6 +189,8 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
     tb.appendChild(tr)}}
 function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 // ---------- events ----------
+document.querySelectorAll("#kindSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.k===KIND);b.onclick=()=>{KIND=b.dataset.k;S.set("kind",KIND);
+  document.querySelectorAll("#kindSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
 ["q","spon","age","roleType","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
 document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;sortDir=sortKey===k?-sortDir:-1;sortKey=k;render()});
 document.getElementById("rows").onclick=e=>{const b=e.target.closest("button");if(!b)return;
