@@ -169,15 +169,29 @@ def opt_related(title, jd):
 DOCTORATE = r"\b(ph\.?\s?d\.?|doctorate|doctoral|m\.?d\.?(/ph\.?d)?|pharm\.?d|psy\.?d|d\.?sc)\b"
 LOWER_DEG = r"\b(master'?s?|m\.?s\.?c?\b|m\.?a\.?\b|mba|bachelor'?s?|b\.?s\.?c?\b|b\.?a\.?\b|undergraduate|equivalent (practical |work |professional )?experience|or equivalent|years of (relevant )?experience)\b"
 LICENSE = r"\b(cpa|certified public accountant|cfa charter(holder)?|chartered financial analyst|registered nurse|\brn\b|licensed (physician|pharmacist|engineer|clinical)|board[- ]certified|\bpe license|professional engineer)\b"
+PREF_HDR = r"preferred (qualifications|skills|experience|requirements)|nice[- ]to[- ]haves?|bonus points|pluses|what (would|could|will) set you apart|it would be great if|ideally you"
+REQ_HDR = r"(required|minimum|basic|must[- ]have) (qualifications|skills|experience|requirements)|requirements|what you('ll)? (need|bring)|qualifications|who you are|you have"
+def _section_is_preferred(t, pos):
+    """Is position `pos` inside a 'preferred' section? (looks at the closest section header before it)"""
+    before = t[max(0, pos - 2500):pos]
+    p = [m.end() for m in re.finditer(PREF_HDR, before)]; r = [m.end() for m in re.finditer(REQ_HDR, before)]
+    return bool(p) and (not r or max(p) > max(r))
 def degree_problem(jd):
-    """Reason string if a REQUIRED qualification needs a doctorate (no master's/experience alternative) or a license he doesn't hold."""
-    for snt in re.split(r"(?<=[.!?;])\s+|\n+|\s\*\s|•|·", jd or ""):
-        l = snt.lower()
-        if re.search(r"prefer|nice to have|a plus|\bplus\b|bonus|ideally|desired|or pursuing|candidates? (with|holding)", l): continue
-        if re.search(DOCTORATE, snt, re.I) and re.search(r"degree|required|requirement|qualification|must|in (bio|computer|stat|math|phys|eng|econ|chem|neuro)|field|candidate|holder|\bwith\b", l) \
-           and not re.search(LOWER_DEG, l): return "requires doctorate: " + snt.strip()[:120]
-        if re.search(LICENSE, l) and re.search(r"required|must|need|active|current|valid", l) and not re.search(r"pursu|work(ing)? toward|obtain within|progress|eligible to sit", l):
-            return "requires license: " + snt.strip()[:120]
+    """Reason string if a REQUIRED qualification needs a doctorate (no master's/experience alternative) or a licence he doesn't hold.
+    Works on whitespace-collapsed JD text: decides required vs preferred from the nearest section header + local wording."""
+    t = (jd or "").lower()
+    for m in re.finditer(DOCTORATE, t):
+        if _section_is_preferred(t, m.start()): continue
+        win = t[max(0, m.start() - 90):m.end() + 140]
+        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|or pursuing", win): continue
+        if re.search(LOWER_DEG, win): continue
+        if not re.search(r"degree|required|qualification|must|field|holder|in (bio|computer|stat|math|phys|eng|econ|chem|neuro|epidem|psych)|\bwith\b|or an", win): continue
+        return "requires doctorate: …" + (jd or "")[max(0, m.start() - 30):m.end() + 90].strip() + "…"
+    for m in re.finditer(LICENSE, t):
+        if _section_is_preferred(t, m.start()): continue
+        win = t[max(0, m.start() - 80):m.end() + 80]
+        if re.search(r"required|must|need|active|current|valid", win) and not re.search(r"prefer|pursu|work(ing)? toward|obtain within|progress|eligible to sit|a plus", win):
+            return "requires licence: …" + (jd or "")[max(0, m.start() - 30):m.end() + 60].strip() + "…"
     return None
 
 def part_time(title, jd):
