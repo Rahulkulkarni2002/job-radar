@@ -245,6 +245,7 @@ def enrich(j):
         if txt:
             k = job(j["company"], j["title"], j["url"], j["posted"], j["location"], txt, j["source"])
             j.update({x: k[x] for x in ("jd", "salary", "years", "sponsor_jd")})
+            j["source"] = "Workday" if "myworkdayjobs" in u else "Greenhouse" if ("greenhouse" in u or "gh_jid=" in u) else "Lever"
     except Exception: pass
     return j
 
@@ -266,7 +267,10 @@ def main():
     n_wd = sum(1 for t in tasks if t[0] == "workday")
     print(f"Workday companies reached: {n_wd - errs.get('workday', 0)}/{n_wd}")
     feed = [j for j in res if not j["jd"]]
-    with cf.ThreadPoolExecutor(32) as ex: list(ex.map(enrich, feed))
+    with cf.ThreadPoolExecutor(16) as ex: list(ex.map(enrich, feed))
+    # PRIORITY RULE: only jobs confirmed on the company's own careers page. Feed jobs that could not be opened
+    # on the company site (no JD fetched from it) are dropped.
+    res[:] = [j for j in res if j["jd"]]
     table = h1b_table()
     prev = {}
     if OUT.exists():

@@ -25,4 +25,5 @@ jobs:
           git config user.email "job-radar-bot@users.noreply.github.com"
           git add docs/data/jobs.json scraper/h1b_counts.json 2>/dev/null || git add docs/data/jobs.json
           git diff --cached --quiet || git commit -m "Update jobs $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase -X theirs origin main || true
           git push

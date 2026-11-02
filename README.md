@@ -3,7 +3,7 @@
 A personal job board that refreshes itself every 3 hours, around the clock, for analytics, data, AI and finance roles.
 
 **How it works**
-- **Scraping:** a GitHub Action (`.github/workflows/scrape.yml`) checks about 2,700 company career boards on Greenhouse, Lever, Ashby, Workday and SmartRecruiters, plus the SimplifyJobs new-grad feed. It keeps only US roles posted in the last 15 days that ask for 3 years of experience or less.
+- **Scraping:** a GitHub Action (`.github/workflows/scrape.yml`) checks about 2,700 company career boards on Greenhouse, Lever, Ashby, Workday and SmartRecruiters, plus company names discovered from the SimplifyJobs new-grad feed. **Only jobs confirmed on the company's own careers page are listed** (no job-board aggregators). It keeps only US roles posted in the last 15 days that ask for 3 years of experience or less.
 - **Sponsorship:** the scraper reads each job description for wording such as "will not sponsor" or "visa sponsorship available". It also looks up the company's H-1B approval count in the USCIS H-1B Employer Data Hub.
 - **Salary:** taken from the posting's pay range when the posting lists one.
 - **Website:** `docs/` is served by GitHub Pages and includes a **Jobs** tab and an **ATS** tab.
