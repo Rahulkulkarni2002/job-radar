@@ -1,0 +1,95 @@
+# Skills the candidate has (no personal info). Jobs are kept only if >= MIN_MATCH% of the JD's skills are here.
+a/b testing
+accounts receivable
+ai
+analyst
+analytics
+api
+benchmarking
+bi
+budget
+business analytics
+business intelligence
+campaign
+cash flow
+catboost
+causal inference
+churn
+classification
+clustering
+competitive analysis
+cost forecasting
+cross-validation
+customer analytics
+dashboard
+dashboards
+data analysis
+data analyst
+data analytics
+data cleaning
+data modeling
+data pipelines
+data quality
+data science
+data scientist
+data storytelling
+data validation
+data visualization
+databricks
+delta lake
+demand planning
+duckdb
+elt
+etl
+etl/elt
+excel
+experimentation
+fastapi
+feature engineering
+financial analysis
+financial forecasting
+forecasting
+generative ai
+git
+github
+hadoop
+hive
+insights
+invoicing
+kpis
+lightgbm
+machine learning
+marketing analytics
+metrics
+mlflow
+model deployment
+model validation
+numpy
+pandas
+predictive modeling
+pricing
+prophet
+pyspark
+python
+random forest
+ratio analysis
+regression
+reporting
+research
+retention
+revenue
+rfm
+risk
+scikit-learn
+segmentation
+snowflake
+sql
+statistical analysis
+statistical inference
+statistics
+streamlit
+tableau
+uplift modeling
+visualization
+xgboost
+zoho

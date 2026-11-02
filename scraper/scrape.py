@@ -16,7 +16,7 @@ UA = {"User-Agent": "Mozilla/5.0 (JobRadar personal job search)", "Accept": "app
 SIMPLIFY = ["https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json"]
 
 TITLE_INCLUDE = r"analyst|analytics|data scien|insight|business intelligence|\bbi\b|fp&a|financ|forecast|pricing|revenue|strategy|operations|decision|reporting|product analyst|\bai\b|machine learning analyst|data associate|quantitative|consult|marketing scien|growth|economist|planning|research"
-TITLE_EXCLUDE = r"senior|\bsr\b|staff|principal|director|\bvp\b|head of|\blead\b|manager|intern\b|internship|co-op|software engineer|hardware|firmware|mechanical|electrical|civil|nurse|clinical|sales rep|account executive|technician|recruit|attorney|counsel|phd|\biii\b|\biv\b|post-?doc|professor|driver|warehouse|summer|2028|cyber|devops|payroll|robotics|bioinformatics|help ?desk|application development|soc analyst|threat|fraud investigator"
+TITLE_EXCLUDE = r"senior|\bsr\b|staff|principal|director|\bvp\b|head of|\blead\b|manager|intern\b|internship|co-op|software engineer|hardware|firmware|mechanical|electrical|civil|nurse|clinical|sales rep|account executive|technician|recruit|attorney|counsel|phd|\biii\b|\biv\b|post-?doc|professor|driver|warehouse|vice president|consultant - |change management|summer|2028|cyber|devops|payroll|robotics|bioinformatics|help ?desk|application development|soc analyst|threat|fraud investigator|coach|cleared|clearance|ts/sci|supervisor|crashworthiness|falcon"
 CLEARANCE_COS = r"booz allen|northrop|lockheed|raytheon|\brtx\b|saic|leidos|general dynamics|bae systems|amentum|vantor|l3harris|mitre|caci|peraton|parsons|anduril|aerospace corp|guidehouse"
 US = r"\b(usa|united states|u\.s\.|remote|[A-Z][a-z]+,\s?(A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\b|NYC|SF|new york|san francisco|seattle|boston|austin|chicago|los angeles|san diego|atlanta|denver|dallas)"
 NON_US = r"\b(uk|united kingdom|canada|india|germany|ireland|singapore|london|toronto|bangalore|bengaluru|mexico|poland|australia|brazil|japan|france|netherlands|spain|philippines)\b"
@@ -39,6 +39,35 @@ def relevant(t):
     if re.search(ALWAYS, t): return True
     return bool(re.search(CORE, t)) and not re.search(NOT_FIT, t)
 SKILLS = r"\b(sql|python|tableau|power bi|excel|statistic\w*|analytics|forecast\w*|machine learning|data analysis|dashboards?|modeling|pandas|snowflake|databricks|looker|a/b test\w*|regression)\b"
+LEX = """sql|python|r|sas|stata|spss|excel|advanced excel|vba|pivot tables|vlookup|power bi|tableau|looker|qlik|domo|alteryx|dbt|airflow|snowflake|databricks|bigquery|redshift|aws|azure|gcp|
+spark|pyspark|hadoop|hive|delta lake|duckdb|postgresql|mysql|etl|elt|etl/elt|data pipelines|data warehousing|data modeling|data mart|git|github|jupyter|docker|api|rest api|fastapi|streamlit|mlflow|
+pandas|numpy|scikit-learn|xgboost|lightgbm|catboost|random forest|prophet|tensorflow|pytorch|nlp|llm|llms|generative ai|genai|ai|artificial intelligence|machine learning|deep learning|
+statistics|statistical analysis|statistical inference|statistical modeling|regression|classification|clustering|segmentation|forecasting|time series|predictive modeling|predictive analytics|
+causal inference|uplift modeling|a/b testing|experimentation|hypothesis testing|bayesian|optimization|cross-validation|feature engineering|model deployment|model validation|
+dashboards|dashboard|data visualization|visualization|reporting|data storytelling|data cleaning|data quality|data validation|data analysis|data analytics|analytics|business intelligence|bi|
+kpis|kpi|metrics|insights|stakeholders|stakeholder management|cross-functional|communication|presentation|powerpoint|
+financial analysis|financial modeling|financial forecasting|fp&a|budgeting|budget|forecast|variance analysis|p&l|cash flow|accounts receivable|invoicing|month-end close|ratio analysis|
+pricing|revenue|cost analysis|cost forecasting|customer analytics|churn|retention|rfm|crm|marketing analytics|campaign|attribution|product analytics|operations|supply chain|demand planning|
+sap|oracle|netsuite|erp|salesforce|zoho|risk|credit risk|compliance|research|benchmarking|competitive analysis|business analytics|data science|data scientist|data analyst|analyst""".replace("\n", "")
+SOFT = {"communication", "presentation", "stakeholders", "stakeholder management", "cross-functional", "analyst", "research", "operations", "risk", "metrics", "insights", "revenue", "campaign", "pricing"}
+TERMS = sorted(set(LEX.split("|")) - SOFT, key=len, reverse=True)
+TERM_RX = {t: re.compile(r"(?<![a-z0-9])" + re.escape(t) + r"(?![a-z0-9])") for t in TERMS}
+SYN = {"ai": {"generative ai", "machine learning"}, "artificial intelligence": {"ai", "machine learning"}, "genai": {"generative ai"}, "bi": {"business intelligence", "tableau"},
+       "business intelligence": {"bi", "tableau"}, "visualization": {"data visualization", "tableau"}, "dashboard": {"dashboards"}, "data analysis": {"data analytics", "analytics"},
+       "statistics": {"statistical analysis"}, "experimentation": {"a/b testing"}, "forecast": {"forecasting"}, "budgeting": {"budget"}, "llm": {"generative ai"}, "llms": {"generative ai"}}
+PROFILE = set(l.strip() for l in open(pathlib.Path(__file__).resolve().parent / "profile_skills.txt") if l.strip() and not l.startswith("#"))
+MIN_MATCH = int(os.environ.get("MIN_MATCH", 80))
+def skill_terms(text):
+    t = " " + re.sub(r"\s+", " ", (text or "").lower()) + " "
+    h = {x for x in TERMS if TERM_RX[x].search(t)}
+    for a, b in [("dashboard", "dashboards"), ("kpi", "kpis"), ("llm", "llms"), ("forecast", "forecasting"), ("budget", "budgeting"), ("etl", "etl/elt"), ("elt", "etl/elt")]:
+        if a in h and b in h: h.discard(a)
+    return h
+def skill_match(title, jd):
+    want = skill_terms(title + " " + jd)
+    if len(want) < 4: return None, [], []      # too few skills in the JD to judge
+    hit = sorted(k for k in want if k in PROFILE or SYN.get(k, set()) & PROFILE)
+    return round(100 * len(hit) / len(want)), hit, sorted(want - set(hit))
 def skill_fit(jd):
     """None if no JD text; else number of distinct core skills mentioned."""
     if not jd: return None
@@ -121,7 +150,8 @@ def workday(board, name):
             try: info = get(f"{base}/wday/cxs/{tenant}/{site}{j['externalPath']}").get("jobPostingInfo", {})
             except Exception: info = {}
             loc2 = info.get("location") or loc
-            if not us(loc2) and "locations" not in loc.lower(): continue
+            if info.get("location") and not us(loc2): continue
+            if not info.get("location") and not us(loc): continue
             out.append(job(name, j["title"], f"{base}/en-US/{site}{j['externalPath']}", (TODAY - datetime.timedelta(days=n)).isoformat(), loc2, strip(info.get("jobDescription")), "Workday"))
     return out
 def smartrecruiters(slug, name):
@@ -224,9 +254,9 @@ def main():
         if key in seen or j["url"] in seen or re.search(CLEARANCE_COS, j["company"], re.I): continue
         seen.add(key); seen.add(j["url"])
         if j["years"] is not None and j["years"] > 3: continue
-        sf = skill_fit(j["jd"])
-        if sf is not None and sf < 2: continue          # description must use >= 2 of the candidate's core skills
-        j["skill_hits"] = sf
+        m, hit, miss = skill_match(j["title"], j["jd"])
+        if m is None or m < MIN_MATCH: continue          # candidate rule: keep only jobs with >= 80% skill match
+        j["match"], j["missing"] = m, miss
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
         jobs.append(j)
