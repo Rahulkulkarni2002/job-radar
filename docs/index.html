@@ -88,7 +88,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
   <div class="meta" id="hint" style="margin-bottom:8px"></div>
   <div class="card"><table><thead><tr>
     <th data-s="title">Role</th><th data-s="posted">Posted</th><th data-s="salary">Salary</th><th data-s="spon">Sponsorship</th>
-    <th data-s="chance">My chance</th><th data-s="ats">Skill match</th><th data-s="rats">Resume ATS <span title="Upload the resume you\'ll send for each job — scored against that job only">ⓘ</span></th><th></th></tr></thead><tbody id="rows"></tbody></table>
+    <th data-s="chance">My chance</th><th data-s="fit">Fit for you</th><th data-s="ats">Skill match</th><th data-s="rats">Resume ATS <span title="Upload the resume you\'ll send for each job — scored against that job only">ⓘ</span></th><th></th></tr></thead><tbody id="rows"></tbody></table>
     <div class="empty" id="empty" hidden>No jobs match these filters.</div></div>
   <p class="meta">Chance % is an <b>estimate</b>: typical cold-application callback rates (≈2–5%) adjusted for ATS match, posting age, sponsorship and experience fit. A referral roughly ×4.</p>
 </section>
@@ -219,7 +219,7 @@ function chance(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",true
   if(need)p*={no:.02,open:.85,strong:.9,some:.6,none:.3,unknown:.55}[sponsorRating(j)];
   if(j.years!=null)p*=j.years<=yoe+1?1:j.years<=yoe+2?.6:.3;return Math.min(p,.6)}
 // ---------- data ----------
-let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
+let DATA={jobs:[]},RESUME="",sortKey="fit",sortDir=-1;const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
 fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.getElementById("meta").textContent=
   `${d.count} open roles · updated ${d.updated} · ${d.boards} company career sites scanned every 3 h`;fillPicker();render()})
@@ -231,7 +231,7 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
     if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
     if(hideA&&applied.has(j.id))return false;if(SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
-  const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
+  const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,fit:r=>r.j.fit??-1,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
   document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
   const nh=Object.keys(DISMISSED).length;const sh=document.getElementById("showHidden");sh.textContent=SHOW_HIDDEN?`← Back to jobs`:`Hidden (${nh})`;sh.classList.toggle("pri",SHOW_HIDDEN);
@@ -242,6 +242,7 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
      <td data-l="Posted">${d===0?"today":d+"d ago"}</td><td data-l="Salary">${h(j.salary||"—")}</td>
      <td data-l="Sponsorship"><span class="badge ${sc}" title="${j.h1b_approvals!=null?"USCIS H-1B approvals: "+j.h1b_approvals:"JD wording"}">${sl}</span></td>
      <td data-l="My chance"><span class="num">${(r.chance*100).toFixed(r.chance<.1?1:0)}%</span></td>
+     <td data-l="Fit for you">${j.fit!=null?`<span class="num" style="color:var(${j.fit>=70?"--good":j.fit>=55?"--warn":"--muted"})">${j.fit}</span><span class="muted">/100</span><div class="co" title="Your core skills this job asks for">✔ ${h((j.why||[]).join(" · "))}</div>`:'<span class="muted">—</span>'}</td>
      <td data-l="Skill match">${r.match!=null?`<span class="num" style="color:var(${r.match>=90?"--good":r.match>=80?"--warn":"--bad"})">${r.match}%</span>${r.miss.length?`<div class="co" title="Missing skills">missing: ${h(r.miss.slice(0,4).join(", "))}</div>`:""}`:'<span class="muted">n/a</span>'}</td>
      <td data-l="Resume ATS">${(()=>{if(!j.jd)return'<span class="muted">n/a</span>';const pj=JOBATS[j.id];
         const an=pj&&pj.text?analyze(pj.text,j.title+". "+j.jd):r.ats;

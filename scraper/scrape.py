@@ -194,6 +194,31 @@ def degree_problem(jd):
             return "requires licence: …" + (jd or "")[max(0, m.start() - 30):m.end() + 60].strip() + "…"
     return None
 
+# ---------- profile FIT: does the JD ask for the candidate's actual core stack? ----------
+CORE = {
+ "SQL":(3,r"\bsql\b"),"Python":(3,r"\bpython\b"),"Tableau":(2,r"\btableau\b"),
+ "ML":(3,r"machine learning|\bml\b|predictive model|classification|xgboost|scikit|random forest"),
+ "Forecasting":(3,r"forecast"),"Stats":(2,r"statistic|regression|hypothesis test"),
+ "A/B · causal":(2,r"a/b test|experiment|causal|uplift|incrementality"),
+ "Segmentation/churn":(2,r"segmentation|churn|retention|customer analytics|rfm|lifetime value|\bltv\b|clv"),
+ "Dashboards/BI":(2,r"dashboard|business intelligence|data visuali[sz]"),
+ "Snowflake/Databricks":(2,r"snowflake|databricks|pyspark|\bspark\b|delta lake"),
+ "ETL":(1,r"\betl\b|\belt\b|data pipeline"),
+ "FP&A":(2,r"fp&a|financial (analysis|model|planning)|budget|variance analysis|cost analysis|p&l"),
+ "Excel":(1,r"\bexcel\b"),"GenAI":(2,r"generative ai|genai|\bllms?\b|large language"),
+ "Pandas":(1,r"pandas|numpy"),"Deployment":(1,r"mlflow|fastapi|model deploy|streamlit|\bapi\b"),
+}
+MAXW=sum(w for w,_ in CORE.values())
+def fit(title,jd):
+    t=(title+" "+jd).lower()
+    hits=[k for k,(w,rx) in CORE.items() if re.search(rx,t)]
+    w=sum(CORE[k][0] for k in hits)
+    hard=any(k in hits for k in ("SQL","Python"))
+    score=min(100,round(100*w/22))      # 22 weight pts ≈ a near-perfect match for him
+    return score,hits,hard
+
+MIN_FIT = int(os.environ.get("MIN_FIT", 45))
+
 def part_time(title, jd):
     return bool(re.search(r"part[- ]time|adjunct|lecturer|\bper diem\b|\bprn\b|seasonal|temporary|\btemp\b|internship|\b(10|15|19) hours", (title + " " + (jd or "")[:1500]).lower())) and not re.search(r"\bfull[- ]time\b", title.lower())
 
@@ -383,6 +408,9 @@ def main():
         m, hit, miss = skill_match(j["title"], j["jd"])
         if m is None or m < MIN_MATCH: continue          # candidate rule: keep only jobs with >= 80% skill match
         j["match"], j["missing"] = m, miss
+        f, hits, hard = fit(j["title"], j["jd"])
+        if f < MIN_FIT or not (hard or len(hits) >= 5): continue   # must ask for HIS core stack (SQL/Python + 4 core skills)
+        j["fit"], j["why"] = f, hits
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")

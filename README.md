@@ -18,6 +18,7 @@ A personal job board that refreshes itself every 3 hours, around the clock, for 
 - Dropped if the JD gives a **start date outside Jan 28 – Mar 31 2027**, or a **graduation window that excludes Dec 2026** (e.g. "Spring 2027 grads").
 - **Degree/licence:** dropped if a *required* qualification is a PhD/MD/doctorate with no Master's or equivalent-experience alternative, or a licence (CPA, CFA charter, RN, PE…).
 - **OPT relatedness:** the job's duties must clearly be Business Analytics work (data analysis, statistics, forecasting, BI, ML, reporting/insights). Purely operational roles are dropped. Part-time/temp/adjunct roles are dropped (OPT needs ≥ 20 h/week). Contract roles are flagged (STEM OPT needs a W-2 employer enrolled in E-Verify).
+- **Profile fit ≥ 45/100:** the JD must ask for your core stack — SQL or Python plus several of Tableau, ML, forecasting, statistics, A/B testing/causal, segmentation/churn, dashboards, Snowflake/Databricks/PySpark, FP&A, GenAI (weighted by how central each is to you). Each job shows *why* it matches.
 - Kept only if your skills cover **≥ 80%** of the JD's hard skills, and ≤ 3 years required.
 - **Website:** `docs/` is served by GitHub Pages and includes a **Jobs** tab and an **ATS** tab.
 - **Privacy:** your resume is read only inside your browser and is never uploaded or saved to this repo. Your chance % and ATS score are calculated on your own device.
