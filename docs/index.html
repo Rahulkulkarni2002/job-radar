@@ -48,6 +48,11 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 .seg button:last-child{border-right:0}.seg button.on{background:var(--accent);color:var(--accent-ink)}
 .b-kind{background:var(--chip);color:var(--muted)}
 @media (max-width:760px){.seg{display:grid;grid-template-columns:1fr 1fr;width:100%}.seg button{border-right:0;border-bottom:1px solid var(--line)}}
+.gt{width:100%;border-collapse:collapse;font-size:13px}.gt td,.gt th{padding:8px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+.gt th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.gt tr.q td{background:var(--chip);color:var(--muted);font-style:italic;font-size:12px}
+.pri-H{background:var(--bad-bg);color:var(--bad)}.pri-M{background:var(--warn-bg);color:var(--warn)}.pri-L{background:var(--chip);color:var(--muted)}
+.gt tr.row{cursor:pointer}.sk{font-weight:700}
+@media (max-width:760px){.gt thead{display:none}.gt tr{display:block;padding:6px 0}.gt td{display:block;border:0;padding:3px 8px}}
 </style>
 </head>
 <body>
@@ -104,9 +109,11 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
       <div><div class="score" id="chance2" style="font-size:28px">–</div><div class="muted">est. chance of hearing back</div></div>
       <div class="muted" id="verdict" style="flex:1;min-width:200px"></div>
     </div>
-    <h4>Missing from your resume</h4><div class="chips miss" id="miss"></div>
-    <h4>Matched</h4><div class="chips hit" id="hit"></div>
-    <small class="note">Scores hard skills, tools, methods and the job title the way ATS keyword filters do. Add a missing keyword only if you truly have that skill — use the job's exact wording.</small>
+    <h4 style="margin-bottom:6px">Skill-by-skill — fix these first</h4>
+    <div class="muted" style="font-size:12px;margin-bottom:6px">Sorted by priority. Required skills weigh 2×. Click a row to see the exact sentence from the job description.</div>
+    <div id="gapTable"></div>
+    <h4 style="margin-bottom:6px">Already matched</h4><div id="hitTable"></div>
+    <small class="note">Only add a skill you genuinely have. ATS systems match the job's exact wording, so mirror it word-for-word.</small>
   </div>
 </section>
 
@@ -149,6 +156,48 @@ function roleKind(j){if(j._kind)return j._kind;const t=j.title+" "+(j.jd||"");
   const comm=new Set((t.match(COMM_RX)||[]).map(x=>x.toLowerCase().slice(0,8)));const r=tech.size/Math.max(tech.size+comm.size,1);
   j._kind=TECH_TITLE.test(j.title)||(tech.size>=6&&r>=.5)?"technical":(tech.size<=3||r<=.35||(NONTECH_TITLE.test(j.title)&&r<.45))?"non-technical":"balanced";return j._kind}
 let KIND=S.get("kind","all");
+// ---------- skill-by-skill ATS analysis ----------
+const RELATED={"power bi":["tableau"],"looker":["tableau"],"qlik":["tableau"],"domo":["tableau"],"r":["python"],"sas":["python"],"stata":["python"],"spss":["python"],
+ "aws":["snowflake","databricks"],"azure":["databricks"],"gcp":["snowflake"],"bigquery":["snowflake","sql"],"redshift":["snowflake","sql"],"spark":["pyspark"],"dbt":["sql","etl"],"airflow":["databricks"],
+ "a/b testing":["uplift modeling","experimentation"],"hypothesis testing":["statistical inference"],"experimentation":["uplift modeling"],"optimization":["forecasting"],"nlp":["generative ai"],"llm":["generative ai"],"llms":["generative ai"],
+ "financial modeling":["forecasting","ratio analysis"],"variance analysis":["budget","forecasting"],"fp&a":["budget","forecasting","financial analysis"],"p&l":["financial analysis"],
+ "erp":["zoho"],"sap":["zoho"],"oracle":["zoho"],"netsuite":["zoho"],"crm":["zoho"],"salesforce":["zoho"],"supply chain":["forecasting"],"demand planning":["forecasting","prophet"],
+ "product analytics":["churn","segmentation"],"advanced excel":["excel"],"pivot tables":["excel"],"vlookup":["excel"],"vba":["excel","python"],"statistical modeling":["regression","predictive modeling"],
+ "time series":["forecasting","prophet"],"data warehousing":["snowflake"],"data mart":["snowflake"],"deep learning":["machine learning"],"tensorflow":["scikit-learn"],"pytorch":["scikit-learn"],
+ "docker":["fastapi"],"kpi":["dashboards"],"kpis":["dashboards"],"credit risk":["ratio analysis"],"attribution":["uplift modeling"],"powerpoint":["data storytelling"]};
+// Where the candidate has REAL evidence for a skill (from his public GitHub projects / experience).
+const EVIDENCE=[
+ [["statistics","statistical analysis","statistical inference","hypothesis testing","regression"],"Email Campaign Uplift Modeling — statistical inference, verified test/control split; or Qualcomm capstone — regression ensemble, leave-one-out CV"],
+ [["dashboards","dashboard","kpis","kpi","data visualization","visualization","business intelligence","bi","reporting","tableau"],"Retail Sales Performance Dashboard — interactive Tableau dashboard (revenue seasonality, top products, AOV by country)"],
+ [["data modeling","etl","elt","etl/elt","data pipelines","data warehousing","data mart","snowflake","databricks","pyspark","delta lake"],"Snowflake–Databricks Medallion Pipeline — Bronze/Silver/Gold tables, PySpark, partitioned for monthly reporting"],
+ [["a/b testing","experimentation","causal inference","uplift modeling","campaign","marketing analytics"],"Email Campaign Uplift Modeling — $32.7K / $18.1K incremental revenue, test/control validation"],
+ [["forecasting","forecast","time series","predictive modeling","demand planning","cost forecasting","prophet"],"Qualcomm NRE cost forecasting (WAPE 49% → 32.9%) and Prophet daily revenue forecast (31% MAPE)"],
+ [["financial analysis","ratio analysis","financial forecasting","budget","budgeting"],"Bank Financial Ratio Analysis (ROE, ROA, NIM from SEC EDGAR) and Qualcomm budget forecasts"],
+ [["machine learning","classification","model deployment","model validation","mlflow","fastapi","streamlit","api","xgboost","scikit-learn","random forest"],"Customer Churn Prediction App — 6 models, 81% recall, FastAPI + Streamlit, MLflow tracking"],
+ [["segmentation","clustering","rfm","customer analytics","retention","churn"],"Customer Segmentation — RFM on 1M+ transactions, 7.7% of customers = 54.5% of revenue"],
+ [["excel","cash flow","accounts receivable","invoicing"],"Inventa Business Support Analyst — Excel cash-flow and payment-trend analysis, AR follow-ups"],
+ [["sql","duckdb","data cleaning","data validation","data quality"],"Customer Segmentation (SQL/DuckDB metric cross-checks) and Qualcomm capstone (cleaned ~198K transactions)"],
+ [["generative ai","ai"],"Generative AI certification and AI & Prescriptive Analytics coursework (UCSD)"]];
+function evidenceFor(k){const e=EVIDENCE.find(([ks])=>ks.includes(k));return e?e[1]:null}
+const PREF_RX=/prefer|nice to have|a plus|\bplus\b|bonus|ideally|desired|familiarity|exposure to/i;
+function sentencesOf(t){return (t||"").split(/(?<=[.!?;])\s+|\n+|\s\*\s|•|·/).map(x=>x.trim()).filter(Boolean)}
+function countTerm(text,term){const m=(" "+text.toLowerCase().replace(/\s+/g," ")+" ").match(new RegExp("(?<![a-z0-9])"+esc(term)+"(?![a-z0-9])","g"));return m?m.length:0}
+function analyze(resume,jd){const want=terms(jd),have=terms(resume);if(want.size<3)return null;const sents=sentencesOf(jd);const items=[];
+  want.forEach(k=>{const ss=sents.filter(x=>RX[k].test(" "+x.toLowerCase()+" "));const req=ss.length?ss.some(x=>!PREF_RX.test(x)):true;
+    const n=countTerm(jd,k),rn=countTerm(resume,k),syn=(SYN[k]||[]).find(x=>have.has(x)),rel=(RELATED[k]||[]).filter(x=>have.has(x));
+    const pri=req&&n>=2?"H":req?"M":"L";let status,action;
+    const ev=evidenceFor(k);
+    if(rn>0){status="match";action=rn===1?`Appears once in your resume. If it's only in Skills, also use “${k}” in a bullet with a result, e.g. what you built and the number it moved.`:`Used ${rn}× — good.`}
+    else if(syn){status="wording";action=`You wrote “${syn}”. The job says “${k}”. Use the job's exact phrase in Skills and in the bullet where you did it, since ATS matches exact wording.`}
+    else if(ev){status="elsewhere";action=`You HAVE this — it's just not in this resume. Swap in: ${ev}. Write “${k}” word-for-word in that bullet and in Skills.`}
+    else if(rel.length){status="related";action=`Not on your resume, but you have ${rel.map(x=>"“"+x+"”").join(", ")}. If you've genuinely used ${k} (course, project, job), add “${k}” to Skills and one bullet. If not, don't add it — mention ${rel[0]} as transferable in your cover letter.`}
+    else{status="missing";action=req?`Required here and not on your resume. Add it only if you have real experience. Otherwise this is a true gap: expect it to cost points with the ATS and the recruiter.`:`Preferred only. Skip it unless you've genuinely used it. It won't block you on its own.`}
+    items.push({k,req,pri,n,rn,status,action,quote:(ss[0]||"").slice(0,240)})});
+  const w=i=>i.req?2:1,got=i=>i.status==="match"?1:i.status==="wording"?.5:0;   // score = what THIS resume shows
+  const score=Math.round(100*items.reduce((a,i)=>a+w(i)*got(i),0)/items.reduce((a,i)=>a+w(i),0));
+  const order={H:0,M:1,L:2},st={elsewhere:0,missing:1,related:2,wording:3,match:4};
+  items.sort((a,b)=>st[a.status]-st[b.status]||order[a.pri]-order[b.pri]||b.n-a.n);
+  return{score,items,n:items.length,hit:items.filter(i=>i.status==="match").length}}
 // ---------- chance estimate ----------
 function daysAgo(d){return Math.max(0,Math.round((Date.now()-new Date(d+"T12:00:00Z"))/864e5))}
 function sponsorRating(j){if(j.sponsor_jd==="no")return"no";if(j.sponsor_jd==="yes")return"open";const a=j.h1b_approvals;
@@ -163,7 +212,7 @@ const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString
 fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.getElementById("meta").textContent=
   `${d.count} open roles · updated ${d.updated} · ${d.boards} company career sites scanned every 3 h`;fillPicker();render()})
   .catch(()=>document.getElementById("meta").textContent="Could not load jobs.json");
-function rowData(j){const r=RESUME&&j.jd?ats(RESUME,j.title+" "+j.jd):null;const m=j.match??null;return{j,ats:r,match:m,miss:j.missing||[],chance:chance(j,r?r.score:m),spon:sponsorRating(j)}}
+function rowData(j){const r=RESUME&&j.jd?analyze(RESUME,j.title+". "+j.jd):null;const m=j.match??null;return{j,ats:r,match:m,miss:j.missing||[],chance:chance(j,r?r.score:m),spon:sponsorRating(j)}}
 const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong:["H-1B: strong","b-good"],some:["H-1B: some","b-warn"],none:["No H-1B record","b-warn"],unknown:["Unknown","b-warn"]};
 function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
@@ -205,8 +254,8 @@ const drop=document.getElementById("drop"),file=document.getElementById("file");
 drop.ondragover=e=>{e.preventDefault()};drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])};file.onchange=()=>file.files[0]&&readFile(file.files[0]);
 let upJob=null;
 document.getElementById("rowFile").onchange=async e=>{const f=e.target.files[0];if(!f||!upJob)return;const text=await extract(f);if(!text)return;
-  const j=DATA.jobs.find(x=>x.id===upJob);const r=ats(text,j.title+" "+j.jd);if(!r){alert("This job description has too few skills to score.");return}
-  JOBATS[upJob]={score:r.score,name:f.name,miss:r.miss};S.set("jobAts",JOBATS);render()};
+  const j=DATA.jobs.find(x=>x.id===upJob);const r=analyze(text,j.title+". "+j.jd);if(!r){alert("This job description has too few skills to score.");return}
+  JOBATS[upJob]={score:r.score,name:f.name,miss:r.items.filter(i=>i.status!=="match").map(i=>(i.status==="wording"?"reword: ":"")+i.k)};S.set("jobAts",JOBATS);render()};
 async function extract(f){let text="";try{const buf=await f.arrayBuffer();
   if(/\.pdf$/i.test(f.name)){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();text+=c.items.map(x=>x.str).join(" ")+"\n"}}
@@ -223,14 +272,21 @@ function setResume(text,name){RESUME=text;S.set("resume",text);S.set("resumeName
 document.getElementById("resumeText").addEventListener("change",e=>setResume(e.target.value,"pasted text"));
 document.getElementById("jobPick").onchange=()=>{document.getElementById("jdText").value="";runATS()};document.getElementById("jdText").addEventListener("input",runATS);
 function runATS(){const pick=DATA.jobs.find(j=>j.id===document.getElementById("jobPick").value),pasted=document.getElementById("jdText").value.trim();
-  const jd=pasted||(pick?pick.title+" "+pick.jd:"");const box=document.getElementById("result");if(!RESUME||!jd){box.hidden=true;return}
-  const r=ats(RESUME,jd);box.hidden=false;if(!r){document.getElementById("score").textContent="–";document.getElementById("verdict").textContent="No recognizable skills in that job text — paste the full description.";return}
-  document.getElementById("score").textContent=r.score+"%";document.getElementById("score").style.color=`var(${r.score>=90?"--good":r.score>=70?"--warn":"--bad"})`;
-  const c=pick&&!pasted?chance(pick,r.score):chance({posted:new Date().toISOString().slice(0,10),sponsor_jd:/no (visa )?sponsorship|will not sponsor|without sponsorship/i.test(jd)?"no":"unknown",years:null},r.score);
+  const jd=pasted||(pick?pick.title+". "+pick.jd:"");const box=document.getElementById("result");if(!RESUME||!jd){box.hidden=true;return}
+  const r=analyze(RESUME,jd);box.hidden=false;if(!r){document.getElementById("score").textContent="–";document.getElementById("verdict").textContent="Too few recognizable skills in that job text — paste the full description.";document.getElementById("gapTable").innerHTML="";document.getElementById("hitTable").innerHTML="";return}
+  const sc=document.getElementById("score");sc.textContent=r.score+"%";sc.style.color=`var(${r.score>=90?"--good":r.score>=80?"--warn":"--bad"})`;
+  const c=pick&&!pasted?chance(pick,r.score):chance({posted:new Date().toISOString().slice(0,10),sponsor_jd:"unknown",years:null},r.score);
   document.getElementById("chance2").textContent=(c*100).toFixed(c<.1?1:0)+"%";
-  document.getElementById("verdict").textContent=r.score>=90?`Strong match (${r.hit.length}/${r.n} skills). Apply.`:r.score>=70?`Close (${r.hit.length}/${r.n}). Add any missing keyword you genuinely have, using the JD's wording.`:`Weak match (${r.hit.length}/${r.n}). Tailor first — or skip if the missing skills are core.`;
-  document.getElementById("miss").innerHTML=r.miss.map(x=>`<span>${h(x)}</span>`).join("")||'<span class="muted">nothing missing</span>';
-  document.getElementById("hit").innerHTML=r.hit.map(x=>`<span>${h(x)}</span>`).join("")}
+  const gaps=r.items.filter(i=>i.status!=="match"),hits=r.items.filter(i=>i.status==="match"),reqMiss=gaps.filter(i=>i.req&&i.status!=="wording").length;
+  document.getElementById("verdict").innerHTML=r.score>=90?`<b>Strong match</b> — ${r.hit}/${r.n} skills. ${gaps.length?"Fix the wording items below and apply.":"Apply."}`:
+    r.score>=80?`<b>Close</b> — ${r.hit}/${r.n} skills. ${reqMiss} required skill(s) missing; fix any you genuinely have.`:`<b>Weak</b> — ${reqMiss} required skill(s) missing. Tailor first, or skip if they're core to the role.`;
+  const LBL={missing:"❌ Missing",elsewhere:"📂 You have it — not in this resume",related:"🟡 Related skill only",wording:"✏️ Different wording"};
+  const row=i=>`<tr class="row" onclick="this.nextElementSibling.hidden=!this.nextElementSibling.hidden"><td><span class="sk">${h(i.k)}</span><br><span class="badge pri-${i.pri}">${{H:"High",M:"Medium",L:"Low"}[i.pri]}</span></td>
+    <td>${i.req?"Required":"Preferred"}<br><span class="muted">${i.n}× in JD</span></td><td>${i.status==="match"?"✅ In resume ("+i.rn+"×)":LBL[i.status]}</td><td>${h(i.action)}</td></tr>
+    <tr class="q" hidden><td colspan="4">JD: “${h(i.quote)}”</td></tr>`;
+  const head='<table class="gt"><thead><tr><th>Skill</th><th>In the job</th><th>Your resume</th><th>What to do</th></tr></thead><tbody>';
+  document.getElementById("gapTable").innerHTML=gaps.length?head+gaps.map(row).join("")+"</tbody></table>":'<p class="muted">Nothing missing 🎉</p>';
+  document.getElementById("hitTable").innerHTML=hits.length?head+hits.map(row).join("")+"</tbody></table>":""}
 // profile
 const yoe=document.getElementById("yoe"),ns=document.getElementById("needSpon");yoe.value=S.get("yoe",2);ns.checked=S.get("needSpon",true);
 yoe.oninput=()=>{S.set("yoe",+yoe.value);render()};ns.onchange=()=>{S.set("needSpon",ns.checked);render()};
