@@ -177,7 +177,10 @@ const EVIDENCE=[
  [["segmentation","clustering","rfm","customer analytics","retention","churn"],"Customer Segmentation — RFM on 1M+ transactions, 7.7% of customers = 54.5% of revenue"],
  [["excel","cash flow","accounts receivable","invoicing"],"Inventa Business Support Analyst — Excel cash-flow and payment-trend analysis, AR follow-ups"],
  [["sql","duckdb","data cleaning","data validation","data quality"],"Customer Segmentation (SQL/DuckDB metric cross-checks) and Qualcomm capstone (cleaned ~198K transactions)"],
+ [["hive","hadoop"],"the Skills line from your Data Scientist resume (Hadoop, Hive — Scalable Analytics coursework)"],
+ [["spark"],"Snowflake–Databricks pipeline built in PySpark — write it as “Spark (PySpark)”"],
  [["generative ai","ai"],"Generative AI certification and AI & Prescriptive Analytics coursework (UCSD)"]];
+const TITLE_TERMS=new Set(["data scientist","data analyst","business analytics","data science"]);
 function evidenceFor(k){const e=EVIDENCE.find(([ks])=>ks.includes(k));return e?e[1]:null}
 const PREF_RX=/prefer|nice to have|a plus|\bplus\b|bonus|ideally|desired|familiarity|exposure to/i;
 function sentencesOf(t){return (t||"").split(/(?<=[.!?;])\s+|\n+|\s\*\s|•|·/).map(x=>x.trim()).filter(Boolean)}
@@ -187,15 +190,17 @@ function analyze(resume,jd){const want=terms(jd),have=terms(resume);if(want.size
     const n=countTerm(jd,k),rn=countTerm(resume,k),syn=(SYN[k]||[]).find(x=>have.has(x)),rel=(RELATED[k]||[]).filter(x=>have.has(x));
     const pri=req&&n>=2?"H":req?"M":"L";let status,action;
     const ev=evidenceFor(k);
-    if(rn>0){status="match";action=rn===1?`Appears once in your resume. If it's only in Skills, also use “${k}” in a bullet with a result, e.g. what you built and the number it moved.`:`Used ${rn}× — good.`}
+    if(TITLE_TERMS.has(k)&&rn===0){status="title";action=k.startsWith("data scien")?`This is the job's field/title, not a skill to list. Put “Data Scientist” as the headline under your name and describe your ML projects (churn, uplift, forecasting) as data science work.`:`This is the job title. Use “${k.replace(/\b\w/g,c=>c.toUpperCase())}” as the headline under your name — ATS weighs title match heavily.`}
+    else if(rn>0&&TITLE_TERMS.has(k)){status="match";action=`Matches the job title — keep it in your headline.`}
+    else if(rn>0){status="match";action=rn===1?`Appears once in your resume. If it's only in Skills, also use “${k}” in a bullet with a result, e.g. what you built and the number it moved.`:`Used ${rn}× — good.`}
     else if(syn){status="wording";action=`You wrote “${syn}”. The job says “${k}”. Use the job's exact phrase in Skills and in the bullet where you did it, since ATS matches exact wording.`}
-    else if(ev){status="elsewhere";action=`You HAVE this — it's just not in this resume. Swap in: ${ev}. Write “${k}” word-for-word in that bullet and in Skills.`}
+    else if(ev){status="elsewhere";action=`You HAVE this — it's just not in this resume. Bring back ${ev}. Write “${k}” word-for-word in that bullet and in Skills.`}
     else if(rel.length){status="related";action=`Not on your resume, but you have ${rel.map(x=>"“"+x+"”").join(", ")}. If you've genuinely used ${k} (course, project, job), add “${k}” to Skills and one bullet. If not, don't add it — mention ${rel[0]} as transferable in your cover letter.`}
     else{status="missing";action=req?`Required here and not on your resume. Add it only if you have real experience. Otherwise this is a true gap: expect it to cost points with the ATS and the recruiter.`:`Preferred only. Skip it unless you've genuinely used it. It won't block you on its own.`}
     items.push({k,req,pri,n,rn,status,action,quote:(ss[0]||"").slice(0,240)})});
-  const w=i=>i.req?2:1,got=i=>i.status==="match"?1:i.status==="wording"?.5:0;   // score = what THIS resume shows
+  const w=i=>i.req?2:1,got=i=>i.status==="match"?1:(i.status==="wording"||i.status==="title")?.5:0;   // score = what THIS resume shows
   const score=Math.round(100*items.reduce((a,i)=>a+w(i)*got(i),0)/items.reduce((a,i)=>a+w(i),0));
-  const order={H:0,M:1,L:2},st={elsewhere:0,missing:1,related:2,wording:3,match:4};
+  const order={H:0,M:1,L:2},st={title:0,elsewhere:1,missing:2,related:3,wording:4,match:5};
   items.sort((a,b)=>st[a.status]-st[b.status]||order[a.pri]-order[b.pri]||b.n-a.n);
   return{score,items,n:items.length,hit:items.filter(i=>i.status==="match").length}}
 // ---------- chance estimate ----------
@@ -207,7 +212,7 @@ function chance(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",true
   if(need)p*={no:.02,open:.85,strong:.9,some:.6,none:.3,unknown:.55}[sponsorRating(j)];
   if(j.years!=null)p*=j.years<=yoe+1?1:j.years<=yoe+2?.6:.3;return Math.min(p,.6)}
 // ---------- data ----------
-let DATA={jobs:[]},RESUME=S.get("resume",""),sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));const JOBATS=S.get("jobAts",{});
+let DATA={jobs:[]},RESUME=S.get("resume",""),sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));const JOBATS=Object.fromEntries(Object.entries(S.get("jobAts",{})).filter(([k,v])=>v&&v.text));
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
 fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.getElementById("meta").textContent=
   `${d.count} open roles · updated ${d.updated} · ${d.boards} company career sites scanned every 3 h`;fillPicker();render()})
@@ -219,7 +224,7 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
     if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
     if(hideA&&applied.has(j.id))return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
-  const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,ats:r=>r.match??-1,rats:r=>JOBATS[r.j.id]?JOBATS[r.j.id].score:(r.ats?r.ats.score:-1)};
+  const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
   document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
   const tb=document.getElementById("rows");tb.innerHTML="";document.getElementById("empty").hidden=rows.length>0;
@@ -230,10 +235,14 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
      <td data-l="Sponsorship"><span class="badge ${sc}" title="${j.h1b_approvals!=null?"USCIS H-1B approvals: "+j.h1b_approvals:"JD wording"}">${sl}</span></td>
      <td data-l="My chance"><span class="num">${(r.chance*100).toFixed(r.chance<.1?1:0)}%</span></td>
      <td data-l="Skill match">${r.match!=null?`<span class="num" style="color:var(${r.match>=90?"--good":r.match>=80?"--warn":"--bad"})">${r.match}%</span>${r.miss.length?`<div class="co" title="Missing skills">missing: ${h(r.miss.slice(0,4).join(", "))}</div>`:""}`:'<span class="muted">n/a</span>'}</td>
-     <td data-l="Resume ATS">${(()=>{const pj=JOBATS[j.id];const sc=pj?pj.score:(r.ats?r.ats.score:null);
-        const col=sc==null?"":`<span class="num" style="color:var(${sc>=90?"--good":sc>=80?"--warn":"--bad"})">${sc}%</span>`;
-        const who=pj?`<div class="co" title="${h(pj.name)}">${h(pj.name.slice(0,22))}</div>${pj.miss.length?`<div class="co">add: ${h(pj.miss.slice(0,3).join(", "))}</div>`:""}`:(r.ats?'<div class="co">general resume</div>':"");
-        return j.jd?`${col}${who}<button class="btn" style="margin-top:4px" data-up="${j.id}">${pj?"Re-upload":"Upload resume"}</button>`:'<span class="muted">n/a</span>'})()}</td>
+     <td data-l="Resume ATS">${(()=>{if(!j.jd)return'<span class="muted">n/a</span>';const pj=JOBATS[j.id];
+        const an=pj&&pj.text?analyze(pj.text,j.title+". "+j.jd):r.ats;
+        const ICON={title:"🏷️",elsewhere:"📂",missing:"❌",related:"🟡",wording:"✏️"};
+        if(!an)return`<button class="btn" data-up="${j.id}">Upload resume</button>`;
+        const top=an.items.filter(i=>i.status!=="match").slice(0,3).map(i=>`<div class="co">${ICON[i.status]} ${h(i.k)}</div>`).join("");
+        return`<span class="num" style="color:var(${an.score>=90?"--good":an.score>=80?"--warn":"--bad"})">${an.score}%</span>
+          <div class="co" title="${h(pj?pj.name:"general resume")}">${h((pj?pj.name:"general resume").slice(0,24))}</div>${top}
+          <div style="display:flex;gap:4px;margin-top:4px"><button class="btn" data-det="${j.id}">Details</button><button class="btn" data-up="${j.id}">${pj?"Re-upload":"Upload"}</button></div>`})()}</td>
      <td data-l=""><div style="display:flex;gap:4px"><a class="btn pri" href="${h(j.url)}" target="_blank" rel="noopener">Apply</a><button class="btn" data-ats="${j.id}" title="Check ATS for this role">ATS</button><button class="btn" data-ap="${j.id}" title="${applied.has(j.id)?"Undo applied":"Mark as applied"}">${applied.has(j.id)?"↩":"✓"}</button></div></td>`;
     tb.appendChild(tr)}}
 function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -245,17 +254,18 @@ document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.d
 document.getElementById("rows").onclick=e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.ap){const id=b.dataset.ap;applied.has(id)?applied.delete(id):applied.add(id);S.set("applied",[...applied]);render()}
   if(b.dataset.up){upJob=b.dataset.up;document.getElementById("rowFile").value="";document.getElementById("rowFile").click();return}
-  if(b.dataset.ats){document.getElementById("jobPick").value=b.dataset.ats;document.getElementById("jdText").value="";show("ats");runATS()}};
+  if(b.dataset.det){const pj=JOBATS[b.dataset.det];if(pj&&pj.text){RESUME_VIEW=pj;}document.getElementById("jobPick").value=b.dataset.det;document.getElementById("jdText").value="";show("ats");runATS();return}
+  if(b.dataset.ats){RESUME_VIEW=null;document.getElementById("jobPick").value=b.dataset.ats;document.getElementById("jdText").value="";show("ats");runATS()}};
 function show(t){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.t));
 function fillPicker(){const sel=document.getElementById("jobPick");DATA.jobs.filter(j=>j.jd).forEach(j=>{const o=document.createElement("option");o.value=j.id;o.textContent=`${j.company} — ${j.title}`;sel.appendChild(o)})}
 // resume upload
 const drop=document.getElementById("drop"),file=document.getElementById("file");drop.onclick=()=>file.click();
 drop.ondragover=e=>{e.preventDefault()};drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])};file.onchange=()=>file.files[0]&&readFile(file.files[0]);
-let upJob=null;
+let upJob=null,RESUME_VIEW=null;
 document.getElementById("rowFile").onchange=async e=>{const f=e.target.files[0];if(!f||!upJob)return;const text=await extract(f);if(!text)return;
   const j=DATA.jobs.find(x=>x.id===upJob);const r=analyze(text,j.title+". "+j.jd);if(!r){alert("This job description has too few skills to score.");return}
-  JOBATS[upJob]={score:r.score,name:f.name,miss:r.items.filter(i=>i.status!=="match").map(i=>(i.status==="wording"?"reword: ":"")+i.k)};S.set("jobAts",JOBATS);render()};
+  JOBATS[upJob]={name:f.name,text};S.set("jobAts",JOBATS);render()};
 async function extract(f){let text="";try{const buf=await f.arrayBuffer();
   if(/\.pdf$/i.test(f.name)){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();text+=c.items.map(x=>x.str).join(" ")+"\n"}}
@@ -272,15 +282,17 @@ function setResume(text,name){RESUME=text;S.set("resume",text);S.set("resumeName
 document.getElementById("resumeText").addEventListener("change",e=>setResume(e.target.value,"pasted text"));
 document.getElementById("jobPick").onchange=()=>{document.getElementById("jdText").value="";runATS()};document.getElementById("jdText").addEventListener("input",runATS);
 function runATS(){const pick=DATA.jobs.find(j=>j.id===document.getElementById("jobPick").value),pasted=document.getElementById("jdText").value.trim();
-  const jd=pasted||(pick?pick.title+". "+pick.jd:"");const box=document.getElementById("result");if(!RESUME||!jd){box.hidden=true;return}
-  const r=analyze(RESUME,jd);box.hidden=false;if(!r){document.getElementById("score").textContent="–";document.getElementById("verdict").textContent="Too few recognizable skills in that job text — paste the full description.";document.getElementById("gapTable").innerHTML="";document.getElementById("hitTable").innerHTML="";return}
+  const jd=pasted||(pick?pick.title+". "+pick.jd:"");const box=document.getElementById("result");if(!(RESUME||(RESUME_VIEW&&RESUME_VIEW.text))||!jd){box.hidden=true;return}
+  const RES=(RESUME_VIEW&&pick&&JOBATS[pick.id]===RESUME_VIEW)?RESUME_VIEW.text:RESUME;
+  document.getElementById("resumeNote").textContent=RES===RESUME?"Read in your browser only — never uploaded.":"Showing the resume you uploaded for this job: "+RESUME_VIEW.name;
+  const r=analyze(RES,jd);box.hidden=false;if(!r){document.getElementById("score").textContent="–";document.getElementById("verdict").textContent="Too few recognizable skills in that job text — paste the full description.";document.getElementById("gapTable").innerHTML="";document.getElementById("hitTable").innerHTML="";return}
   const sc=document.getElementById("score");sc.textContent=r.score+"%";sc.style.color=`var(${r.score>=90?"--good":r.score>=80?"--warn":"--bad"})`;
   const c=pick&&!pasted?chance(pick,r.score):chance({posted:new Date().toISOString().slice(0,10),sponsor_jd:"unknown",years:null},r.score);
   document.getElementById("chance2").textContent=(c*100).toFixed(c<.1?1:0)+"%";
   const gaps=r.items.filter(i=>i.status!=="match"),hits=r.items.filter(i=>i.status==="match"),reqMiss=gaps.filter(i=>i.req&&i.status!=="wording").length;
   document.getElementById("verdict").innerHTML=r.score>=90?`<b>Strong match</b> — ${r.hit}/${r.n} skills. ${gaps.length?"Fix the wording items below and apply.":"Apply."}`:
     r.score>=80?`<b>Close</b> — ${r.hit}/${r.n} skills. ${reqMiss} required skill(s) missing; fix any you genuinely have.`:`<b>Weak</b> — ${reqMiss} required skill(s) missing. Tailor first, or skip if they're core to the role.`;
-  const LBL={missing:"❌ Missing",elsewhere:"📂 You have it — not in this resume",related:"🟡 Related skill only",wording:"✏️ Different wording"};
+  const LBL={title:"🏷️ Job title — use as headline",missing:"❌ Missing",elsewhere:"📂 You have it — not in this resume",related:"🟡 Related skill only",wording:"✏️ Different wording"};
   const row=i=>`<tr class="row" onclick="this.nextElementSibling.hidden=!this.nextElementSibling.hidden"><td><span class="sk">${h(i.k)}</span><br><span class="badge pri-${i.pri}">${{H:"High",M:"Medium",L:"Low"}[i.pri]}</span></td>
     <td>${i.req?"Required":"Preferred"}<br><span class="muted">${i.n}× in JD</span></td><td>${i.status==="match"?"✅ In resume ("+i.rn+"×)":LBL[i.status]}</td><td>${h(i.action)}</td></tr>
     <tr class="q" hidden><td colspan="4">JD: “${h(i.quote)}”</td></tr>`;
