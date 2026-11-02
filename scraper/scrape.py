@@ -5,7 +5,7 @@ Sources: company career boards (Greenhouse, Lever, Ashby, Workday, SmartRecruite
 Output:  docs/data/jobs.json  (jobs posted <= MAX_AGE days, relevant to analytics / data / AI / finance roles)
 No personal data is stored here - personalization (ATS, chance %) happens in the browser.
 """
-import json, re, time, datetime, pathlib, urllib.request, concurrent.futures as cf, html, hashlib, csv, io, os
+import json, re, time, urllib.error, datetime, pathlib, urllib.request, concurrent.futures as cf, html, hashlib, csv, io, os
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "data" / "jobs.json"
@@ -24,11 +24,23 @@ NO_SPONSOR = r"((not|unable to|cannot|can't|won't|will not|does not|do not|are n
 SPONSOR_OK = r"((will|can|able to|we)\s+(consider\s+)?(provide|offer|support)\w*\s+(\w+\s+){0,3}(visa|h-?1b|immigration) sponsorship|sponsorship (is )?available|open to sponsor|visa sponsorship (is )?(available|provided|offered)|h-?1b sponsorship available)"
 SAL = re.compile(r"\$\s?(\d{2,3}(?:,\d{3})+|\d{2,3}(?:\.\d)?\s?[kK])\s*(?:-|–|to)\s*\$?\s?(\d{2,3}(?:,\d{3})+|\d{2,3}(?:\.\d)?\s?[kK])")
 
-def get(url, timeout=25, data=None):
+def get(url, timeout=25, data=None, tries=3):
+    """Honest client (identifies itself as a personal job-search bot). Retries only when the server asks us
+    to slow down (429 / Retry-After) or has a temporary error; 401/403 refusals are respected, not retried."""
     h = dict(UA)
     if data: h["Content-Type"] = "application/json"
-    with urllib.request.urlopen(urllib.request.Request(url, headers=h, data=data), timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8", "ignore"))
+    for i in range(tries):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=h, data=data), timeout=timeout) as r:
+                return json.loads(r.read().decode("utf-8", "ignore"))
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 502, 503, 504) and i < tries - 1:
+                time.sleep(min(int(e.headers.get("Retry-After") or 0) or 4 * (i + 1), 30)); continue
+            raise
+        except (urllib.error.URLError, TimeoutError):
+            if i < tries - 1: time.sleep(2 * (i + 1)); continue
+            raise
+
 def strip(h): return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", html.unescape(h or "")))).strip()
 AI_TITLE = r"\b(ai|a\.i\.|genai|gen ai|generative ai|artificial intelligence|llm|machine learning|ml)\b.{0,40}\b(analyst|associate|strategist|strategy|consultant|operations|ops|enablement|adoption|governance|solutions|product|research|insights?|implementation|evaluation|quality|program|transformation|innovation|deployment|specialist|lead analyst)\b|\b(analyst|associate|strategist|consultant|operations|researcher)\b.{0,30}\b(ai|genai|generative ai|artificial intelligence|llm)\b"
 ALWAYS = r"data analyst|business analyst|analytics engineer|ai analyst|data scientist|bi analyst|bi developer|insights? analyst|product analyst|financial analyst|fp&a|decision scien|reporting analyst|pricing analyst|revenue analyst|strategy (and|&) operations|business intelligence|marketing analyst|operations analyst|research analyst|credit analyst|risk analyst|data associate|analytics associate|people analytics|forecasting analyst|planning analyst|quantitative analyst|economist|machine learning analyst"
@@ -142,7 +154,13 @@ def ashby(slug, name):
 def workday(board, name):
     tenant, wd, site = board.split("|"); base = f"https://{tenant}.{wd}.myworkdayjobs.com"; out = []
     for q in ("analyst", "data", "analytics"):
-        d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"limit": 20, "offset": 0, "searchText": q, "appliedFacets": {}}).encode())
+        try:
+            d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": q}).encode())
+        except urllib.error.HTTPError as e:
+            if e.code != 422: raise
+            # our request format was rejected (not a block): retry once with the minimal payload this tenant accepts
+            d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"appliedFacets": {}, "limit": 20, "offset": 0}).encode())
+        time.sleep(1.0)                                   # be polite: pause between searches on the same site
         for j in d.get("jobPostings", []):
             p = (j.get("postedOn") or "").lower()
             n = 0 if "today" in p else 1 if "yesterday" in p else (99 if "30+" in p else int((re.findall(r"\d+", p) or [99])[0]))
@@ -235,13 +253,18 @@ def main():
     try: res += simplify()
     except Exception as e: errs["simplify"] = str(e)[:80]
     tasks = [(k, b, name) for k, v in BOARDS.items() for b, name in v.items()]
-    with cf.ThreadPoolExecutor(48) as ex:
-        futs = {ex.submit(FETCH[k], b, name): k for k, b, name in tasks}
-        for f in cf.as_completed(futs):
-            try: res += f.result()
-            except Exception as e:
-                errs[futs[f]] = errs.get(futs[f], 0) + 1
-                samples.setdefault(futs[f], []).append(str(e)[:70])
+    def run(batch, workers):
+        with cf.ThreadPoolExecutor(workers) as ex:
+            futs = {ex.submit(FETCH[k], b, name): k for k, b, name in batch}
+            for f in cf.as_completed(futs):
+                try: res.extend(f.result())
+                except Exception as e:
+                    errs[futs[f]] = errs.get(futs[f], 0) + 1
+                    samples.setdefault(futs[f], []).append(str(e)[:70])
+    run([t for t in tasks if t[0] != "workday"], 48)
+    run([t for t in tasks if t[0] == "workday"], 10)       # Workday: fewer parallel requests
+    n_wd = sum(1 for t in tasks if t[0] == "workday")
+    print(f"Workday companies reached: {n_wd - errs.get('workday', 0)}/{n_wd}")
     feed = [j for j in res if not j["jd"]]
     with cf.ThreadPoolExecutor(32) as ex: list(ex.map(enrich, feed))
     table = h1b_table()
