@@ -417,6 +417,11 @@ def main():
         jobs.append(j)
     jobs.sort(key=lambda j: j["posted"], reverse=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
+    # SAFETY GUARD: a sudden collapse means the scrape broke - keep the last good list instead of publishing it
+    prev_n = len(prev)
+    if prev_n >= 20 and len(jobs) < 0.4 * prev_n:
+        print(f"GUARD: only {len(jobs)} jobs vs {prev_n} last time - NOT publishing; keeping previous list. Errors: {errs}")
+        raise SystemExit(1)
     json.dump({"updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "count": len(jobs),
                "boards": len(tasks), "errors": errs, "h1b_source": "USCIS H-1B Employer Data Hub" if table else "",
                "jobs": jobs}, open(OUT, "w"), separators=(",", ":"))
