@@ -13,6 +13,10 @@ A personal job board that refreshes itself every 3 hours, around the clock, for 
 - **Scraping:** a GitHub Action (`.github/workflows/scrape.yml`) checks about 2,700 company career boards on Greenhouse, Lever, Ashby, Workday and SmartRecruiters, plus company names discovered from the SimplifyJobs new-grad feed. **Only jobs confirmed on the company's own careers page are listed** (no job-board aggregators). It keeps only US roles posted in the last 15 days that ask for 3 years of experience or less.
 - **Sponsorship:** the scraper reads each job description for wording such as "will not sponsor" or "visa sponsorship available". It also looks up the company's H-1B approval count in the USCIS H-1B Employer Data Hub.
 - **Salary:** taken from the posting's pay range when the posting lists one.
+- **Strict eligibility (F-1 → OPT from Jan 28 2027, graduating Dec 2026):**
+- Dropped if **any** sentence says no visa sponsorship / no H-1B / no OPT-CPT / citizens only / clearance (equal-opportunity boilerplate ignored).
+- Dropped if the JD gives a **start date outside Jan 28 – Mar 31 2027**, or a **graduation window that excludes Dec 2026** (e.g. "Spring 2027 grads").
+- Kept only if your skills cover **≥ 80%** of the JD's hard skills, and ≤ 3 years required.
 - **Website:** `docs/` is served by GitHub Pages and includes a **Jobs** tab and an **ATS** tab.
 - **Privacy:** your resume is read only inside your browser and is never uploaded or saved to this repo. Your chance % and ATS score are calculated on your own device.
 

@@ -106,9 +106,49 @@ def years_required(txt):
     if re.search(r"new grad|recent graduate|entry[- ]level|university graduate|early career|campus|0-?\s?[12] years", t): return 0
     return None
 
+# ---------- strict eligibility checks (candidate: F-1 -> OPT starts 2027-01-28, graduates Dec 2026) ----------
+OPT_START, LATEST_START = datetime.date(2027, 1, 28), datetime.date(2027, 3, 31)
+GRAD = datetime.date(2026, 12, 15)
+NEG = r"\b(not|no|unable|cannot|can't|won't|will not|without|n't|ineligible|not eligible|unavailable|not available|does not|do not|are not|is not|must be (a )?(u\.?s\.? )?citizen|only u\.?s\.? citizens|citizenship (is )?required|permanent residen\w*|green card)\b"
+VISA = r"\b(sponsor\w*|visas?|h-?1b|h1-?b|f-?1|immigration|work authori[sz]ation|employment authori[sz]ation|authori[sz]ed to work)\b"
+EEO = r"without regard|regardless of|discriminat|equal (employment )?opportunity|protected (veteran|characteristic|status)|e-verify|affirmative action|fair chance"
+def sentences(t): return re.split(r"(?<=[.!?;])\s+|\n+|\s\*\s|•", t or "")
+def no_sponsorship(t):
+    for s in sentences(t):
+        l = s.lower()
+        if re.search(EEO, l): continue                     # equal-opportunity boilerplate, not a sponsorship statement
+        l = re.sub(r"(employer|company)[- ]sponsored|sponsored (medical|health|dental|vision|benefit\w*|plans?|insurance|events?|teams?|programs?|retirement|401)", " ", l)
+        visa = re.search(VISA, l) or re.search(r"\b(OPT|CPT)\b", s)   # OPT/CPT only in capitals (not "opt out")
+        if visa and re.search(NEG, l): return s.strip()[:160]
+        if re.search(r"security clearance|active clearance|ts/sci|secret clearance|u\.?s\.? citizenship", l): return s.strip()[:160]
+    return None
+MON = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
+SEASON = {"spring": 5, "summer": 7, "fall": 12, "autumn": 12, "winter": 12}
+def dates_in(s):
+    out = []
+    for m, y in re.findall(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(?:\d{1,2}(?:st|nd|rd|th)?,?\s+)?(20\d\d)\b", s): out.append(datetime.date(int(y), MON[m], 15))
+    for se, y in re.findall(r"\b(spring|summer|fall|autumn|winter)\s+(?:of\s+)?(20\d\d)\b", s): out.append(datetime.date(int(y), SEASON[se], 15))
+    for m, y in re.findall(r"\b(\d{1,2})/(?:\d{1,2}/)?(20\d\d)\b", s):
+        if 1 <= int(m) <= 12: out.append(datetime.date(int(y), int(m), 15))
+    return out
+def timing_problem(t):
+    """Return a reason string if the JD's start date or graduation window doesn't fit the candidate, else None."""
+    for s in sentences(t):
+        l = s.lower(); ds = dates_in(l)
+        if not ds: continue
+        if re.search(r"graduat|class of|degree (completion|conferred)|completing (a|your) degree|students", l):
+            lo, hi = min(ds), max(ds)
+            if len(ds) == 1 and abs((ds[0] - GRAD).days) > 75: return "graduation window: " + s.strip()[:120]
+            if len(ds) > 1 and not (lo - datetime.timedelta(days=45) <= GRAD <= hi + datetime.timedelta(days=45)): return "graduation window: " + s.strip()[:120]
+        elif re.search(r"\bstart|availab|begin|commence|join(ing)? (us|the team|in)|employment on|program (starts|begins)|cohort", l):
+            d = min(ds)
+            if d.year >= 2027 and (d > LATEST_START): return "start date: " + s.strip()[:120]
+            if d < OPT_START and d >= TODAY: return "start date before OPT: " + s.strip()[:120]
+    return None
+
 def job(company, title, url, posted, loc, txt, source, comp=None):
     txt = txt or ""
-    sp = "no" if re.search(NO_SPONSOR, txt, re.I) else "yes" if re.search(SPONSOR_OK, txt, re.I) else "unknown"
+    sp = "no" if (re.search(NO_SPONSOR, txt, re.I) or no_sponsorship(txt)) else "yes" if re.search(SPONSOR_OK, txt, re.I) else "unknown"
     return {"id": hashlib.sha1(url.encode()).hexdigest()[:12], "company": company.strip(), "title": title.strip(), "url": url,
             "posted": posted, "location": (loc or "").strip()[:80], "salary": salary(txt, comp), "years": years_required(txt),
             "sponsor_jd": sp, "source": source, "jd": txt[:8000]}
@@ -282,6 +322,8 @@ def main():
         if key in seen or j["url"] in seen or re.search(CLEARANCE_COS, j["company"], re.I): continue
         seen.add(key); seen.add(j["url"])
         if j["years"] is not None and j["years"] > 3: continue
+        if j["sponsor_jd"] == "no": continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
+        if timing_problem(j["jd"]): continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
         m, hit, miss = skill_match(j["title"], j["jd"])
         if m is None or m < MIN_MATCH: continue          # candidate rule: keep only jobs with >= 80% skill match
         j["match"], j["missing"] = m, miss
