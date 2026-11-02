@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Radar</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#14171c;--muted:#5d6673;--line:#e3e6eb;--accent:#2457d6;--accent-ink:#fff;
+ --good:#137a43;--good-bg:#e4f5ea;--warn:#8a5a00;--warn-bg:#fff2d6;--bad:#a1261b;--bad-bg:#fde7e4;--chip:#eef1f6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#171a20;--ink:#e8eaee;--muted:#9aa3af;--line:#2a2f38;--accent:#6b93ff;--accent-ink:#0f1115;
+ --good:#5fd394;--good-bg:#12301f;--warn:#f0c060;--warn-bg:#33270c;--bad:#ff8a7d;--bad-bg:#3a1714;--chip:#222731}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#171a20;--ink:#e8eaee;--muted:#9aa3af;--line:#2a2f38;--accent:#6b93ff;--accent-ink:#0f1115;
+ --good:#5fd394;--good-bg:#12301f;--warn:#f0c060;--warn-bg:#33270c;--bad:#ff8a7d;--bad-bg:#3a1714;--chip:#222731}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 16px}
+.top{display:flex;align-items:center;gap:12px;padding:12px 0;flex-wrap:wrap}
+h1{font-size:18px;margin:0}.meta{color:var(--muted);font-size:12px}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:600}
+.tab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;padding:10px 0}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+input[type=search]{flex:1;min-width:180px}label.ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;cursor:pointer;user-select:none;white-space:nowrap}
+tr:last-child td{border-bottom:0}.role{font-weight:600}.co{color:var(--muted);font-size:13px}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-good{background:var(--good-bg);color:var(--good)}.b-warn{background:var(--warn-bg);color:var(--warn)}.b-bad{background:var(--bad-bg);color:var(--bad)}.b-new{background:var(--accent);color:var(--accent-ink)}
+.num{font-variant-numeric:tabular-nums;font-weight:700}
+a.btn,button.btn{display:inline-block;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:5px 10px;cursor:pointer;text-decoration:none;font-size:13px;white-space:nowrap}
+a.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.applied td{opacity:.45}
+.panel{padding:16px;margin:12px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chips span{display:inline-block;background:var(--chip);border-radius:99px;padding:3px 9px;margin:3px 4px 0 0;font-size:12px}
+.chips.miss span{background:var(--bad-bg);color:var(--bad)}.chips.hit span{background:var(--good-bg);color:var(--good)}
+.score{font-size:44px;font-weight:800;line-height:1}.muted{color:var(--muted)}
+textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;cursor:pointer}
+.drop.ok{border-color:var(--good)}small.note{color:var(--muted);display:block;margin-top:6px}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+@media (max-width:760px){.grid{grid-template-columns:1fr}thead{display:none}tr{display:block;border-bottom:1px solid var(--line);padding:8px 0}
+ td{display:flex;justify-content:space-between;gap:10px;border:0;padding:4px 12px}td::before{content:attr(data-l);color:var(--muted);font-size:12px}
+ td.first{display:block}td.first::before{content:none}.tabs{margin-left:0}}
+</style>
+</head>
+<body>
+<header><div class="wrap top">
+  <div><h1>Job Radar</h1><div class="meta" id="meta">Loading…</div></div>
+  <div class="tabs"><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
+</div></header>
+
+<main class="wrap">
+<!-- JOBS -->
+<section id="jobs">
+  <div class="bar">
+    <input type="search" id="q" placeholder="Search role, company, location, skill…">
+    <select id="spon"><option value="ok">Sponsorship: hide "won't sponsor"</option><option value="all">Sponsorship: show all</option><option value="good">Only likely sponsors</option></select>
+    <select id="age"><option value="15">Posted ≤ 15 days</option><option value="7">≤ 7 days</option><option value="3">≤ 3 days</option><option value="1">Last 24 h</option></select>
+    <label class="ck"><input type="checkbox" id="hideApplied" checked> Hide applied</label>
+    <label class="ck"><input type="checkbox" id="onlyNew"> New since my last visit</label>
+  </div>
+  <div class="meta" id="hint" style="margin-bottom:8px"></div>
+  <div class="card"><table><thead><tr>
+    <th data-s="title">Role</th><th data-s="posted">Posted</th><th data-s="salary">Salary</th><th data-s="spon">Sponsorship</th>
+    <th data-s="chance">My chance</th><th data-s="ats">ATS</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+    <div class="empty" id="empty" hidden>No jobs match these filters.</div></div>
+  <p class="meta">Chance % is an <b>estimate</b>: typical cold-application callback rates (≈2–5%) adjusted for ATS match, posting age, sponsorship and experience fit. A referral roughly ×4.</p>
+</section>
+
+<!-- ATS -->
+<section id="ats" hidden>
+  <div class="grid">
+    <div class="card panel">
+      <h3 style="margin-top:0">1 · Your resume</h3>
+      <div class="drop" id="drop">Drop PDF / DOCX / TXT here or click to upload<input type="file" id="file" accept=".pdf,.docx,.txt" hidden></div>
+      <small class="note" id="resumeNote">Read in your browser only — never uploaded.</small>
+      <details style="margin-top:10px"><summary class="muted">or paste resume text</summary><textarea id="resumeText"></textarea></details>
+    </div>
+    <div class="card panel">
+      <h3 style="margin-top:0">2 · The role</h3>
+      <select id="jobPick" style="width:100%"><option value="">— pick a job from the board —</option></select>
+      <small class="note">or paste any job description:</small>
+      <textarea id="jdText" placeholder="Paste the full job description here…"></textarea>
+    </div>
+  </div>
+  <div class="card panel" id="result" hidden>
+    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div><div class="score" id="score">–</div><div class="muted">ATS match</div></div>
+      <div><div class="score" id="chance2" style="font-size:28px">–</div><div class="muted">est. chance of hearing back</div></div>
+      <div class="muted" id="verdict" style="flex:1;min-width:200px"></div>
+    </div>
+    <h4>Missing from your resume</h4><div class="chips miss" id="miss"></div>
+    <h4>Matched</h4><div class="chips hit" id="hit"></div>
+    <small class="note">Scores hard skills, tools, methods and the job title the way ATS keyword filters do. Add a missing keyword only if you truly have that skill — use the job's exact wording.</small>
+  </div>
+</section>
+
+<!-- PROFILE -->
+<section id="me" hidden>
+  <div class="card panel" style="max-width:560px">
+    <h3 style="margin-top:0">My profile <span class="muted" style="font-weight:400">(saved in this browser only)</span></h3>
+    <p><label>Years of experience<br><input type="number" id="yoe" min="0" max="30" step="0.5" style="width:100px"></label></p>
+    <p><label class="ck"><input type="checkbox" id="needSpon"> I need H-1B sponsorship (now or later)</label></p>
+    <p class="muted">Upload your resume in the <b>ATS check</b> tab once — every job's ATS and chance % then personalize automatically.</p>
+    <p id="resumeStatus" class="muted"></p>
+    <button class="btn" id="clearAll">Clear my data from this browser</button>
+  </div>
+</section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+// ---------- storage (safe) ----------
+const S={get(k,d){try{const v=localStorage.getItem("jr_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("jr_"+k,JSON.stringify(v))}catch(e){}}};
+// ---------- ATS lexicon (same as scraper/tools) ----------
+const LEX=`sql|python|r|sas|stata|spss|excel|advanced excel|vba|pivot tables|vlookup|power bi|tableau|looker|qlik|domo|alteryx|dbt|airflow|snowflake|databricks|bigquery|redshift|aws|azure|gcp|spark|pyspark|hadoop|hive|delta lake|duckdb|postgresql|mysql|etl|elt|etl/elt|data pipelines|data warehousing|data modeling|data mart|git|github|jupyter|docker|api|rest api|fastapi|streamlit|mlflow|pandas|numpy|scikit-learn|xgboost|lightgbm|catboost|random forest|prophet|tensorflow|pytorch|nlp|llm|llms|generative ai|genai|ai|artificial intelligence|machine learning|deep learning|statistics|statistical analysis|statistical inference|statistical modeling|regression|classification|clustering|segmentation|forecasting|time series|predictive modeling|predictive analytics|causal inference|uplift modeling|a/b testing|experimentation|hypothesis testing|bayesian|optimization|cross-validation|feature engineering|model deployment|model validation|dashboards|dashboard|data visualization|visualization|reporting|data storytelling|data cleaning|data quality|data validation|data analysis|data analytics|analytics|business intelligence|bi|kpis|kpi|metrics|insights|stakeholders|stakeholder management|cross-functional|communication|presentation|powerpoint|financial analysis|financial modeling|financial forecasting|fp&a|budgeting|budget|forecast|variance analysis|p&l|cash flow|accounts receivable|invoicing|month-end close|ratio analysis|pricing|revenue|cost analysis|cost forecasting|customer analytics|churn|retention|rfm|crm|marketing analytics|campaign|attribution|product analytics|operations|supply chain|demand planning|sap|oracle|netsuite|erp|salesforce|zoho|risk|credit risk|compliance|research|benchmarking|competitive analysis|business analytics|data science|data scientist|data analyst|analyst`;
+const TERMS=[...new Set(LEX.split("|"))].sort((a,b)=>b.length-a.length);
+const SYN={"ai":["generative ai","machine learning","artificial intelligence"],"artificial intelligence":["ai"],"genai":["generative ai"],"bi":["business intelligence","tableau"],"business intelligence":["bi","tableau"],"visualization":["data visualization","tableau"],"dashboard":["dashboards"],"data analysis":["data analytics","analytics"],"statistics":["statistical analysis","statistical inference"],"experimentation":["a/b testing","uplift modeling"],"forecast":["forecasting"]};
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+const RX=Object.fromEntries(TERMS.map(t=>[t,new RegExp("(?<![a-z0-9])"+esc(t)+"(?![a-z0-9])")]));
+function terms(text){const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" ";const h=new Set(TERMS.filter(x=>RX[x].test(t)));
+  [["dashboard","dashboards"],["kpi","kpis"],["llm","llms"],["forecast","forecasting"],["budget","budgeting"],["etl","etl/elt"],["elt","etl/elt"]].forEach(([a,b])=>{if(h.has(a)&&h.has(b))h.delete(a)});return h}
+function ats(resume,jd){const want=terms(jd),have=terms(resume);if(!want.size)return null;const hit=[],miss=[];
+  want.forEach(k=>((have.has(k)||(SYN[k]||[]).some(s=>have.has(s)))?hit:miss).push(k));return{score:Math.round(100*hit.length/want.size),hit:hit.sort(),miss:miss.sort(),n:want.size}}
+// ---------- chance estimate ----------
+function daysAgo(d){return Math.max(0,Math.round((Date.now()-new Date(d+"T12:00:00Z"))/864e5))}
+function sponsorRating(j){if(j.sponsor_jd==="no")return"no";if(j.sponsor_jd==="yes")return"open";const a=j.h1b_approvals;
+  if(a==null)return"unknown";return a>=50?"strong":a>=1?"some":"none"}
+function chance(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",true);let p=.04;const a=atsScore??70;
+  p*=a<60?.4:a<75?.8:a<85?1.2:1.5;const d=daysAgo(j.posted);p*=d<=2?1.6:d<=5?1.3:d<=10?1:.7;
+  if(need)p*={no:.02,open:.85,strong:.9,some:.6,none:.3,unknown:.55}[sponsorRating(j)];
+  if(j.years!=null)p*=j.years<=yoe+1?1:j.years<=yoe+2?.6:.3;return Math.min(p,.6)}
+// ---------- data ----------
+let DATA={jobs:[]},RESUME=S.get("resume",""),sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));
+const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
+fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.getElementById("meta").textContent=
+  `${d.count} open roles · updated ${d.updated} · ${d.boards} company career sites scanned every 3 h`;fillPicker();render()})
+  .catch(()=>document.getElementById("meta").textContent="Could not load jobs.json");
+function rowData(j){const r=RESUME&&j.jd?ats(RESUME,j.title+" "+j.jd):null;return{j,ats:r,chance:chance(j,r?r.score:null),spon:sponsorRating(j)}}
+const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong:["H-1B: strong","b-good"],some:["H-1B: some","b-warn"],none:["No H-1B record","b-warn"],unknown:["Unknown","b-warn"]};
+function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
+  maxAge=+document.getElementById("age").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
+  let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
+    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;
+    if(hideA&&applied.has(j.id))return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
+  const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,ats:r=>r.ats?r.ats.score:-1};
+  rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
+  document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · ATS & chance personalized to your uploaded resume`:`${rows.length} jobs · upload your resume in the ATS tab to personalize ATS and chance %`;
+  const tb=document.getElementById("rows");tb.innerHTML="";document.getElementById("empty").hidden=rows.length>0;
+  for(const r of rows.slice(0,600)){const j=r.j,d=daysAgo(j.posted),isNew=Date.now()-new Date(j.first_seen)<864e5,[sl,sc]=SP[r.spon];
+    const tr=document.createElement("tr");if(applied.has(j.id))tr.className="applied";
+    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}</div></td>
+     <td data-l="Posted">${d===0?"today":d+"d ago"}</td><td data-l="Salary">${h(j.salary||"—")}</td>
+     <td data-l="Sponsorship"><span class="badge ${sc}" title="${j.h1b_approvals!=null?"USCIS H-1B approvals: "+j.h1b_approvals:"JD wording"}">${sl}</span></td>
+     <td data-l="My chance"><span class="num">${(r.chance*100).toFixed(r.chance<.1?1:0)}%</span></td>
+     <td data-l="ATS">${r.ats?`<span class="num" style="color:var(${r.ats.score>=90?"--good":r.ats.score>=70?"--warn":"--bad"})">${r.ats.score}%</span>`:j.jd?'<span class="muted">—</span>':'<span class="muted" title="No JD text from this source">n/a</span>'}</td>
+     <td data-l=""><div style="display:flex;gap:4px"><a class="btn pri" href="${h(j.url)}" target="_blank" rel="noopener">Apply</a><button class="btn" data-ats="${j.id}" title="Check ATS for this role">ATS</button><button class="btn" data-ap="${j.id}" title="${applied.has(j.id)?"Undo applied":"Mark as applied"}">${applied.has(j.id)?"↩":"✓"}</button></div></td>`;
+    tb.appendChild(tr)}}
+function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+// ---------- events ----------
+["q","spon","age","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;sortDir=sortKey===k?-sortDir:-1;sortKey=k;render()});
+document.getElementById("rows").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.ap){const id=b.dataset.ap;applied.has(id)?applied.delete(id):applied.add(id);S.set("applied",[...applied]);render()}
+  if(b.dataset.ats){document.getElementById("jobPick").value=b.dataset.ats;document.getElementById("jdText").value="";show("ats");runATS()}};
+function show(t){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);window.scrollTo(0,0)}
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.t));
+function fillPicker(){const sel=document.getElementById("jobPick");DATA.jobs.filter(j=>j.jd).forEach(j=>{const o=document.createElement("option");o.value=j.id;o.textContent=`${j.company} — ${j.title}`;sel.appendChild(o)})}
+// resume upload
+const drop=document.getElementById("drop"),file=document.getElementById("file");drop.onclick=()=>file.click();
+drop.ondragover=e=>{e.preventDefault()};drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])};file.onchange=()=>file.files[0]&&readFile(file.files[0]);
+async function readFile(f){let text="";try{const buf=await f.arrayBuffer();
+  if(/\.pdf$/i.test(f.name)){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();text+=c.items.map(x=>x.str).join(" ")+"\n"}}
+  else if(/\.docx$/i.test(f.name)){text=(await mammoth.extractRawText({arrayBuffer:buf})).value}else text=new TextDecoder().decode(buf)}catch(e){alert("Could not read that file: "+e.message);return}
+  setResume(text,f.name)}
+function setResume(text,name){RESUME=text;S.set("resume",text);S.set("resumeName",name||"pasted text");drop.classList.add("ok");
+  drop.firstChild.textContent=`✓ ${name||"Resume"} loaded (${text.split(/\s+/).length} words) — click to replace`;document.getElementById("resumeText").value=text;
+  document.getElementById("resumeStatus").textContent="Resume loaded: "+(name||"pasted text");runATS();render()}
+document.getElementById("resumeText").addEventListener("change",e=>setResume(e.target.value,"pasted text"));
+document.getElementById("jobPick").onchange=()=>{document.getElementById("jdText").value="";runATS()};document.getElementById("jdText").addEventListener("input",runATS);
+function runATS(){const pick=DATA.jobs.find(j=>j.id===document.getElementById("jobPick").value),pasted=document.getElementById("jdText").value.trim();
+  const jd=pasted||(pick?pick.title+" "+pick.jd:"");const box=document.getElementById("result");if(!RESUME||!jd){box.hidden=true;return}
+  const r=ats(RESUME,jd);box.hidden=false;if(!r){document.getElementById("score").textContent="–";document.getElementById("verdict").textContent="No recognizable skills in that job text — paste the full description.";return}
+  document.getElementById("score").textContent=r.score+"%";document.getElementById("score").style.color=`var(${r.score>=90?"--good":r.score>=70?"--warn":"--bad"})`;
+  const c=pick&&!pasted?chance(pick,r.score):chance({posted:new Date().toISOString().slice(0,10),sponsor_jd:/no (visa )?sponsorship|will not sponsor|without sponsorship/i.test(jd)?"no":"unknown",years:null},r.score);
+  document.getElementById("chance2").textContent=(c*100).toFixed(c<.1?1:0)+"%";
+  document.getElementById("verdict").textContent=r.score>=90?`Strong match (${r.hit.length}/${r.n} skills). Apply.`:r.score>=70?`Close (${r.hit.length}/${r.n}). Add any missing keyword you genuinely have, using the JD's wording.`:`Weak match (${r.hit.length}/${r.n}). Tailor first — or skip if the missing skills are core.`;
+  document.getElementById("miss").innerHTML=r.miss.map(x=>`<span>${h(x)}</span>`).join("")||'<span class="muted">nothing missing</span>';
+  document.getElementById("hit").innerHTML=r.hit.map(x=>`<span>${h(x)}</span>`).join("")}
+// profile
+const yoe=document.getElementById("yoe"),ns=document.getElementById("needSpon");yoe.value=S.get("yoe",2);ns.checked=S.get("needSpon",true);
+yoe.oninput=()=>{S.set("yoe",+yoe.value);render()};ns.onchange=()=>{S.set("needSpon",ns.checked);render()};
+document.getElementById("clearAll").onclick=()=>{try{Object.keys(localStorage).filter(k=>k.startsWith("jr_")).forEach(k=>localStorage.removeItem(k))}catch(e){}location.reload()};
+if(RESUME){drop.classList.add("ok");drop.firstChild.textContent=`✓ ${S.get("resumeName","Resume")} loaded — click to replace`;document.getElementById("resumeStatus").textContent="Resume loaded: "+S.get("resumeName","")}
+</script>
+</body>
+</html>

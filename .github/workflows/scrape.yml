@@ -1,0 +1,28 @@
+name: Scrape jobs
+on:
+  schedule:
+    - cron: "17 */3 * * *"     # every 3 hours, 24/7
+  workflow_dispatch: {}        # "Run workflow" button for an instant refresh
+permissions:
+  contents: write
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Scrape company career pages
+        run: python scraper/scrape.py
+      - name: Publish
+        run: |
+          git config user.name "job-radar-bot"
+          git config user.email "job-radar-bot@users.noreply.github.com"
+          git add docs/data/jobs.json scraper/h1b_counts.json 2>/dev/null || git add docs/data/jobs.json
+          git diff --cached --quiet || git commit -m "Update jobs $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
