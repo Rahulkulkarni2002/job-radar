@@ -195,7 +195,7 @@ def degree_problem(jd):
     return None
 
 # ---------- profile FIT: does the JD ask for the candidate's actual core stack? ----------
-CORE = {
+PROFILE_CORE = {
  "SQL":(3,r"\bsql\b"),"Python":(3,r"\bpython\b"),"Tableau":(2,r"\btableau\b"),
  "ML":(3,r"machine learning|\bml\b|predictive model|classification|xgboost|scikit|random forest"),
  "Forecasting":(3,r"forecast"),"Stats":(2,r"statistic|regression|hypothesis test"),
@@ -208,11 +208,11 @@ CORE = {
  "Excel":(1,r"\bexcel\b"),"GenAI":(2,r"generative ai|genai|\bllms?\b|large language"),
  "Pandas":(1,r"pandas|numpy"),"Deployment":(1,r"mlflow|fastapi|model deploy|streamlit|\bapi\b"),
 }
-MAXW=sum(w for w,_ in CORE.values())
+MAXW=sum(w for w,_ in PROFILE_CORE.values())
 def fit(title,jd):
     t=(title+" "+jd).lower()
-    hits=[k for k,(w,rx) in CORE.items() if re.search(rx,t)]
-    w=sum(CORE[k][0] for k in hits)
+    hits=[k for k,(w,rx) in PROFILE_CORE.items() if re.search(rx,t)]
+    w=sum(PROFILE_CORE[k][0] for k in hits)
     hard=any(k in hits for k in ("SQL","Python"))
     score=min(100,round(100*w/22))      # 22 weight pts ≈ a near-perfect match for him
     return score,hits,hard
