@@ -155,6 +155,20 @@ def timing_problem(t):
             if d < OPT_START and d >= TODAY: return "start date before OPT: " + s.strip()[:120]
     return None
 
+# ---------- OPT: job must be directly related to M.S. Business Analytics ----------
+ANALYTIC_DUTIES = r"\b(data analysis|analy[sz]e (data|trends|results|performance|large)|analytics|statistic\w*|forecast\w*|predictive|modell?ing|machine learning|sql|python|\br\b|excel|tableau|power bi|looker|dashboards?|reporting|insights?|kpis?|metrics|business intelligence|data[- ]driven|quantitative|visuali[sz]\w*|optimi[sz]ation|experiment\w*|a/b test\w*|segmentation|data mining|data model\w*|trend analysis|root[- ]cause analysis)\b"
+ANALYTIC_TITLE = r"analy|data|scien|insight|intelligence|forecast|quant|statistic|fp&a|financ|pricing|strategy|decision|research|economist|planning|reporting|ai\b|machine learning|product"
+def opt_related(title, jd):
+    """'strong' / 'ok' / 'weak' - how clearly the duties match a Business Analytics degree (for the OPT relatedness requirement)."""
+    duties = {m.group(0).lower()[:12] for m in re.finditer(ANALYTIC_DUTIES, jd or "", re.I)}
+    t = bool(re.search(ANALYTIC_TITLE, title.lower()))
+    if len(duties) >= 8 and t: return "strong"
+    if len(duties) >= 5 and t: return "ok"
+    if len(duties) >= 3 and re.search(r"data analyst|data scien|analytics|business intelligence|quantitative|statistic|insights analyst|\bbi\b|machine learning|applied scientist|decision scien", title.lower()): return "ok"
+    return "weak"
+def part_time(title, jd):
+    return bool(re.search(r"part[- ]time|adjunct|lecturer|\bper diem\b|\bprn\b|seasonal|temporary|\btemp\b|internship|\b(10|15|19) hours", (title + " " + (jd or "")[:1500]).lower())) and not re.search(r"\bfull[- ]time\b", title.lower())
+
 def job(company, title, url, posted, loc, txt, source, comp=None):
     txt = txt or ""
     sp = "no" if (re.search(NO_SPONSOR, txt, re.I) or no_sponsorship(txt)) else "yes" if re.search(SPONSOR_OK, txt, re.I) else "unknown"
@@ -333,6 +347,10 @@ def main():
         if j["years"] is not None and j["years"] > 3: continue
         if j["sponsor_jd"] == "no": continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
         if timing_problem(j["jd"]): continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
+        j["opt"] = opt_related(j["title"], j["jd"])
+        if j["opt"] == "weak": continue                  # OPT: duties must be directly related to Business Analytics
+        if part_time(j["title"], j["jd"]): continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
+        j["contract"] = bool(re.search(r"(contract(or)?|1099|c2c|corp[- ]to[- ]corp|freelance|apprentice)", (j["title"] + " " + j["jd"][:1500]).lower()))
         m, hit, miss = skill_match(j["title"], j["jd"])
         if m is None or m < MIN_MATCH: continue          # candidate rule: keep only jobs with >= 80% skill match
         j["match"], j["missing"] = m, miss
