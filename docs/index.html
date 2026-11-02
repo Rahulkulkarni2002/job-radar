@@ -255,7 +255,7 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
         return`<span class="num" style="color:var(${an.score>=90?"--good":an.score>=80?"--warn":"--bad"})">${an.score}%</span>
           <div class="co" title="${h(pj?pj.name:"general resume")}">${h((pj?pj.name:"general resume").slice(0,24))}</div>${top}<div class="co" data-ttl="${pj?pj.until:RESUME_UNTIL}"></div>
           <div style="display:flex;gap:4px;margin-top:4px"><button class="btn" data-det="${j.id}">Details</button><button class="btn" data-up="${j.id}">${pj?"Re-upload":"Upload"}</button></div>`})()}</td>
-     <td data-l=""><div style="display:flex;gap:4px"><a class="btn pri" href="${h(j.url)}" target="_blank" rel="noopener">Apply</a><button class="btn" data-ats="${j.id}" title="Check ATS for this role">ATS</button>${DISMISSED[j.id]?`<button class="btn" data-undo="${j.id}" title="Hidden: ${h(DISMISSED[j.id].reason)}">Undo ✕</button>`:`<button class="btn x" data-x="${j.id}" title="I'm not applying — hide this job">✕</button>`}<button class="btn" data-ap="${j.id}" title="${applied.has(j.id)?"Undo applied":"Mark as applied"}">${applied.has(j.id)?"↩":"✓"}</button></div></td>`;
+     <td data-l=""><div style="display:flex;gap:4px"><a class="btn pri" href="${h(j.url)}" target="_blank" rel="noopener">Apply</a><button class="btn" data-ats="${j.id}" title="Check ATS for this role">ATS</button><button class="btn" data-prep="${j.id}" title="Copy a message for Claude to build your resume + cover letter + answers (ATS loop, apply if ≥85%)">🤖 Prepare</button>${DISMISSED[j.id]?`<button class="btn" data-undo="${j.id}" title="Hidden: ${h(DISMISSED[j.id].reason)}">Undo ✕</button>`:`<button class="btn x" data-x="${j.id}" title="I'm not applying — hide this job">✕</button>`}<button class="btn" data-ap="${j.id}" title="${applied.has(j.id)?"Undo applied":"Mark as applied"}">${applied.has(j.id)?"↩":"✓"}</button></div></td>`;
     tb.appendChild(tr)}}
 function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 // ---------- auto-reset: uploaded resumes & ATS scores clear after 30 s ----------
@@ -287,8 +287,11 @@ document.querySelectorAll("#kindSeg button").forEach(b=>{b.classList.toggle("on"
   document.querySelectorAll("#kindSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
 ["q","spon","age","roleType","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
 document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;sortDir=sortKey===k?-sortDir:-1;sortKey=k;render()});
-document.getElementById("rows").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+document.getElementById("rows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.ap){const id=b.dataset.ap;applied.has(id)?applied.delete(id):applied.add(id);S.set("applied",[...applied]);render()}
+  if(b.dataset.prep){const j=DATA.jobs.find(x=>x.id===b.dataset.prep);const msg=`apply to ${j.company} – ${j.title} (id ${j.id})\n${j.url}`;
+    try{await navigator.clipboard.writeText(msg);b.textContent="✓ Copied — paste to Claude"}catch(e){prompt("Copy this and paste it to Claude:",msg)}
+    setTimeout(()=>{b.textContent="🤖 Prepare"},4000);return}
   if(b.dataset.x){openX(b);return}
   if(b.dataset.undo){delete DISMISSED[b.dataset.undo];S.set("dismissed",DISMISSED);render();return}
   if(b.dataset.up){upJob=b.dataset.up;document.getElementById("rowFile").value="";document.getElementById("rowFile").click();return}
