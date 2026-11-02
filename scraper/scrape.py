@@ -16,7 +16,7 @@ UA = {"User-Agent": "Mozilla/5.0 (JobRadar personal job search)", "Accept": "app
 SIMPLIFY = ["https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json"]
 
 TITLE_INCLUDE = r"analyst|analytics|data scien|insight|business intelligence|\bbi\b|fp&a|financ|forecast|pricing|revenue|strategy|operations|decision|reporting|product analyst|\bai\b|machine learning analyst|data associate|quantitative|consult|marketing scien|growth|economist|planning|research"
-TITLE_EXCLUDE = r"senior|\bsr\b|staff|principal|director|\bvp\b|head of|\blead\b|manager|intern\b|internship|co-op|software engineer|hardware|firmware|mechanical|electrical|civil|nurse|clinical|sales rep|account executive|technician|recruit|attorney|counsel|phd|\biii\b|\biv\b|post-?doc|professor|driver|warehouse"
+TITLE_EXCLUDE = r"senior|\bsr\b|staff|principal|director|\bvp\b|head of|\blead\b|manager|intern\b|internship|co-op|software engineer|hardware|firmware|mechanical|electrical|civil|nurse|clinical|sales rep|account executive|technician|recruit|attorney|counsel|phd|\biii\b|\biv\b|post-?doc|professor|driver|warehouse|summer|2028|cyber|devops|payroll|robotics|bioinformatics|help ?desk|application development|soc analyst|threat|fraud investigator"
 CLEARANCE_COS = r"booz allen|northrop|lockheed|raytheon|\brtx\b|saic|leidos|general dynamics|bae systems|amentum|vantor|l3harris|mitre|caci|peraton|parsons|anduril|aerospace corp|guidehouse"
 US = r"\b(usa|united states|u\.s\.|remote|[A-Z][a-z]+,\s?(A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\b|NYC|SF|new york|san francisco|seattle|boston|austin|chicago|los angeles|san diego|atlanta|denver|dallas)"
 NON_US = r"\b(uk|united kingdom|canada|india|germany|ireland|singapore|london|toronto|bangalore|bengaluru|mexico|poland|australia|brazil|japan|france|netherlands|spain|philippines)\b"
@@ -30,13 +30,20 @@ def get(url, timeout=25, data=None):
     with urllib.request.urlopen(urllib.request.Request(url, headers=h, data=data), timeout=timeout) as r:
         return json.loads(r.read().decode("utf-8", "ignore"))
 def strip(h): return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", html.unescape(h or "")))).strip()
-ALWAYS = r"data analyst|business analyst|analytics engineer|ai analyst|data scientist|bi analyst|bi developer|insights analyst|product analyst|financial analyst|fp&a|decision scien"
-NOT_FIT = r"engineer|engineering|research scientist|scientist, ml systems|materials|chemist|biolog|physic|lab |laboratory|clinical|geospatial|gis\b|programmer|developer(?! - bi)|full stack|technologist|mechanic"
+ALWAYS = r"data analyst|business analyst|analytics engineer|ai analyst|data scientist|bi analyst|bi developer|insights? analyst|product analyst|financial analyst|fp&a|decision scien|reporting analyst|pricing analyst|revenue analyst|strategy (and|&) operations|business intelligence|marketing analyst|operations analyst|research analyst|credit analyst|risk analyst|data associate|analytics associate|people analytics|forecasting analyst|planning analyst|quantitative analyst|economist|machine learning analyst"
+CORE = r"\b(analyst|analytics|data|insights?|intelligence|forecast\w*|pricing|fp&a|financ\w+ anal\w+|statistic\w*|quantitative|decision|ai|machine learning)\b"
+NOT_FIT = r"engineer|engineering|research scientist|materials|chemist|biolog|physic|\blab\b|laboratory|clinical|geospatial|\bgis\b|programmer|developer|full stack|technologist|mechanic|specialist|generalist|coordinator|support|care\b|security|\bit\b|cloud|temporary|temp\b|inventory|workplace|vice president|assistant|administrator|representative|sales|recruit|nurse|teacher|tutor|driver|annotator|rater|trainer|writer|editor"
 def relevant(t):
     t = t.lower()
     if re.search(TITLE_EXCLUDE, t): return False
     if re.search(ALWAYS, t): return True
-    return bool(re.search(TITLE_INCLUDE, t)) and not re.search(NOT_FIT, t)
+    return bool(re.search(CORE, t)) and not re.search(NOT_FIT, t)
+SKILLS = r"\b(sql|python|tableau|power bi|excel|statistic\w*|analytics|forecast\w*|machine learning|data analysis|dashboards?|modeling|pandas|snowflake|databricks|looker|a/b test\w*|regression)\b"
+def skill_fit(jd):
+    """None if no JD text; else number of distinct core skills mentioned."""
+    if not jd: return None
+    return len(set(m.lower() for m in re.findall(SKILLS, jd, re.I)))
+
 def us(loc): return bool(re.search(US, loc or "", re.I)) and not re.search(NON_US, loc or "", re.I)
 def age(d): return (TODAY - datetime.date.fromisoformat(d)).days
 def money(x):
@@ -193,7 +200,7 @@ def enrich(j):
     return j
 
 def main():
-    t0 = time.time(); res, errs = [], {}
+    t0 = time.time(); res, errs, samples = [], {}, {}
     try: res += simplify()
     except Exception as e: errs["simplify"] = str(e)[:80]
     tasks = [(k, b, name) for k, v in BOARDS.items() for b, name in v.items()]
@@ -201,7 +208,9 @@ def main():
         futs = {ex.submit(FETCH[k], b, name): k for k, b, name in tasks}
         for f in cf.as_completed(futs):
             try: res += f.result()
-            except Exception: errs[futs[f]] = errs.get(futs[f], 0) + 1
+            except Exception as e:
+                errs[futs[f]] = errs.get(futs[f], 0) + 1
+                samples.setdefault(futs[f], []).append(str(e)[:70])
     feed = [j for j in res if not j["jd"]]
     with cf.ThreadPoolExecutor(32) as ex: list(ex.map(enrich, feed))
     table = h1b_table()
@@ -215,6 +224,9 @@ def main():
         if key in seen or j["url"] in seen or re.search(CLEARANCE_COS, j["company"], re.I): continue
         seen.add(key); seen.add(j["url"])
         if j["years"] is not None and j["years"] > 3: continue
+        sf = skill_fit(j["jd"])
+        if sf is not None and sf < 2: continue          # description must use >= 2 of the candidate's core skills
+        j["skill_hits"] = sf
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
         jobs.append(j)
@@ -223,6 +235,7 @@ def main():
     json.dump({"updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "count": len(jobs),
                "boards": len(tasks), "errors": errs, "h1b_source": "USCIS H-1B Employer Data Hub" if table else "",
                "jobs": jobs}, open(OUT, "w"), separators=(",", ":"))
+    for k, v in samples.items(): print("sample errors", k, sorted(set(v))[:4])
     print(f"{len(jobs)} jobs from {len(tasks)} boards in {time.time()-t0:.0f}s; board errors {errs}")
 
 if __name__ == "__main__":
