@@ -16,7 +16,7 @@ UA = {"User-Agent": "Mozilla/5.0 (JobRadar personal job search)", "Accept": "app
 SIMPLIFY = ["https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json"]
 
 TITLE_INCLUDE = r"analyst|analytics|data scien|insight|business intelligence|\bbi\b|fp&a|financ|forecast|pricing|revenue|strategy|operations|decision|reporting|product analyst|\bai\b|machine learning analyst|data associate|quantitative|consult|marketing scien|growth|economist|planning|research"
-TITLE_EXCLUDE = r"senior|\bsr\b|staff|principal|director|\bvp\b|head of|\blead\b|manager|intern\b|internship|co-op|software engineer|hardware|firmware|mechanical|electrical|civil|nurse|clinical|sales rep|account executive|technician|recruit|attorney|counsel|phd|\biii\b|\biv\b|post-?doc|professor|driver|warehouse|vice president|consultant - |change management|summer|2028|cyber|devops|payroll|robotics|bioinformatics|help ?desk|application development|soc analyst|threat|fraud investigator|coach|cleared|clearance|ts/sci|supervisor|crashworthiness|falcon"
+TITLE_EXCLUDE = r"senior|\bsr\b|staff|principal|director|\bvp\b|head of|\blead\b|manager|intern\b|internship|co-op|software engineer|hardware|firmware|mechanical|electrical|civil|nurse|clinical|sales rep|account executive|technician|recruit|attorney|counsel|phd|\biii\b|\biv\b|post-?doc|professor|driver|warehouse|\bavp\b|vice president|consultant - |change management|summer|2028|cyber|devops|payroll|robotics|bioinformatics|help ?desk|application development|soc analyst|threat|fraud investigator|coach|cleared|clearance|ts/sci|supervisor|crashworthiness|falcon"
 CLEARANCE_COS = r"booz allen|northrop|lockheed|raytheon|\brtx\b|saic|leidos|general dynamics|bae systems|amentum|vantor|l3harris|mitre|caci|peraton|parsons|anduril|aerospace corp|guidehouse"
 US = r"\b(usa|united states|u\.s\.|remote|[A-Z][a-z]+,\s?(A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\b|NYC|SF|new york|san francisco|seattle|boston|austin|chicago|los angeles|san diego|atlanta|denver|dallas)"
 NON_US = r"\b(uk|united kingdom|canada|india|germany|ireland|singapore|london|toronto|bangalore|bengaluru|mexico|poland|australia|brazil|japan|france|netherlands|spain|philippines)\b"
@@ -219,6 +219,26 @@ def fit(title,jd):
 
 MIN_FIT = int(os.environ.get("MIN_FIT", 45))
 
+# ---------- role families (sections on the site) with family-specific fit gates ----------
+FAM_DS = r"data scien|decision scien|applied scien|machine learning (scientist|engineer|analyst)|\bml scientist|quantitative (analyst|scientist|researcher)|\bquant\b|statistician|research scientist"
+FAM_DA = r"data analyst|analytics (analyst|engineer|associate|specialist|consultant)|advanced analytics|business intelligence|\bbi\b|insights?|reporting analyst|product analyst|marketing analyst|people analytics|data (associate|operations|ops|quality)|analytics$|analyst, analytics|research data analyst|data & analytics"
+FAM_BA = r"business analyst|business operations|strategy|operations analyst|fp&a|financial (analyst|planning)|finance analyst|pricing|planning analyst|risk analyst|market analyst|revenue|investment analyst|treasury|budget|forecasting.*analyst|actuarial|consult|program analyst|associate"
+def family(title, jd, is_ai):
+    t = title.lower()
+    if re.search(FAM_DS, t): return "ds"
+    if re.search(AI_TITLE, t): return "ai"
+    if re.search(FAM_DA, t): return "da"
+    if re.search(FAM_BA, t): return "ba"
+    return "ai" if is_ai else "da"
+def family_gate(fam, f, hits):
+    """Each section is judged on what THAT kind of role needs from his profile."""
+    h = set(hits)
+    if fam == "ds": return f >= 45 and "Python" in h and bool(h & {"ML", "Stats", "Forecasting", "A/B · causal"})
+    if fam == "da": return f >= 40 and "SQL" in h and bool(h & {"Tableau", "Dashboards/BI", "Stats", "Python", "Excel"})
+    if fam == "ba": return f >= 32 and bool(h & {"SQL", "Excel"}) and bool(h & {"Tableau", "Dashboards/BI", "Forecasting", "FP&A", "Stats", "SQL"}) and len(h) >= 3
+    if fam == "ai": return f >= 30 and bool(h & {"SQL", "Python"}) and bool(h & {"GenAI", "ML"})
+    return False
+
 def part_time(title, jd):
     return bool(re.search(r"part[- ]time|adjunct|lecturer|\bper diem\b|\bprn\b|seasonal|temporary|\btemp\b|internship|\b(10|15|19) hours", (title + " " + (jd or "")[:1500]).lower())) and not re.search(r"\bfull[- ]time\b", title.lower())
 
@@ -409,9 +429,10 @@ def main():
         if m is None or m < MIN_MATCH: continue          # candidate rule: keep only jobs with >= 80% skill match
         j["match"], j["missing"] = m, miss
         f, hits, hard = fit(j["title"], j["jd"])
-        if f < MIN_FIT or not (hard or len(hits) >= 5): continue   # must ask for HIS core stack (SQL/Python + 4 core skills)
-        j["fit"], j["why"] = f, hits
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
+        j["family"] = family(j["title"], j["jd"], j["ai"])
+        if not family_gate(j["family"], f, hits): continue    # section-specific: DS needs Python+ML, DA needs SQL+BI, BA needs SQL/Excel+finance/BI, AI needs AI+SQL/Python
+        j["fit"], j["why"] = f, hits
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
         jobs.append(j)

@@ -47,6 +47,8 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 .seg button{border:0;border-right:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 16px;font:inherit;font-weight:600;cursor:pointer}
 .seg button:last-child{border-right:0}.seg button.on{background:var(--accent);color:var(--accent-ink)}
 .b-kind{background:var(--chip);color:var(--muted)}
+.seg.fam button{padding:10px 14px}.seg .cnt{opacity:.7;font-weight:500}
+#kindSeg{margin-top:8px}#kindSeg button{padding:6px 12px;font-size:13px}
 @media (max-width:760px){.seg{display:grid;grid-template-columns:1fr 1fr;width:100%}.seg button{border-right:0;border-bottom:1px solid var(--line)}}
 .gt{width:100%;border-collapse:collapse;font-size:13px}.gt td,.gt th{padding:8px;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
 .gt th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}.gt tr.q td{background:var(--chip);color:var(--muted);font-style:italic;font-size:12px}
@@ -68,6 +70,13 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 <main class="wrap">
 <!-- JOBS -->
 <section id="jobs">
+  <div class="seg fam" id="famSeg" role="tablist" aria-label="Role family">
+    <button data-f="all" class="on">All <span class="cnt"></span></button>
+    <button data-f="ds">🔬 Data Scientist &amp; similar <span class="cnt"></span></button>
+    <button data-f="da">📊 Data Analyst &amp; similar <span class="cnt"></span></button>
+    <button data-f="ba">💼 Business Analyst &amp; similar <span class="cnt"></span></button>
+    <button data-f="ai">🤖 AI Analyst &amp; similar <span class="cnt"></span></button>
+  </div>
   <div class="seg" id="kindSeg" role="tablist" aria-label="Role type">
     <button data-k="all" class="on">All roles</button>
     <button data-k="technical" title="Heavy Python / SQL / ML / statistics">🧮 Technical</button>
@@ -163,7 +172,9 @@ function roleKind(j){if(j._kind)return j._kind;const t=j.title+" "+(j.jd||"");
   const tech=new Set((t.match(TECH_RX)||[]).map(x=>x.toLowerCase()));if(/\bR\b/.test(t))tech.add("R");
   const comm=new Set((t.match(COMM_RX)||[]).map(x=>x.toLowerCase().slice(0,8)));const r=tech.size/Math.max(tech.size+comm.size,1);
   j._kind=TECH_TITLE.test(j.title)||(tech.size>=6&&r>=.5)?"technical":(tech.size<=3||r<=.35||(NONTECH_TITLE.test(j.title)&&r<.45))?"non-technical":"balanced";return j._kind}
-let KIND=S.get("kind","all");
+let KIND=S.get("kind","all"),FAM=S.get("fam","all");
+const FAM_LABEL={ds:"🔬 Data Scientist",da:"📊 Data Analyst",ba:"💼 Business Analyst",ai:"🤖 AI Analyst"};
+function famOf(j){return j.family||"da"}
 // ---------- skill-by-skill ATS analysis ----------
 const RELATED={"power bi":["tableau"],"looker":["tableau"],"qlik":["tableau"],"domo":["tableau"],"r":["python"],"sas":["python"],"stata":["python"],"spss":["python"],
  "aws":["snowflake","databricks"],"azure":["databricks"],"gcp":["snowflake"],"bigquery":["snowflake","sql"],"redshift":["snowflake","sql"],"spark":["pyspark"],"dbt":["sql","etl"],"airflow":["databricks"],
@@ -232,17 +243,19 @@ const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong
 function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
-    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
+    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(FAM!=="all"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
     if(SHOW_APPLIED){if(!applied.has(j.id))return false}else if(hideA&&applied.has(j.id))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
   const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,fit:r=>r.j.fit??-1,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
   document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
   const nh=Object.keys(DISMISSED).length;const sh=document.getElementById("showHidden");sh.textContent=SHOW_HIDDEN?`← Back to jobs`:`Hidden (${nh})`;sh.classList.toggle("pri",SHOW_HIDDEN);
   const sa=document.getElementById("showApplied");const na=DATA.jobs.filter(j=>applied.has(j.id)).length;sa.textContent=SHOW_APPLIED?"← Back to jobs":`Applied (${na})`;sa.classList.toggle("pri",SHOW_APPLIED);
+  const base=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]);
+  document.querySelectorAll("#famSeg button").forEach(b=>{const f=b.dataset.f;b.querySelector(".cnt").textContent="("+(f==="all"?base.length:base.filter(j=>famOf(j)===f).length)+")"});
   const tb=document.getElementById("rows");tb.innerHTML="";document.getElementById("empty").hidden=rows.length>0;
   for(const r of rows.slice(0,600)){const j=r.j,d=daysAgo(j.posted),isNew=Date.now()-new Date(j.first_seen)<864e5,[sl,sc]=SP[r.spon];
     const tr=document.createElement("tr");if(applied.has(j.id))tr.className="applied";
-    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${j.ai?'<span class="badge b-good">AI</span> ':""}${j.opt?`<span class="badge ${j.opt==="strong"?"b-good":"b-kind"}" title="How clearly the duties relate to your M.S. Business Analytics (OPT requires a directly related job)">🎓 OPT: ${j.opt}</span> `:""}${j.contract?'<span class="badge b-warn" title="Contract/apprentice — OK for OPT, but STEM OPT needs a W-2 employer that uses E-Verify">📝 Contract</span> ':""}<span class="badge b-kind">${{"technical":"🧮 Technical","balanced":"⚖️ Balanced","non-technical":"🗣️ Non-technical"}[roleKind(j)]}</span> ${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}<br><span title="Scraped from the company\'s own careers page">🏢 ${h(j.company)} careers page · ${h(j.source)}</span></div></td>
+    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${j.ai?'<span class="badge b-good">AI</span> ':""}<span class="badge b-kind">${FAM_LABEL[famOf(j)]||""}</span> ${j.opt?`<span class="badge ${j.opt==="strong"?"b-good":"b-kind"}" title="How clearly the duties relate to your M.S. Business Analytics (OPT requires a directly related job)">🎓 OPT: ${j.opt}</span> `:""}${j.contract?'<span class="badge b-warn" title="Contract/apprentice — OK for OPT, but STEM OPT needs a W-2 employer that uses E-Verify">📝 Contract</span> ':""}<span class="badge b-kind">${{"technical":"🧮 Technical","balanced":"⚖️ Balanced","non-technical":"🗣️ Non-technical"}[roleKind(j)]}</span> ${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}<br><span title="Scraped from the company\'s own careers page">🏢 ${h(j.company)} careers page · ${h(j.source)}</span></div></td>
      <td data-l="Posted">${d===0?"today":d+"d ago"}</td><td data-l="Salary">${h(j.salary||"—")}</td>
      <td data-l="Sponsorship"><span class="badge ${sc}" title="${j.h1b_approvals!=null?"USCIS H-1B approvals: "+j.h1b_approvals:"JD wording"}">${sl}</span></td>
      <td data-l="My chance"><span class="num">${(r.chance*100).toFixed(r.chance<.1?1:0)}%</span></td>
@@ -284,6 +297,8 @@ document.getElementById("copyFb").onclick=async()=>{const rows=Object.values(DIS
   const txt="Job Radar feedback — jobs I hid and why:\n\n"+Object.entries(by).map(([k,v])=>`## ${k} (${v.length})\n`+v.map(r=>`- ${r.company} — ${r.title} (${r.url})`).join("\n")).join("\n\n");
   try{await navigator.clipboard.writeText(txt);alert(`Copied ${rows.length} hidden jobs. Paste it to Claude in chat.`)}catch(e){prompt("Copy this and paste it to Claude:",txt)}};
 // ---------- events ----------
+document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.f===FAM);b.onclick=()=>{FAM=b.dataset.f;S.set("fam",FAM);
+  document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
 document.querySelectorAll("#kindSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.k===KIND);b.onclick=()=>{KIND=b.dataset.k;S.set("kind",KIND);
   document.querySelectorAll("#kindSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
 ["q","spon","age","roleType","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
