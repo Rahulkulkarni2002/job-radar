@@ -16,6 +16,7 @@ A personal job board that refreshes itself every 3 hours, around the clock, for 
 - **Strict eligibility (F-1 → OPT from Jan 28 2027, graduating Dec 2026):**
 - Dropped if **any** sentence says no visa sponsorship / no H-1B / no OPT-CPT / citizens only / clearance (equal-opportunity boilerplate ignored).
 - Dropped if the JD gives a **start date outside Jan 28 – Mar 31 2027**, or a **graduation window that excludes Dec 2026** (e.g. "Spring 2027 grads").
+- **Degree/licence:** dropped if a *required* qualification is a PhD/MD/doctorate with no Master's or equivalent-experience alternative, or a licence (CPA, CFA charter, RN, PE…).
 - **OPT relatedness:** the job's duties must clearly be Business Analytics work (data analysis, statistics, forecasting, BI, ML, reporting/insights). Purely operational roles are dropped. Part-time/temp/adjunct roles are dropped (OPT needs ≥ 20 h/week). Contract roles are flagged (STEM OPT needs a W-2 employer enrolled in E-Verify).
 - Kept only if your skills cover **≥ 80%** of the JD's hard skills, and ≤ 3 years required.
 - **Website:** `docs/` is served by GitHub Pages and includes a **Jobs** tab and an **ATS** tab.

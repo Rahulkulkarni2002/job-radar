@@ -166,6 +166,20 @@ def opt_related(title, jd):
     if len(duties) >= 5 and t: return "ok"
     if len(duties) >= 3 and re.search(r"data analyst|data scien|analytics|business intelligence|quantitative|statistic|insights analyst|\bbi\b|machine learning|applied scientist|decision scien", title.lower()): return "ok"
     return "weak"
+DOCTORATE = r"\b(ph\.?\s?d\.?|doctorate|doctoral|m\.?d\.?(/ph\.?d)?|pharm\.?d|psy\.?d|d\.?sc)\b"
+LOWER_DEG = r"\b(master'?s?|m\.?s\.?c?\b|m\.?a\.?\b|mba|bachelor'?s?|b\.?s\.?c?\b|b\.?a\.?\b|undergraduate|equivalent (practical |work |professional )?experience|or equivalent|years of (relevant )?experience)\b"
+LICENSE = r"\b(cpa|certified public accountant|cfa charter(holder)?|chartered financial analyst|registered nurse|\brn\b|licensed (physician|pharmacist|engineer|clinical)|board[- ]certified|\bpe license|professional engineer)\b"
+def degree_problem(jd):
+    """Reason string if a REQUIRED qualification needs a doctorate (no master's/experience alternative) or a license he doesn't hold."""
+    for snt in re.split(r"(?<=[.!?;])\s+|\n+|\s\*\s|•|·", jd or ""):
+        l = snt.lower()
+        if re.search(r"prefer|nice to have|a plus|\bplus\b|bonus|ideally|desired|or pursuing|candidates? (with|holding)", l): continue
+        if re.search(DOCTORATE, snt, re.I) and re.search(r"degree|required|requirement|qualification|must|in (bio|computer|stat|math|phys|eng|econ|chem|neuro)|field|candidate|holder|\bwith\b", l) \
+           and not re.search(LOWER_DEG, l): return "requires doctorate: " + snt.strip()[:120]
+        if re.search(LICENSE, l) and re.search(r"required|must|need|active|current|valid", l) and not re.search(r"pursu|work(ing)? toward|obtain within|progress|eligible to sit", l):
+            return "requires license: " + snt.strip()[:120]
+    return None
+
 def part_time(title, jd):
     return bool(re.search(r"part[- ]time|adjunct|lecturer|\bper diem\b|\bprn\b|seasonal|temporary|\btemp\b|internship|\b(10|15|19) hours", (title + " " + (jd or "")[:1500]).lower())) and not re.search(r"\bfull[- ]time\b", title.lower())
 
@@ -347,6 +361,7 @@ def main():
         if j["years"] is not None and j["years"] > 3: continue
         if j["sponsor_jd"] == "no": continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
         if timing_problem(j["jd"]): continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
+        if degree_problem(j["jd"]): continue             # strict: PhD/MD-only roles and required licenses (CPA/CFA/RN...) dropped
         j["opt"] = opt_related(j["title"], j["jd"])
         if j["opt"] == "weak": continue                  # OPT: duties must be directly related to Business Analytics
         if part_time(j["title"], j["jd"]): continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
