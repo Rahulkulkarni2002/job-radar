@@ -76,6 +76,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <button data-f="da">📊 Data Analyst &amp; similar <span class="cnt"></span></button>
     <button data-f="ba">💼 Business Analyst &amp; similar <span class="cnt"></span></button>
     <button data-f="ai">🤖 AI Analyst &amp; similar <span class="cnt"></span></button>
+    <button data-f="ot">📈 Finance &amp; Other Analyst <span class="cnt"></span></button>
   </div>
   <div class="seg" id="kindSeg" role="tablist" aria-label="Role type">
     <button data-k="all" class="on">All roles</button>
@@ -173,7 +174,7 @@ function roleKind(j){if(j._kind)return j._kind;const t=j.title+" "+(j.jd||"");
   const comm=new Set((t.match(COMM_RX)||[]).map(x=>x.toLowerCase().slice(0,8)));const r=tech.size/Math.max(tech.size+comm.size,1);
   j._kind=TECH_TITLE.test(j.title)||(tech.size>=6&&r>=.5)?"technical":(tech.size<=3||r<=.35||(NONTECH_TITLE.test(j.title)&&r<.45))?"non-technical":"balanced";return j._kind}
 let KIND=S.get("kind","all"),FAM=S.get("fam","all");
-const FAM_LABEL={ds:"🔬 Data Scientist",da:"📊 Data Analyst",ba:"💼 Business Analyst",ai:"🤖 AI Analyst"};
+const FAM_LABEL={ds:"🔬 Data Scientist",da:"📊 Data Analyst",ba:"💼 Business Analyst",ai:"🤖 AI Analyst",ot:"📈 Finance & Other Analyst"};
 function famOf(j){return j.family||"da"}
 // ---------- skill-by-skill ATS analysis ----------
 const RELATED={"power bi":["tableau"],"looker":["tableau"],"qlik":["tableau"],"domo":["tableau"],"r":["python"],"sas":["python"],"stata":["python"],"spss":["python"],

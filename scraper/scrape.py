@@ -222,20 +222,24 @@ MIN_FIT = int(os.environ.get("MIN_FIT", 45))
 # ---------- role families (sections on the site) with family-specific fit gates ----------
 FAM_DS = r"data scien|decision scien|applied scien|machine learning (scientist|engineer|analyst)|\bml scientist|quantitative (analyst|scientist|researcher)|\bquant\b|statistician|research scientist"
 FAM_DA = r"data analyst|analytics (analyst|engineer|associate|specialist|consultant)|advanced analytics|business intelligence|\bbi\b|insights?|reporting analyst|product analyst|marketing analyst|people analytics|data (associate|operations|ops|quality)|analytics$|analyst, analytics|research data analyst|data & analytics"
-FAM_BA = r"business analyst|business operations|strategy|operations analyst|fp&a|financial (analyst|planning)|finance analyst|pricing|planning analyst|risk analyst|market analyst|revenue|investment analyst|treasury|budget|forecasting.*analyst|actuarial|consult|program analyst|associate"
+FAM_BA = r"business analyst|business operations|business systems analyst|strategy|operations analyst|ops analyst|consult|program analyst|process analyst|project analyst|go-to-market|sales operations|growth analyst|associate"
+FAM_OT = r"fp&a|financial (analyst|planning)|finance analyst|pricing|planning analyst|risk|credit|investment|treasury|budget|forecasting|actuarial|market analyst|market intelligence|research analyst|revenue|compensation|supply|procurement|portfolio|economist|underwrit|analyst"
 def family(title, jd, is_ai):
     t = title.lower()
     if re.search(FAM_DS, t): return "ds"
     if re.search(AI_TITLE, t): return "ai"
     if re.search(FAM_DA, t): return "da"
+    if re.search(r"fp&a|financial (planning|analyst|analysis)|finance analyst|pricing|risk|credit|investment|treasury|actuarial|market (analyst|intelligence)|economist|portfolio|underwrit|compensation|budget", t): return "ot"
     if re.search(FAM_BA, t): return "ba"
-    return "ai" if is_ai else "da"
+    if is_ai: return "ai"
+    return "ot"                                  # finance & other analyst roles
 def family_gate(fam, f, hits):
     """Each section is judged on what THAT kind of role needs from his profile."""
     h = set(hits)
     if fam == "ds": return f >= 45 and "Python" in h and bool(h & {"ML", "Stats", "Forecasting", "A/B · causal"})
     if fam == "da": return f >= 40 and "SQL" in h and bool(h & {"Tableau", "Dashboards/BI", "Stats", "Python", "Excel"})
     if fam == "ba": return f >= 32 and bool(h & {"SQL", "Excel"}) and bool(h & {"Tableau", "Dashboards/BI", "Forecasting", "FP&A", "Stats", "SQL"}) and len(h) >= 3
+    if fam == "ot": return f >= 35 and bool(h & {"SQL", "Excel", "Python"}) and len(h) >= 3
     if fam == "ai": return f >= 30 and bool(h & {"SQL", "Python"}) and bool(h & {"GenAI", "ML"})
     return False
 
