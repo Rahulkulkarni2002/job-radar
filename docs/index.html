@@ -57,7 +57,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 </head>
 <body>
 <header><div class="wrap top">
-  <div><h1>Job Radar</h1><div class="meta" id="meta">Loading…</div></div>
+  <div><h1>Job Radar</h1><div class="meta"><span id="meta">Loading…</span> · <span title="Site version">v 2026-11-02b</span></div></div>
   <div class="tabs"><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
 </div></header>
 
@@ -93,7 +93,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <div class="card panel">
       <h3 style="margin-top:0">1 · Your resume</h3>
       <div class="drop" id="drop">Drop PDF / DOCX / TXT here or click to upload<input type="file" id="file" accept=".pdf,.docx,.txt" hidden></div><input type="file" id="rowFile" accept=".pdf,.docx,.txt" hidden>
-      <small class="note" id="resumeNote">Read in your browser only — never uploaded.</small>
+      <small class="note" id="resumeNote">Read in your browser only — never uploaded or saved. Clears after 30 s.</small>
       <details style="margin-top:10px"><summary class="muted">or paste resume text</summary><textarea id="resumeText"></textarea></details>
     </div>
     <div class="card panel">
@@ -107,7 +107,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
       <div><div class="score" id="score">–</div><div class="muted">ATS match</div></div>
       <div><div class="score" id="chance2" style="font-size:28px">–</div><div class="muted">est. chance of hearing back</div></div>
-      <div class="muted" id="verdict" style="flex:1;min-width:200px"></div>
+      <div class="muted" id="verdict" style="flex:1;min-width:200px"></div><div class="badge b-warn" id="atsCountdown"></div>
     </div>
     <h4 style="margin-bottom:6px">Skill-by-skill — fix these first</h4>
     <div class="muted" style="font-size:12px;margin-bottom:6px">Sorted by priority. Required skills weigh 2×. Click a row to see the exact sentence from the job description.</div>
@@ -123,7 +123,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <h3 style="margin-top:0">My profile <span class="muted" style="font-weight:400">(saved in this browser only)</span></h3>
     <p><label>Years of experience<br><input type="number" id="yoe" min="0" max="30" step="0.5" style="width:100px"></label></p>
     <p><label class="ck"><input type="checkbox" id="needSpon"> I need H-1B sponsorship (now or later)</label></p>
-    <p class="muted">Upload your resume in the <b>ATS check</b> tab once — every job's ATS and chance % then personalize automatically.</p>
+    <p class="muted">Uploaded resumes and ATS scores are never saved — they clear 30 seconds after upload.</p>
     <p id="resumeStatus" class="muted"></p>
     <button class="btn" id="clearAll">Clear my data from this browser</button>
   </div>
@@ -212,7 +212,7 @@ function chance(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",true
   if(need)p*={no:.02,open:.85,strong:.9,some:.6,none:.3,unknown:.55}[sponsorRating(j)];
   if(j.years!=null)p*=j.years<=yoe+1?1:j.years<=yoe+2?.6:.3;return Math.min(p,.6)}
 // ---------- data ----------
-let DATA={jobs:[]},RESUME=S.get("resume",""),sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));const JOBATS=Object.fromEntries(Object.entries(S.get("jobAts",{})).filter(([k,v])=>v&&v.text));
+let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
 fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.getElementById("meta").textContent=
   `${d.count} open roles · updated ${d.updated} · ${d.boards} company career sites scanned every 3 h`;fillPicker();render()})
@@ -241,11 +241,20 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
         if(!an)return`<button class="btn" data-up="${j.id}">Upload resume</button>`;
         const top=an.items.filter(i=>i.status!=="match").slice(0,3).map(i=>`<div class="co">${ICON[i.status]} ${h(i.k)}</div>`).join("");
         return`<span class="num" style="color:var(${an.score>=90?"--good":an.score>=80?"--warn":"--bad"})">${an.score}%</span>
-          <div class="co" title="${h(pj?pj.name:"general resume")}">${h((pj?pj.name:"general resume").slice(0,24))}</div>${top}
+          <div class="co" title="${h(pj?pj.name:"general resume")}">${h((pj?pj.name:"general resume").slice(0,24))}</div>${top}<div class="co" data-ttl="${pj?pj.until:RESUME_UNTIL}"></div>
           <div style="display:flex;gap:4px;margin-top:4px"><button class="btn" data-det="${j.id}">Details</button><button class="btn" data-up="${j.id}">${pj?"Re-upload":"Upload"}</button></div>`})()}</td>
      <td data-l=""><div style="display:flex;gap:4px"><a class="btn pri" href="${h(j.url)}" target="_blank" rel="noopener">Apply</a><button class="btn" data-ats="${j.id}" title="Check ATS for this role">ATS</button><button class="btn" data-ap="${j.id}" title="${applied.has(j.id)?"Undo applied":"Mark as applied"}">${applied.has(j.id)?"↩":"✓"}</button></div></td>`;
     tb.appendChild(tr)}}
 function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+// ---------- auto-reset: uploaded resumes & ATS scores clear after 30 s ----------
+setInterval(()=>{const now=Date.now();let changed=false;
+  for(const [id,v] of Object.entries(JOBATS)){if(now>=v.until){delete JOBATS[id];changed=true}}
+  if(RESUME&&now>=RESUME_UNTIL){RESUME="";RESUME_VIEW=null;changed=true;const d=document.getElementById("drop");d.classList.remove("ok");d.firstChild.textContent="Drop PDF / DOCX / TXT here or click to upload";
+    document.getElementById("resumeText").value="";document.getElementById("result").hidden=true;document.getElementById("resumeStatus").textContent=""}
+  if(RESUME_VIEW&&!JOBATS[Object.keys(JOBATS).find(k=>JOBATS[k]===RESUME_VIEW)]){RESUME_VIEW=null;if(!RESUME)document.getElementById("result").hidden=true;changed=true}
+  document.querySelectorAll("[data-ttl]").forEach(el=>{const t=Math.max(0,Math.ceil((+el.dataset.ttl-now)/1000));el.textContent=`clears in ${t}s`});
+  const cd=document.getElementById("atsCountdown");if(cd){const u=RESUME_VIEW?RESUME_VIEW.until:RESUME_UNTIL;const t=Math.ceil((u-now)/1000);cd.textContent=(RESUME||RESUME_VIEW)&&t>0?`Resume & score clear in ${t}s`:""}
+  if(changed)render()},1000);
 // ---------- events ----------
 document.querySelectorAll("#kindSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.k===KIND);b.onclick=()=>{KIND=b.dataset.k;S.set("kind",KIND);
   document.querySelectorAll("#kindSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
@@ -262,10 +271,10 @@ function fillPicker(){const sel=document.getElementById("jobPick");DATA.jobs.fil
 // resume upload
 const drop=document.getElementById("drop"),file=document.getElementById("file");drop.onclick=()=>file.click();
 drop.ondragover=e=>{e.preventDefault()};drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])};file.onchange=()=>file.files[0]&&readFile(file.files[0]);
-let upJob=null,RESUME_VIEW=null;
+let upJob=null,RESUME_VIEW=null,RESUME_UNTIL=0,RESUME_NAME="";
 document.getElementById("rowFile").onchange=async e=>{const f=e.target.files[0];if(!f||!upJob)return;const text=await extract(f);if(!text)return;
   const j=DATA.jobs.find(x=>x.id===upJob);const r=analyze(text,j.title+". "+j.jd);if(!r){alert("This job description has too few skills to score.");return}
-  JOBATS[upJob]={name:f.name,text};S.set("jobAts",JOBATS);render()};
+  JOBATS[upJob]={name:f.name,text,until:Date.now()+ATS_TTL};render()};
 async function extract(f){let text="";try{const buf=await f.arrayBuffer();
   if(/\.pdf$/i.test(f.name)){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();text+=c.items.map(x=>x.str).join(" ")+"\n"}}
@@ -276,7 +285,7 @@ async function readFile(f){let text="";try{const buf=await f.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();text+=c.items.map(x=>x.str).join(" ")+"\n"}}
   else if(/\.docx$/i.test(f.name)){text=(await mammoth.extractRawText({arrayBuffer:buf})).value}else text=new TextDecoder().decode(buf)}catch(e){alert("Could not read that file: "+e.message);return}
   setResume(text,f.name)}
-function setResume(text,name){RESUME=text;S.set("resume",text);S.set("resumeName",name||"pasted text");drop.classList.add("ok");
+function setResume(text,name){RESUME=text;RESUME_UNTIL=Date.now()+ATS_TTL;RESUME_NAME=name||"pasted text";drop.classList.add("ok");
   drop.firstChild.textContent=`✓ ${name||"Resume"} loaded (${text.split(/\s+/).length} words) — click to replace`;document.getElementById("resumeText").value=text;
   document.getElementById("resumeStatus").textContent="Resume loaded: "+(name||"pasted text");runATS();render()}
 document.getElementById("resumeText").addEventListener("change",e=>setResume(e.target.value,"pasted text"));
@@ -284,7 +293,7 @@ document.getElementById("jobPick").onchange=()=>{document.getElementById("jdText
 function runATS(){const pick=DATA.jobs.find(j=>j.id===document.getElementById("jobPick").value),pasted=document.getElementById("jdText").value.trim();
   const jd=pasted||(pick?pick.title+". "+pick.jd:"");const box=document.getElementById("result");if(!(RESUME||(RESUME_VIEW&&RESUME_VIEW.text))||!jd){box.hidden=true;return}
   const RES=(RESUME_VIEW&&pick&&JOBATS[pick.id]===RESUME_VIEW)?RESUME_VIEW.text:RESUME;
-  document.getElementById("resumeNote").textContent=RES===RESUME?"Read in your browser only — never uploaded.":"Showing the resume you uploaded for this job: "+RESUME_VIEW.name;
+  document.getElementById("resumeNote").textContent=RES===RESUME?"Read in your browser only — never uploaded or saved. Clears after 30 s.":"Showing the resume you uploaded for this job: "+RESUME_VIEW.name;
   const r=analyze(RES,jd);box.hidden=false;if(!r){document.getElementById("score").textContent="–";document.getElementById("verdict").textContent="Too few recognizable skills in that job text — paste the full description.";document.getElementById("gapTable").innerHTML="";document.getElementById("hitTable").innerHTML="";return}
   const sc=document.getElementById("score");sc.textContent=r.score+"%";sc.style.color=`var(${r.score>=90?"--good":r.score>=80?"--warn":"--bad"})`;
   const c=pick&&!pasted?chance(pick,r.score):chance({posted:new Date().toISOString().slice(0,10),sponsor_jd:"unknown",years:null},r.score);
@@ -303,7 +312,7 @@ function runATS(){const pick=DATA.jobs.find(j=>j.id===document.getElementById("j
 const yoe=document.getElementById("yoe"),ns=document.getElementById("needSpon");yoe.value=S.get("yoe",2);ns.checked=S.get("needSpon",true);
 yoe.oninput=()=>{S.set("yoe",+yoe.value);render()};ns.onchange=()=>{S.set("needSpon",ns.checked);render()};
 document.getElementById("clearAll").onclick=()=>{try{Object.keys(localStorage).filter(k=>k.startsWith("jr_")).forEach(k=>localStorage.removeItem(k))}catch(e){}location.reload()};
-if(RESUME){drop.classList.add("ok");drop.firstChild.textContent=`✓ ${S.get("resumeName","Resume")} loaded — click to replace`;document.getElementById("resumeStatus").textContent="Resume loaded: "+S.get("resumeName","")}
+
 </script>
 </body>
 </html>
