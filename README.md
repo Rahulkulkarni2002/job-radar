@@ -1,5 +1,12 @@
 # Job Radar
 
+### 👉 [Open the live job board](https://rahulkulkarni2002.github.io/job-radar/)
+
+[![Open Job Radar](https://img.shields.io/badge/Open-Job%20Radar-2457d6?style=for-the-badge)](https://rahulkulkarni2002.github.io/job-radar/)
+[![Scrape jobs](https://github.com/Rahulkulkarni2002/job-radar/actions/workflows/scrape.yml/badge.svg)](https://github.com/Rahulkulkarni2002/job-radar/actions/workflows/scrape.yml)
+
+**Quick links:** [Jobs](https://rahulkulkarni2002.github.io/job-radar/) · [Refresh now (Run workflow)](https://github.com/Rahulkulkarni2002/job-radar/actions/workflows/scrape.yml) · [Raw job data](docs/data/jobs.json)
+
 A personal job board that refreshes itself every 3 hours, around the clock, for analytics, data, AI and finance roles.
 
 **How it works**
