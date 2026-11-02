@@ -58,6 +58,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <input type="search" id="q" placeholder="Search role, company, location, skill…">
     <select id="spon"><option value="ok">Sponsorship: hide "won't sponsor"</option><option value="all">Sponsorship: show all</option><option value="good">Only likely sponsors</option></select>
     <select id="age"><option value="15">Posted ≤ 15 days</option><option value="7">≤ 7 days</option><option value="3">≤ 3 days</option><option value="1">Last 24 h</option></select>
+    <select id="roleType"><option value="all">All roles</option><option value="ai">AI roles only</option><option value="nonai">Non-AI roles</option></select>
     <select id="minMatch"><option value="80">Skill match ≥ 80%</option><option value="90">≥ 90%</option><option value="0">Any match</option></select>
     <label class="ck"><input type="checkbox" id="hideApplied" checked> Hide applied</label>
     <label class="ck"><input type="checkbox" id="onlyNew"> New since my last visit</label>
@@ -65,7 +66,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
   <div class="meta" id="hint" style="margin-bottom:8px"></div>
   <div class="card"><table><thead><tr>
     <th data-s="title">Role</th><th data-s="posted">Posted</th><th data-s="salary">Salary</th><th data-s="spon">Sponsorship</th>
-    <th data-s="chance">My chance</th><th data-s="ats">Skill match</th><th data-s="rats">Resume ATS</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+    <th data-s="chance">My chance</th><th data-s="ats">Skill match</th><th data-s="rats">Resume ATS <span title="Upload the resume you\'ll send for each job — scored against that job only">ⓘ</span></th><th></th></tr></thead><tbody id="rows"></tbody></table>
     <div class="empty" id="empty" hidden>No jobs match these filters.</div></div>
   <p class="meta">Chance % is an <b>estimate</b>: typical cold-application callback rates (≈2–5%) adjusted for ATS match, posting age, sponsorship and experience fit. A referral roughly ×4.</p>
 </section>
@@ -75,7 +76,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
   <div class="grid">
     <div class="card panel">
       <h3 style="margin-top:0">1 · Your resume</h3>
-      <div class="drop" id="drop">Drop PDF / DOCX / TXT here or click to upload<input type="file" id="file" accept=".pdf,.docx,.txt" hidden></div>
+      <div class="drop" id="drop">Drop PDF / DOCX / TXT here or click to upload<input type="file" id="file" accept=".pdf,.docx,.txt" hidden></div><input type="file" id="rowFile" accept=".pdf,.docx,.txt" hidden>
       <small class="note" id="resumeNote">Read in your browser only — never uploaded.</small>
       <details style="margin-top:10px"><summary class="muted">or paste resume text</summary><textarea id="resumeText"></textarea></details>
     </div>
@@ -118,13 +119,14 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 const S={get(k,d){try{const v=localStorage.getItem("jr_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("jr_"+k,JSON.stringify(v))}catch(e){}}};
 // ---------- ATS lexicon (same as scraper/tools) ----------
 const LEX=`sql|python|r|sas|stata|spss|excel|advanced excel|vba|pivot tables|vlookup|power bi|tableau|looker|qlik|domo|alteryx|dbt|airflow|snowflake|databricks|bigquery|redshift|aws|azure|gcp|spark|pyspark|hadoop|hive|delta lake|duckdb|postgresql|mysql|etl|elt|etl/elt|data pipelines|data warehousing|data modeling|data mart|git|github|jupyter|docker|api|rest api|fastapi|streamlit|mlflow|pandas|numpy|scikit-learn|xgboost|lightgbm|catboost|random forest|prophet|tensorflow|pytorch|nlp|llm|llms|generative ai|genai|ai|artificial intelligence|machine learning|deep learning|statistics|statistical analysis|statistical inference|statistical modeling|regression|classification|clustering|segmentation|forecasting|time series|predictive modeling|predictive analytics|causal inference|uplift modeling|a/b testing|experimentation|hypothesis testing|bayesian|optimization|cross-validation|feature engineering|model deployment|model validation|dashboards|dashboard|data visualization|visualization|reporting|data storytelling|data cleaning|data quality|data validation|data analysis|data analytics|analytics|business intelligence|bi|kpis|kpi|metrics|insights|stakeholders|stakeholder management|cross-functional|communication|presentation|powerpoint|financial analysis|financial modeling|financial forecasting|fp&a|budgeting|budget|forecast|variance analysis|p&l|cash flow|accounts receivable|invoicing|month-end close|ratio analysis|pricing|revenue|cost analysis|cost forecasting|customer analytics|churn|retention|rfm|crm|marketing analytics|campaign|attribution|product analytics|operations|supply chain|demand planning|sap|oracle|netsuite|erp|salesforce|zoho|risk|credit risk|compliance|research|benchmarking|competitive analysis|business analytics|data science|data scientist|data analyst|analyst`;
-const TERMS=[...new Set(LEX.split("|"))].sort((a,b)=>b.length-a.length);
+const SOFT=new Set(["communication","presentation","stakeholders","stakeholder management","cross-functional","analyst","research","operations","risk","metrics","insights","revenue","campaign","pricing"]);
+const TERMS=[...new Set(LEX.split("|"))].filter(t=>!SOFT.has(t)).sort((a,b)=>b.length-a.length);
 const SYN={"ai":["generative ai","machine learning","artificial intelligence"],"artificial intelligence":["ai"],"genai":["generative ai"],"bi":["business intelligence","tableau"],"business intelligence":["bi","tableau"],"visualization":["data visualization","tableau"],"dashboard":["dashboards"],"data analysis":["data analytics","analytics"],"statistics":["statistical analysis","statistical inference"],"experimentation":["a/b testing","uplift modeling"],"forecast":["forecasting"]};
 const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 const RX=Object.fromEntries(TERMS.map(t=>[t,new RegExp("(?<![a-z0-9])"+esc(t)+"(?![a-z0-9])")]));
 function terms(text){const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" ";const h=new Set(TERMS.filter(x=>RX[x].test(t)));
   [["dashboard","dashboards"],["kpi","kpis"],["llm","llms"],["forecast","forecasting"],["budget","budgeting"],["etl","etl/elt"],["elt","etl/elt"]].forEach(([a,b])=>{if(h.has(a)&&h.has(b))h.delete(a)});return h}
-function ats(resume,jd){const want=terms(jd),have=terms(resume);if(!want.size)return null;const hit=[],miss=[];
+function ats(resume,jd){const want=terms(jd),have=terms(resume);if(want.size<3)return null;const hit=[],miss=[];
   want.forEach(k=>((have.has(k)||(SYN[k]||[]).some(s=>have.has(s)))?hit:miss).push(k));return{score:Math.round(100*hit.length/want.size),hit:hit.sort(),miss:miss.sort(),n:want.size}}
 // ---------- chance estimate ----------
 function daysAgo(d){return Math.max(0,Math.round((Date.now()-new Date(d+"T12:00:00Z"))/864e5))}
@@ -135,7 +137,7 @@ function chance(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",true
   if(need)p*={no:.02,open:.85,strong:.9,some:.6,none:.3,unknown:.55}[sponsorRating(j)];
   if(j.years!=null)p*=j.years<=yoe+1?1:j.years<=yoe+2?.6:.3;return Math.min(p,.6)}
 // ---------- data ----------
-let DATA={jobs:[]},RESUME=S.get("resume",""),sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));
+let DATA={jobs:[]},RESUME=S.get("resume",""),sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));const JOBATS=S.get("jobAts",{});
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
 fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.getElementById("meta").textContent=
   `${d.count} open roles · updated ${d.updated} · ${d.boards} company career sites scanned every 3 h`;fillPicker();render()})
@@ -143,30 +145,34 @@ fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.g
 function rowData(j){const r=RESUME&&j.jd?ats(RESUME,j.title+" "+j.jd):null;const m=j.match??null;return{j,ats:r,match:m,miss:j.missing||[],chance:chance(j,r?r.score:m),spon:sponsorRating(j)}}
 const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong:["H-1B: strong","b-good"],some:["H-1B: some","b-warn"],none:["No H-1B record","b-warn"],unknown:["Unknown","b-warn"]};
 function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
-  maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
+  maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
-    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
+    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
     if(hideA&&applied.has(j.id))return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
-  const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,ats:r=>r.match??-1,rats:r=>r.ats?r.ats.score:-1};
+  const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,ats:r=>r.match??-1,rats:r=>JOBATS[r.j.id]?JOBATS[r.j.id].score:(r.ats?r.ats.score:-1)};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
   document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
   const tb=document.getElementById("rows");tb.innerHTML="";document.getElementById("empty").hidden=rows.length>0;
   for(const r of rows.slice(0,600)){const j=r.j,d=daysAgo(j.posted),isNew=Date.now()-new Date(j.first_seen)<864e5,[sl,sc]=SP[r.spon];
     const tr=document.createElement("tr");if(applied.has(j.id))tr.className="applied";
-    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}</div></td>
+    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${j.ai?'<span class="badge b-good">AI</span> ':""}${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}</div></td>
      <td data-l="Posted">${d===0?"today":d+"d ago"}</td><td data-l="Salary">${h(j.salary||"—")}</td>
      <td data-l="Sponsorship"><span class="badge ${sc}" title="${j.h1b_approvals!=null?"USCIS H-1B approvals: "+j.h1b_approvals:"JD wording"}">${sl}</span></td>
      <td data-l="My chance"><span class="num">${(r.chance*100).toFixed(r.chance<.1?1:0)}%</span></td>
      <td data-l="Skill match">${r.match!=null?`<span class="num" style="color:var(${r.match>=90?"--good":r.match>=80?"--warn":"--bad"})">${r.match}%</span>${r.miss.length?`<div class="co" title="Missing skills">missing: ${h(r.miss.slice(0,4).join(", "))}</div>`:""}`:'<span class="muted">n/a</span>'}</td>
-     <td data-l="Resume ATS">${r.ats?`<span class="num" style="color:var(${r.ats.score>=90?"--good":r.ats.score>=80?"--warn":"--bad"})">${r.ats.score}%</span>`:'<span class="muted" title="Upload your resume in the ATS tab">—</span>'}</td>
+     <td data-l="Resume ATS">${(()=>{const pj=JOBATS[j.id];const sc=pj?pj.score:(r.ats?r.ats.score:null);
+        const col=sc==null?"":`<span class="num" style="color:var(${sc>=90?"--good":sc>=80?"--warn":"--bad"})">${sc}%</span>`;
+        const who=pj?`<div class="co" title="${h(pj.name)}">${h(pj.name.slice(0,22))}</div>${pj.miss.length?`<div class="co">add: ${h(pj.miss.slice(0,3).join(", "))}</div>`:""}`:(r.ats?'<div class="co">general resume</div>':"");
+        return j.jd?`${col}${who}<button class="btn" style="margin-top:4px" data-up="${j.id}">${pj?"Re-upload":"Upload resume"}</button>`:'<span class="muted">n/a</span>'})()}</td>
      <td data-l=""><div style="display:flex;gap:4px"><a class="btn pri" href="${h(j.url)}" target="_blank" rel="noopener">Apply</a><button class="btn" data-ats="${j.id}" title="Check ATS for this role">ATS</button><button class="btn" data-ap="${j.id}" title="${applied.has(j.id)?"Undo applied":"Mark as applied"}">${applied.has(j.id)?"↩":"✓"}</button></div></td>`;
     tb.appendChild(tr)}}
 function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 // ---------- events ----------
-["q","spon","age","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+["q","spon","age","roleType","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
 document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;sortDir=sortKey===k?-sortDir:-1;sortKey=k;render()});
 document.getElementById("rows").onclick=e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.ap){const id=b.dataset.ap;applied.has(id)?applied.delete(id):applied.add(id);S.set("applied",[...applied]);render()}
+  if(b.dataset.up){upJob=b.dataset.up;document.getElementById("rowFile").value="";document.getElementById("rowFile").click();return}
   if(b.dataset.ats){document.getElementById("jobPick").value=b.dataset.ats;document.getElementById("jdText").value="";show("ats");runATS()}};
 function show(t){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.t));
@@ -174,6 +180,15 @@ function fillPicker(){const sel=document.getElementById("jobPick");DATA.jobs.fil
 // resume upload
 const drop=document.getElementById("drop"),file=document.getElementById("file");drop.onclick=()=>file.click();
 drop.ondragover=e=>{e.preventDefault()};drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])};file.onchange=()=>file.files[0]&&readFile(file.files[0]);
+let upJob=null;
+document.getElementById("rowFile").onchange=async e=>{const f=e.target.files[0];if(!f||!upJob)return;const text=await extract(f);if(!text)return;
+  const j=DATA.jobs.find(x=>x.id===upJob);const r=ats(text,j.title+" "+j.jd);if(!r){alert("This job description has too few skills to score.");return}
+  JOBATS[upJob]={score:r.score,name:f.name,miss:r.miss};S.set("jobAts",JOBATS);render()};
+async function extract(f){let text="";try{const buf=await f.arrayBuffer();
+  if(/\.pdf$/i.test(f.name)){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();text+=c.items.map(x=>x.str).join(" ")+"\n"}}
+  else if(/\.docx$/i.test(f.name)){text=(await mammoth.extractRawText({arrayBuffer:buf})).value}else text=new TextDecoder().decode(buf)}catch(e){alert("Could not read that file: "+e.message);return""}
+  return text}
 async function readFile(f){let text="";try{const buf=await f.arrayBuffer();
   if(/\.pdf$/i.test(f.name)){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;for(let i=1;i<=pdf.numPages;i++){const c=await (await pdf.getPage(i)).getTextContent();text+=c.items.map(x=>x.str).join(" ")+"\n"}}

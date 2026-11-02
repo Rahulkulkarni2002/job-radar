@@ -30,13 +30,14 @@ def get(url, timeout=25, data=None):
     with urllib.request.urlopen(urllib.request.Request(url, headers=h, data=data), timeout=timeout) as r:
         return json.loads(r.read().decode("utf-8", "ignore"))
 def strip(h): return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", html.unescape(h or "")))).strip()
+AI_TITLE = r"\b(ai|a\.i\.|genai|gen ai|generative ai|artificial intelligence|llm|machine learning|ml)\b.{0,40}\b(analyst|associate|strategist|strategy|consultant|operations|ops|enablement|adoption|governance|solutions|product|research|insights?|implementation|evaluation|quality|program|transformation|innovation|deployment|specialist|lead analyst)\b|\b(analyst|associate|strategist|consultant|operations|researcher)\b.{0,30}\b(ai|genai|generative ai|artificial intelligence|llm)\b"
 ALWAYS = r"data analyst|business analyst|analytics engineer|ai analyst|data scientist|bi analyst|bi developer|insights? analyst|product analyst|financial analyst|fp&a|decision scien|reporting analyst|pricing analyst|revenue analyst|strategy (and|&) operations|business intelligence|marketing analyst|operations analyst|research analyst|credit analyst|risk analyst|data associate|analytics associate|people analytics|forecasting analyst|planning analyst|quantitative analyst|economist|machine learning analyst"
 CORE = r"\b(analyst|analytics|data|insights?|intelligence|forecast\w*|pricing|fp&a|financ\w+ anal\w+|statistic\w*|quantitative|decision|ai|machine learning)\b"
-NOT_FIT = r"engineer|engineering|research scientist|materials|chemist|biolog|physic|\blab\b|laboratory|clinical|geospatial|\bgis\b|programmer|developer|full stack|technologist|mechanic|specialist|generalist|coordinator|support|care\b|security|\bit\b|cloud|temporary|temp\b|inventory|workplace|vice president|assistant|administrator|representative|sales|recruit|nurse|teacher|tutor|driver|annotator|rater|trainer|writer|editor"
+NOT_FIT = r"architect|engineer|engineering|research scientist|materials|chemist|biolog|physic|\blab\b|laboratory|clinical|geospatial|\bgis\b|programmer|developer|full stack|technologist|mechanic|specialist|generalist|coordinator|support|care\b|security|\bit\b|cloud|temporary|temp\b|inventory|workplace|vice president|assistant|administrator|representative|sales|recruit|nurse|teacher|tutor|driver|annotator|rater|trainer|writer|editor"
 def relevant(t):
     t = t.lower()
     if re.search(TITLE_EXCLUDE, t): return False
-    if re.search(ALWAYS, t): return True
+    if re.search(ALWAYS, t) or (re.search(AI_TITLE, t) and not re.search(r"engineer|architect|scientist, ml|researcher, ml|annotator|rater|trainer|tutor|writer", t)): return True
     return bool(re.search(CORE, t)) and not re.search(NOT_FIT, t)
 SKILLS = r"\b(sql|python|tableau|power bi|excel|statistic\w*|analytics|forecast\w*|machine learning|data analysis|dashboards?|modeling|pandas|snowflake|databricks|looker|a/b test\w*|regression)\b"
 LEX = """sql|python|r|sas|stata|spss|excel|advanced excel|vba|pivot tables|vlookup|power bi|tableau|looker|qlik|domo|alteryx|dbt|airflow|snowflake|databricks|bigquery|redshift|aws|azure|gcp|
@@ -257,6 +258,7 @@ def main():
         m, hit, miss = skill_match(j["title"], j["jd"])
         if m is None or m < MIN_MATCH: continue          # candidate rule: keep only jobs with >= 80% skill match
         j["match"], j["missing"] = m, miss
+        j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
         jobs.append(j)
