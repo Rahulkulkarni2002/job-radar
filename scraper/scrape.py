@@ -98,11 +98,20 @@ def salary(txt, comp=None):
     lo, hi = money(m.group(1)), money(m.group(2))
     if lo < 20000 or hi > 600000: return ""
     return f"${lo/1000:.0f}K – ${hi/1000:.0f}K"
+WORDNUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
 def years_required(txt):
+    """Strictest REQUIRED years of experience found in any sentence about experience (preferred/nice-to-have ignored).
+    Handles '6+ years', '(6 + years)', '6-8 years', 'minimum of 5 years', 'at least five years', 'experience: 4 yrs'."""
     t = (txt or "").lower()
-    m = re.findall(r"(\d{1,2})\s*\+?\s*(?:-|–|to)?\s*\d{0,2}\s*\+?\s*years?(?:'|’)?\s*(?:of\s+)?(?:relevant\s+|professional\s+|work\s+|related\s+|industry\s+|full-time\s+)*(?:experience|exp)", t)
-    n = [int(x) for x in m if int(x) < 15]
-    if n: return min(n)
+    for w, n in WORDNUM.items(): t = re.sub(r"\b" + w + r"\b(?=\s*(\(\d+\)\s*)?\+?\s*(or more )?(years?|yrs?))", str(n), t)
+    best = None
+    for s in re.split(r"(?<=[.!?;])\s+|\n+|\s\*\s|•|·", t):
+        if not re.search(r"experience|exp\b|background|track record|working in|work in|history of", s): continue
+        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|years old|years of age|over \d+ years|for \d+ years,? (we|our|the company)", s): continue
+        for m in re.finditer(r"(\d{1,2})\s*(?:\+|\s*plus)?\s*(?:-|–|to|or)?\s*(?:\d{1,2})?\s*\+?\s*\)?\s*(?:years?|yrs?)\b", s):
+            n = int(m.group(1))
+            if n < 15: best = n if best is None else max(best, n)
+    if best is not None: return best
     if re.search(r"new grad|recent graduate|entry[- ]level|university graduate|early career|campus|0-?\s?[12] years", t): return 0
     return None
 
