@@ -16,7 +16,7 @@ UA = {"User-Agent": "Mozilla/5.0 (JobRadar personal job search)", "Accept": "app
 SIMPLIFY = ["https://raw.githubusercontent.com/SimplifyJobs/New-Grad-Positions/dev/.github/scripts/listings.json"]
 
 TITLE_INCLUDE = r"analyst|analytics|data scien|insight|business intelligence|\bbi\b|fp&a|financ|forecast|pricing|revenue|strategy|operations|decision|reporting|product analyst|\bai\b|machine learning analyst|data associate|quantitative|consult|marketing scien|growth|economist|planning|research"
-TITLE_EXCLUDE = r"senior|\bsr\b|staff|principal|director|\bvp\b|head of|\blead\b|manager|intern\b|internship|co-op|software engineer|hardware|firmware|mechanical|electrical|civil|nurse|clinical|sales rep|account executive|technician|recruit|attorney|counsel|phd|\biii\b|\biv\b|post-?doc|professor|driver|warehouse|\bavp\b|vice president|consultant - |change management|summer|2028|cyber|devops|payroll|robotics|bioinformatics|help ?desk|application development|soc analyst|threat|fraud investigator|coach|cleared|clearance|ts/sci|supervisor|crashworthiness|falcon"
+TITLE_EXCLUDE = r"senior|\bsr\b|staff|principal|director|\bvp\b|head of|\blead\b|manager|intern\b|internship|co-op|software engineer|hardware|firmware|mechanical|electrical|civil|nurse|clinical|sales rep|account executive|technician|recruit|attorney|counsel|phd|\biii\b|\biv\b|post-?doc|professor|driver|warehouse|\bavp\b|vice president|consultant - |change management|summer|2028|cyber|devops|payroll|robotics|bioinformatics|help ?desk|application development|data engineer|soc analyst|threat|fraud investigator|coach|cleared|clearance|ts/sci|supervisor|crashworthiness|falcon"
 CLEARANCE_COS = r"booz allen|northrop|lockheed|raytheon|\brtx\b|saic|leidos|general dynamics|bae systems|amentum|vantor|l3harris|mitre|caci|peraton|parsons|anduril|aerospace corp|guidehouse"
 US = r"\b(usa|united states|u\.s\.|remote|[A-Z][a-z]+,\s?(A[LKZR]|C[AOT]|D[EC]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY])\b|NYC|SF|new york|san francisco|seattle|boston|austin|chicago|los angeles|san diego|atlanta|denver|dallas)"
 NON_US = r"\b(uk|united kingdom|canada|india|germany|ireland|singapore|london|toronto|bangalore|bengaluru|mexico|poland|australia|brazil|japan|france|netherlands|spain|philippines)\b"
@@ -464,6 +464,8 @@ def google(_b, name):
             time.sleep(1.0)
     return out
 TIKTOK_SEEN = ROOT / "scraper" / "tiktok_seen.json"
+import threading
+_TT_LOCK = threading.Lock()
 def tiktok(board, name):
     """TikTok / ByteDance careers. Their API has NO posting date, so a job's date = when this scraper first saw it.
     First run records a baseline (not shown); later runs show only jobs that are new since then - keeps the 15-day rule strict."""
@@ -471,10 +473,13 @@ def tiktok(board, name):
     baseline = board not in seen.get("_boards", [])
     today = TODAY.isoformat(); out = []
     for q in ("data analyst", "business analyst", "data scientist", "analytics", "business intelligence", "financial analyst"):
-        body = json.dumps({"recruitment_id_list": [], "job_category_id_list": [], "subject_id_list": [], "location_code_list": [], "keyword": q, "limit": 100, "offset": 0, "portal_entrance": 1}).encode()
+      for off in (0, 10, 20, 30, 40):
+        body = json.dumps({"recruitment_id_list": [], "job_category_id_list": [], "subject_id_list": [], "location_code_list": [], "keyword": q, "limit": 10, "offset": off, "portal_entrance": 1}).encode()
         rq = urllib.request.Request("https://api.lifeattiktok.com/api/v1/public/supplier/search/job/posts", data=body, headers={**UA, "Content-Type": "application/json", "website-path": board})
         with urllib.request.urlopen(rq, timeout=30) as r: d = json.loads(r.read())
-        for p in (d.get("data") or {}).get("job_post_list", []):
+        posts = (d.get("data") or {}).get("job_post_list", [])
+        if not posts: break
+        for p in posts:
             ci = p.get("city_info") or {}; chain, x = [], ci
             while x: chain.append(x.get("en_name") or ""); x = x.get("parent")
             loc = ", ".join(c for c in chain if c)
@@ -486,9 +491,12 @@ def tiktok(board, name):
             out.append(job(name, p["title"], f"https://{site}/search/{p['id']}", first, loc, strip((p.get("description") or "") + " " + (p.get("requirement") or "")),
                            "TikTok careers" if board == "tiktok" else "ByteDance careers"))
         time.sleep(1.0)
-    seen.setdefault("_boards", [])
-    if board not in seen["_boards"]: seen["_boards"].append(board)
-    json.dump(seen, open(TIKTOK_SEEN, "w"))
+    with _TT_LOCK:   # TikTok + ByteDance run in parallel: merge into the file instead of overwriting it
+        cur = json.load(open(TIKTOK_SEEN)) if TIKTOK_SEEN.exists() else {}
+        for k, v in seen.items():
+            if k != "_boards": cur.setdefault(k, v)
+        cur["_boards"] = sorted(set(cur.get("_boards", [])) | {board})
+        json.dump(cur, open(TIKTOK_SEEN, "w"))
     return out
 FETCH = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby, "workday": workday, "smartrecruiters": smartrecruiters,
          "myworkdaysite": lambda b, n: workday(b, n, mws=True), "eightfold": eightfold, "oracle": oracle, "workable": workable, "amazon": amazon,
@@ -587,6 +595,7 @@ def main():
         except Exception: pass
     seen, jobs = set(), []
     funnel = {"scraped (relevant title, US, <=15 days)": len(res)}
+    print("SCRAPED BY SOURCE (before filters)", json.dumps(dict(__import__("collections").Counter(j["source"] for j in res))))
     dropped_samples = {}
     def drop(reason, j=None):
         funnel[reason] = funnel.get(reason, 0) + 1
