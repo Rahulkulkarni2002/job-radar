@@ -570,7 +570,7 @@ def main():
     try: res += simplify()
     except Exception as e: errs["simplify"] = str(e)[:80]
     tasks = [(k, b, name) for k, v in BOARDS.items() for b, name in v.items()] + [("amazon", "amazon", "Amazon"), ("apple", "apple", "Apple"), ("google", "google", "Google"),
-                ("tiktok", "tiktok", "TikTok"), ("tiktok", "bytedance", "ByteDance")]
+                ("tiktok", "tiktok", "TikTok")]
     def run(batch, workers):
         with cf.ThreadPoolExecutor(workers) as ex:
             futs = {ex.submit(FETCH[k], b, name): k for k, b, name in batch}
