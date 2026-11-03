@@ -399,8 +399,63 @@ def amazon(_board, name):
             out.append(job(r.get("company_name") or "Amazon", r["title"], "https://www.amazon.jobs" + r.get("job_path", ""), posted, loc, txt, "amazon.jobs"))
         time.sleep(1.0)
     return out
+# ---------- big-tech companies with their own careers systems ----------
+def apple(_b, name):
+    """jobs.apple.com public search (uses the site's own CSRF token endpoint, as the careers page does)."""
+    req = urllib.request.Request("https://jobs.apple.com/api/csrfToken", headers=UA)
+    with urllib.request.urlopen(req, timeout=25) as r: tok = r.headers.get("x-apple-csrf-token", "")
+    out = []
+    for q in ("data analyst", "business analyst", "data scientist", "analytics", "financial analyst"):
+        body = json.dumps({"query": q, "filters": {"postingpostLocation": ["postLocation-USA"]}, "page": 1, "locale": "en-us", "sort": "newest"}).encode()
+        rq = urllib.request.Request("https://jobs.apple.com/api/role/search", data=body, headers={**UA, "Content-Type": "application/json", "x-apple-csrf-token": tok})
+        with urllib.request.urlopen(rq, timeout=25) as r: d = json.loads(r.read())
+        for p in d.get("searchResults", []):
+            try: posted = datetime.datetime.strptime(p.get("postingDate", ""), "%b %d, %Y").date().isoformat()
+            except ValueError: continue
+            loc = "; ".join(l.get("name", "") for l in p.get("locations", [])) + " USA"
+            if age(posted) > MAX_AGE or not relevant(p.get("postingTitle", "")): continue
+            try:
+                det = get(f"https://jobs.apple.com/api/role/detail/{p['positionId']}?languageCd=en-us")
+                txt = strip(" ".join(str(det.get(k) or "") for k in ("description", "jobSummary", "minimumQualifications", "preferredQualifications", "responsibilities")))
+            except Exception: txt = strip(p.get("jobSummary"))
+            out.append(job("Apple", p["postingTitle"], f"https://jobs.apple.com/en-us/details/{p['positionId']}", posted, loc, txt, "Apple careers"))
+        time.sleep(1.0)
+    return out
+def google(_b, name):
+    """Google / YouTube careers search API. Only jobs with a known posting date are kept (15-day rule)."""
+    out = []
+    for q in ("data analyst", "business analyst", "data scientist", "analytics", "financial analyst"):
+        d = get(f"https://careers.google.com/api/v3/search/?q={urllib.parse.quote(q)}&location=United%20States&page_size=100&sort_by=date")
+        for p in d.get("jobs", []):
+            posted = (p.get("publish_date") or p.get("created") or "")[:10]
+            loc = "; ".join(l.get("display", "") for l in p.get("locations", []))
+            if not posted or age(posted) > MAX_AGE or not relevant(p.get("title", "")) or not us(loc): continue
+            txt = strip(" ".join(p.get(k) or "" for k in ("description", "responsibilities", "qualifications")))
+            co = p.get("company_name") or "Google"
+            out.append(job(co, p["title"], p.get("apply_url") or f"https://www.google.com/about/careers/applications/jobs/results/{str(p.get('id','')).split('/')[-1]}", posted, loc, txt, "Google careers"))
+        time.sleep(1.0)
+    return out
+def tiktok(board, name):
+    """TikTok / ByteDance careers public job-post search."""
+    out = []
+    for q in ("data analyst", "business analyst", "data scientist", "analytics"):
+        rq = urllib.request.Request("https://api.lifeattiktok.com/api/v1/public/supplier/search/job/posts",
+            data=json.dumps({"keyword": q, "limit": 50, "offset": 0, "recruitment_id_list": [], "job_category_id_list": [], "location_code_list": [], "subject_id_list": []}).encode(),
+            headers={**UA, "Content-Type": "application/json", "website-path": board})
+        with urllib.request.urlopen(rq, timeout=25) as r: d = json.loads(r.read())
+        for p in (d.get("data") or {}).get("job_post_list", []):
+            loc = ((p.get("city_info") or {}).get("en_name") or "") + ", " + (((p.get("city_info") or {}).get("parent") or {}).get("parent") or {}).get("en_name", "")
+            ts = p.get("publish_time") or p.get("create_time") or 0
+            posted = datetime.date.fromtimestamp(int(ts) / (1000 if int(ts) > 10**11 else 1)).isoformat() if ts else ""
+            if not posted or age(posted) > MAX_AGE or not relevant(p.get("title", "")) or not us(loc): continue
+            txt = strip((p.get("description") or "") + " " + (p.get("requirement") or ""))
+            site = "lifeattiktok.com" if board == "tiktok" else "jobs.bytedance.com/en"
+            out.append(job(name, p["title"], f"https://{site}/search/{p['id']}", posted, loc, txt, "TikTok careers" if board == "tiktok" else "ByteDance careers"))
+        time.sleep(1.0)
+    return out
 FETCH = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby, "workday": workday, "smartrecruiters": smartrecruiters,
-         "myworkdaysite": lambda b, n: workday(b, n, mws=True), "eightfold": eightfold, "oracle": oracle, "workable": workable, "amazon": amazon}
+         "myworkdaysite": lambda b, n: workday(b, n, mws=True), "eightfold": eightfold, "oracle": oracle, "workable": workable, "amazon": amazon,
+         "apple": apple, "google": google, "tiktok": tiktok}
 
 # ---------------- H-1B history (USCIS H-1B Employer Data Hub, public) ----------------
 def norm_co(c):
@@ -469,7 +524,8 @@ def main():
     t0 = time.time(); res, errs, samples = [], {}, {}
     try: res += simplify()
     except Exception as e: errs["simplify"] = str(e)[:80]
-    tasks = [(k, b, name) for k, v in BOARDS.items() for b, name in v.items()] + [("amazon", "amazon", "Amazon")]
+    tasks = [(k, b, name) for k, v in BOARDS.items() for b, name in v.items()] + [("amazon", "amazon", "Amazon"), ("apple", "apple", "Apple"), ("google", "google", "Google"),
+                ("tiktok", "tiktok", "TikTok"), ("tiktok", "bytedance", "ByteDance")]
     def run(batch, workers):
         with cf.ThreadPoolExecutor(workers) as ex:
             futs = {ex.submit(FETCH[k], b, name): k for k, b, name in batch}
