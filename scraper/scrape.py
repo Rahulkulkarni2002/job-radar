@@ -400,58 +400,95 @@ def amazon(_board, name):
         time.sleep(1.0)
     return out
 # ---------- big-tech companies with their own careers systems ----------
+def _html(url):
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": UA["User-Agent"]}), timeout=30) as r:
+        return r.read().decode("utf-8", "ignore")
+def _apple_hydration(html_text):
+    m = re.search(r"window\.__staticRouterHydrationData\s*=\s*JSON\.parse\((\".*?\")\);", html_text, re.S)
+    return json.loads(json.loads(m.group(1))) if m else {}
+def _find_key(o, key):
+    if isinstance(o, dict):
+        if key in o: return o[key]
+        for v in o.values():
+            r = _find_key(v, key)
+            if r is not None: return r
+    elif isinstance(o, list):
+        for v in o:
+            r = _find_key(v, key)
+            if r is not None: return r
+    return None
 def apple(_b, name):
-    """jobs.apple.com public search (uses the site's own CSRF token endpoint, as the careers page does)."""
-    req = urllib.request.Request("https://jobs.apple.com/api/csrfToken", headers=UA)
-    with urllib.request.urlopen(req, timeout=25) as r: tok = r.headers.get("x-apple-csrf-token", "")
-    out = []
-    for q in ("data analyst", "business analyst", "data scientist", "analytics", "financial analyst"):
-        body = json.dumps({"query": q, "filters": {"postingpostLocation": ["postLocation-USA"]}, "page": 1, "locale": "en-us", "sort": "newest"}).encode()
-        rq = urllib.request.Request("https://jobs.apple.com/api/role/search", data=body, headers={**UA, "Content-Type": "application/json", "x-apple-csrf-token": tok})
-        with urllib.request.urlopen(rq, timeout=25) as r: d = json.loads(r.read())
-        for p in d.get("searchResults", []):
-            try: posted = datetime.datetime.strptime(p.get("postingDate", ""), "%b %d, %Y").date().isoformat()
-            except ValueError: continue
-            loc = "; ".join(l.get("name", "") for l in p.get("locations", [])) + " USA"
-            if age(posted) > MAX_AGE or not relevant(p.get("postingTitle", "")): continue
-            try:
-                det = get(f"https://jobs.apple.com/api/role/detail/{p['positionId']}?languageCd=en-us")
-                txt = strip(" ".join(str(det.get(k) or "") for k in ("description", "jobSummary", "minimumQualifications", "preferredQualifications", "responsibilities")))
-            except Exception: txt = strip(p.get("jobSummary"))
-            out.append(job("Apple", p["postingTitle"], f"https://jobs.apple.com/en-us/details/{p['positionId']}", posted, loc, txt, "Apple careers"))
-        time.sleep(1.0)
+    """jobs.apple.com: search page data (title, id, posting date) + each job's detail page for the full JD."""
+    out, seen_ids = [], set()
+    for q in ("data analyst", "business analyst", "data scientist", "analytics", "financial analyst", "business intelligence"):
+        for page in (1, 2):
+            data = _apple_hydration(_html(f"https://jobs.apple.com/en-us/search?search={urllib.parse.quote(q)}&sort=newest&location=united-states-USA&page={page}"))
+            for p in (_find_key(data, "searchResults") or []):
+                pid = p.get("positionId")
+                if not pid or pid in seen_ids: continue
+                seen_ids.add(pid)
+                try: posted = datetime.datetime.strptime(p.get("postingDate", ""), "%b %d, %Y").date().isoformat()
+                except ValueError: continue
+                loc = "; ".join(f"{l.get('name','')}, {l.get('countryName','')}" for l in p.get("locations", []))
+                if age(posted) > MAX_AGE or not relevant(p.get("postingTitle", "")) or "United States" not in loc: continue
+                txt = p.get("jobSummary") or ""
+                try:
+                    det = _apple_hydration(_html(f"https://jobs.apple.com/en-us/details/{pid}"))
+                    txt = " ".join(str(_find_key(det, k) or "") for k in ("description", "jobSummary", "minimumQualifications", "preferredQualifications", "responsibilities"))
+                except Exception: pass
+                out.append(job("Apple", p["postingTitle"], f"https://jobs.apple.com/en-us/details/{pid}", posted, loc.replace("United States of America", "USA"), strip(txt), "Apple careers"))
+            time.sleep(1.0)
     return out
 def google(_b, name):
-    """Google / YouTube careers search API. Only jobs with a known posting date are kept (15-day rule)."""
-    out = []
-    for q in ("data analyst", "business analyst", "data scientist", "analytics", "financial analyst"):
-        d = get(f"https://careers.google.com/api/v3/search/?q={urllib.parse.quote(q)}&location=United%20States&page_size=100&sort_by=date")
-        for p in d.get("jobs", []):
-            posted = (p.get("publish_date") or p.get("created") or "")[:10]
-            loc = "; ".join(l.get("display", "") for l in p.get("locations", []))
-            if not posted or age(posted) > MAX_AGE or not relevant(p.get("title", "")) or not us(loc): continue
-            txt = strip(" ".join(p.get(k) or "" for k in ("description", "responsibilities", "qualifications")))
-            co = p.get("company_name") or "Google"
-            out.append(job(co, p["title"], p.get("apply_url") or f"https://www.google.com/about/careers/applications/jobs/results/{str(p.get('id','')).split('/')[-1]}", posted, loc, txt, "Google careers"))
-        time.sleep(1.0)
+    """Google careers (incl. YouTube, DeepMind, Waymo): job data embedded in the search page; publish timestamp at field [12]."""
+    out, seen_ids = [], set()
+    for q in ("data analyst", "business analyst", "data scientist", "analytics", "financial analyst", "business intelligence"):
+        for page in (1, 2, 3):
+            g = _html(f"https://www.google.com/about/careers/applications/jobs/results/?q={urllib.parse.quote(q)}&location=United%20States&sort_by=date&page={page}")
+            raw = next((mm.group(2) for mm in re.finditer(r"AF_initDataCallback\(\{key: '(ds:\d+)'.*?data:(.*?), sideChannel", g, re.S) if mm.group(1) == "ds:1"), None)
+            if not raw: break
+            rows = (json.loads(raw) or [[]])[0] or []
+            for r in rows:
+                try:
+                    jid, title = r[0], r[1]
+                    if jid in seen_ids: continue
+                    seen_ids.add(jid)
+                    posted = datetime.datetime.fromtimestamp(r[12][0], datetime.timezone.utc).date().isoformat()
+                    locs = r[9] or []; loc = "; ".join(l[0] for l in locs if l)
+                    if age(posted) > MAX_AGE or not relevant(title) or not any((l[5] if len(l) > 5 else "") == "US" for l in locs if l): continue
+                    txt = " ".join((x[1] if isinstance(x, list) and len(x) > 1 and isinstance(x[1], str) else "") for x in (r[10], r[3], r[4], r[19] if len(r) > 19 else None))
+                    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+                    out.append(job(r[7] or "Google", title, f"https://www.google.com/about/careers/applications/jobs/results/{jid}-{slug}", posted, loc, strip(txt), "Google careers"))
+                except Exception: continue
+            if len(rows) < 20: break
+            time.sleep(1.0)
     return out
+TIKTOK_SEEN = ROOT / "scraper" / "tiktok_seen.json"
 def tiktok(board, name):
-    """TikTok / ByteDance careers public job-post search."""
-    out = []
-    for q in ("data analyst", "business analyst", "data scientist", "analytics"):
-        rq = urllib.request.Request("https://api.lifeattiktok.com/api/v1/public/supplier/search/job/posts",
-            data=json.dumps({"keyword": q, "limit": 50, "offset": 0, "recruitment_id_list": [], "job_category_id_list": [], "location_code_list": [], "subject_id_list": []}).encode(),
-            headers={**UA, "Content-Type": "application/json", "website-path": board})
-        with urllib.request.urlopen(rq, timeout=25) as r: d = json.loads(r.read())
+    """TikTok / ByteDance careers. Their API has NO posting date, so a job's date = when this scraper first saw it.
+    First run records a baseline (not shown); later runs show only jobs that are new since then - keeps the 15-day rule strict."""
+    seen = json.load(open(TIKTOK_SEEN)) if TIKTOK_SEEN.exists() else {}
+    baseline = board not in seen.get("_boards", [])
+    today = TODAY.isoformat(); out = []
+    for q in ("data analyst", "business analyst", "data scientist", "analytics", "business intelligence", "financial analyst"):
+        body = json.dumps({"recruitment_id_list": [], "job_category_id_list": [], "subject_id_list": [], "location_code_list": [], "keyword": q, "limit": 100, "offset": 0, "portal_entrance": 1}).encode()
+        rq = urllib.request.Request("https://api.lifeattiktok.com/api/v1/public/supplier/search/job/posts", data=body, headers={**UA, "Content-Type": "application/json", "website-path": board})
+        with urllib.request.urlopen(rq, timeout=30) as r: d = json.loads(r.read())
         for p in (d.get("data") or {}).get("job_post_list", []):
-            loc = ((p.get("city_info") or {}).get("en_name") or "") + ", " + (((p.get("city_info") or {}).get("parent") or {}).get("parent") or {}).get("en_name", "")
-            ts = p.get("publish_time") or p.get("create_time") or 0
-            posted = datetime.date.fromtimestamp(int(ts) / (1000 if int(ts) > 10**11 else 1)).isoformat() if ts else ""
-            if not posted or age(posted) > MAX_AGE or not relevant(p.get("title", "")) or not us(loc): continue
-            txt = strip((p.get("description") or "") + " " + (p.get("requirement") or ""))
+            ci = p.get("city_info") or {}; chain, x = [], ci
+            while x: chain.append(x.get("en_name") or ""); x = x.get("parent")
+            loc = ", ".join(c for c in chain if c)
+            key = f"{board}:{p['id']}"
+            first = seen.get(key)
+            if not first: seen[key] = first = ("baseline" if baseline else today)
+            if first == "baseline" or "United States" not in loc or not relevant(p.get("title", "")) or age(first) > MAX_AGE: continue
             site = "lifeattiktok.com" if board == "tiktok" else "jobs.bytedance.com/en"
-            out.append(job(name, p["title"], f"https://{site}/search/{p['id']}", posted, loc, txt, "TikTok careers" if board == "tiktok" else "ByteDance careers"))
+            out.append(job(name, p["title"], f"https://{site}/search/{p['id']}", first, loc, strip((p.get("description") or "") + " " + (p.get("requirement") or "")),
+                           "TikTok careers" if board == "tiktok" else "ByteDance careers"))
         time.sleep(1.0)
+    seen.setdefault("_boards", [])
+    if board not in seen["_boards"]: seen["_boards"].append(board)
+    json.dump(seen, open(TIKTOK_SEEN, "w"))
     return out
 FETCH = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby, "workday": workday, "smartrecruiters": smartrecruiters,
          "myworkdaysite": lambda b, n: workday(b, n, mws=True), "eightfold": eightfold, "oracle": oracle, "workable": workable, "amazon": amazon,
