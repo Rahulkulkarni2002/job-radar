@@ -10,6 +10,12 @@ import json, re, time, urllib.error, urllib.parse, datetime, pathlib, urllib.req
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "data" / "jobs.json"
 BOARDS = json.load(open(ROOT / "scraper" / "boards.json"))
+# Y Combinator companies' careers pages (found weekly by discover_yc.py)
+YC = {}
+if (ROOT / "scraper" / "yc_boards.json").exists():
+    YC = json.load(open(ROOT / "scraper" / "yc_boards.json"))
+    for _k in ("ashby", "greenhouse", "lever", "workable"):
+        for _slug, _name in YC.get(_k, {}).items(): BOARDS.setdefault(_k, {}).setdefault(_slug, _name)
 MAX_AGE = int(os.environ.get("MAX_AGE_DAYS", 15))
 TODAY = datetime.date.today()
 UA = {"User-Agent": "Mozilla/5.0 (JobRadar personal job search)", "Accept": "application/json"}
@@ -593,6 +599,7 @@ def main():
     if OUT.exists():
         try: prev = {j["id"]: j for j in json.load(open(OUT)).get("jobs", [])}
         except Exception: pass
+    YC_NAMES = {norm_co(n) for n in YC.get("companies", [])}
     seen, jobs = set(), []
     funnel = {"scraped (relevant title, US, <=15 days)": len(res)}
     print("SCRAPED BY SOURCE (before filters)", json.dumps(dict(__import__("collections").Counter(j["source"] for j in res))))
@@ -622,6 +629,7 @@ def main():
         if not family_gate(j["family"], f, hits): drop("section fit too low", j); continue    # section-specific: DS needs Python+ML, DA needs SQL+BI, BA needs SQL/Excel+finance/BI, AI needs AI+SQL/Python
         j["fit"], j["why"] = f, hits
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
+        j["yc"] = norm_co(j["company"]) in YC_NAMES
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
         jobs.append(j)
     jobs.sort(key=lambda j: j["posted"], reverse=True)
