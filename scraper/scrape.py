@@ -111,6 +111,17 @@ def years_required(txt):
         for m in re.finditer(r"(\d{1,2})\s*(?:\+|\s*plus)?\s*(?:-|–|to|or)?\s*(?:\d{1,2})?\s*\+?\s*\)?\s*(?:years?|yrs?)\b", s):
             n = int(m.group(1))
             if n < 15: best = n if best is None else max(best, n)
+    # Also catch requirement phrasing WITHOUT the word "experience": "8+ years in management consulting", "3-5 years as an analyst"
+    for m in re.finditer(r"(\d{1,2})\s*(?:\+|plus)\s*years?\b|(\d{1,2})\s*(?:-|–|to)\s*\d{1,2}\s*years?\b|(\d{1,2})\s*years?\s+(?:in|of|as|at|working|within|doing|leading|managing|building|across)\b", t):
+        n = int(next(g for g in m.groups() if g))
+        pre = t[max(0, m.start() - 25):m.start()]
+        ctx = t[max(0, m.start() - 160):m.end() + 160]
+        if re.search(r"\b(for|over|more than|than|nearly|almost|since|past|within the (last|past)|history of|founded|age|aged|old)\s*$", pre): continue
+        a_ = max(t.rfind(". ", 0, m.start()), t.rfind("; ", 0, m.start()), t.rfind(" * ", 0, m.start()), 0)
+        b_ = min([x for x in (t.find(". ", m.end()), t.find("; ", m.end()), t.find(" * ", m.end())) if x != -1] or [len(t)])
+        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired", t[a_:b_]): continue      # same sentence only
+        if re.search(r"years old|years of age|warranty|contract term|vesting|anniversar", ctx): continue
+        if n < 15: best = n if best is None else max(best, n)
     if best is not None: return best
     if re.search(r"new grad|recent graduate|entry[- ]level|university graduate|early career|campus|0-?\s?[12] years", t): return 0
     return None
