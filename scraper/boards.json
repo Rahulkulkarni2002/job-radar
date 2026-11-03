@@ -889,7 +889,8 @@
 "elastic": "Elastic",
 "okta": "Okta",
 "samsara": "Samsara",
-"rubrik": "Rubrik"
+"rubrik": "Rubrik",
+"uipath": "UiPath"
 },
 "lever": {
 "schmidt-entities": "Schmidt Sciences",
@@ -1230,7 +1231,8 @@
 "futo-org": "FUTO",
 "camstex": "CAMS",
 "loftorbital": "Loft Orbital",
-"fireworkhq": "Firework"
+"fireworkhq": "Firework",
+"uipath": "UiPath"
 },
 "ashby": {
 "blackbird-labs-inc": "Blackbird Labs",
@@ -3642,7 +3644,9 @@
 "pernodricard|wd3|pernod-ricard": "Pernod Ricard, cr\u00e9ateurs de convivialit\u00e9",
 "valeris|wd108|Valeris": "Valeris",
 "faithtechnologies|wd1|fti": "Faith Technologies",
-"macfound|wd1|MAC_FOUND_EXT_CAREERS": "John D. and Catherine T. MacArthur Foundation"
+"macfound|wd1|MAC_FOUND_EXT_CAREERS": "John D. and Catherine T. MacArthur Foundation",
+"uipath|wd1|UiPath": "UiPath",
+"uipath|wd5|UiPath": "UiPath"
 },
 "smartrecruiters": {
 "BoydGaming": "Boyd Gaming",
@@ -3862,7 +3866,8 @@
 "EDF-UK": "EDF Energy",
 "Videotron": "Videotron",
 "Pyrotek3": "Pyrotek",
-"SpringVentureGroup1": "Spring Venture Group"
+"SpringVentureGroup1": "Spring Venture Group",
+"UiPath": "UiPath"
 },
 "myworkdaysite": {
 "wd3|magna|Magna": "Magna",
