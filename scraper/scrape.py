@@ -550,27 +550,30 @@ def main():
         except Exception: pass
     seen, jobs = set(), []
     funnel = {"scraped (relevant title, US, <=15 days)": len(res)}
-    def drop(reason): funnel[reason] = funnel.get(reason, 0) + 1
+    dropped_samples = {}
+    def drop(reason, j=None):
+        funnel[reason] = funnel.get(reason, 0) + 1
+        if j is not None and len(dropped_samples.setdefault(reason, [])) < 40: dropped_samples[reason].append(f"{j['company'][:22]} | {j['title'][:60]}")
     for j in sorted(res, key=lambda j: (j["source"] == "Simplify new-grad",)):   # prefer direct ATS copy (has JD)
         key = (norm_co(j["company"]), re.sub(r"[^a-z0-9]+", " ", j["title"].lower()).strip())
         if key in seen or j["url"] in seen: drop("duplicate"); continue
         if re.search(CLEARANCE_COS, j["company"], re.I): drop("clearance employer"); continue
         seen.add(key); seen.add(j["url"])
-        if j["years"] is not None and j["years"] > 3: drop("needs > 3 years"); continue
+        if j["years"] is not None and j["years"] > 3: drop("needs > 3 years", j); continue
         if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only"); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
         if timing_problem(j["jd"]): drop("start date / grad window"); continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
         if degree_problem(j["jd"]): drop("PhD / licence required"); continue             # strict: PhD/MD-only roles and required licenses (CPA/CFA/RN...) dropped
         j["opt"] = opt_related(j["title"], j["jd"])
-        if j["opt"] == "weak": drop("not Business-Analytics related (OPT)"); continue                  # OPT: duties must be directly related to Business Analytics
+        if j["opt"] == "weak": drop("not Business-Analytics related (OPT)", j); continue                  # OPT: duties must be directly related to Business Analytics
         if part_time(j["title"], j["jd"]): drop("part-time / temp"); continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
         j["contract"] = bool(re.search(r"(contract(or)?|1099|c2c|corp[- ]to[- ]corp|freelance|apprentice)", (j["title"] + " " + j["jd"][:1500]).lower()))
         m, hit, miss = skill_match(j["title"], j["jd"])
-        if m is None or m < MIN_MATCH: drop("skill match < 80%"); continue          # candidate rule: keep only jobs with >= 80% skill match
+        if m is None or m < MIN_MATCH: drop("skill match < 80%", j); continue          # candidate rule: keep only jobs with >= 80% skill match
         j["match"], j["missing"] = m, miss
         f, hits, hard = fit(j["title"], j["jd"])
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
         j["family"] = family(j["title"], j["jd"], j["ai"])
-        if not family_gate(j["family"], f, hits): drop("section fit too low"); continue    # section-specific: DS needs Python+ML, DA needs SQL+BI, BA needs SQL/Excel+finance/BI, AI needs AI+SQL/Python
+        if not family_gate(j["family"], f, hits): drop("section fit too low", j); continue    # section-specific: DS needs Python+ML, DA needs SQL+BI, BA needs SQL/Excel+finance/BI, AI needs AI+SQL/Python
         j["fit"], j["why"] = f, hits
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
@@ -587,6 +590,7 @@ def main():
                "jobs": jobs}, open(OUT, "w"), separators=(",", ":"))
     for k, v in samples.items(): print("sample errors", k, sorted(set(v))[:4])
     print("FUNNEL", json.dumps({**funnel, "shown": len(jobs)}))
+    for k, v in dropped_samples.items(): print("DROPPED[" + k + "]", " || ".join(v))
     print("BY SOURCE", json.dumps(dict(__import__("collections").Counter(j["source"] for j in jobs))))
     print(f"{len(jobs)} jobs from {len(tasks)} boards in {time.time()-t0:.0f}s; board errors {errs}")
 
