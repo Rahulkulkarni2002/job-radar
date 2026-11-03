@@ -175,7 +175,7 @@ def opt_related(title, jd):
     t = bool(re.search(ANALYTIC_TITLE, title.lower()))
     if len(duties) >= 8 and t: return "strong"
     if len(duties) >= 5 and t: return "ok"
-    if len(duties) >= 3 and re.search(r"data analyst|data scien|analytics|business intelligence|quantitative|statistic|insights analyst|\bbi\b|machine learning|applied scientist|decision scien", title.lower()): return "ok"
+    if len(duties) >= 3 and re.search(r"data analyst|data scien|analytics|business intelligence|quantitative|statistic|insights analyst|\bbi\b|machine learning|applied scientist|decision scien|business analyst|pricing analyst|financial analyst|fp&a|actuarial|forecast|planning analyst|revenue analyst", title.lower()): return "ok"
     return "weak"
 DOCTORATE = r"\b(ph\.?\s?d\.?|doctorate|doctoral|m\.?d\.?(/ph\.?d)?|pharm\.?d|psy\.?d|d\.?sc)\b"
 LOWER_DEG = r"\b(master'?s?|m\.?s\.?c?\b|m\.?a\.?\b|mba|bachelor'?s?|b\.?s\.?c?\b|b\.?a\.?\b|undergraduate|equivalent (practical |work |professional )?experience|or equivalent|years of (relevant )?experience)\b"
