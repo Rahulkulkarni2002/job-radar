@@ -5,7 +5,7 @@ Sources: company career boards (Greenhouse, Lever, Ashby, Workday, SmartRecruite
 Output:  docs/data/jobs.json  (jobs posted <= MAX_AGE days, relevant to analytics / data / AI / finance roles)
 No personal data is stored here - personalization (ATS, chance %) happens in the browser.
 """
-import json, re, time, urllib.error, datetime, pathlib, urllib.request, concurrent.futures as cf, html, hashlib, csv, io, os
+import json, re, time, urllib.error, urllib.parse, datetime, pathlib, urllib.request, concurrent.futures as cf, html, hashlib, csv, io, os
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "data" / "jobs.json"
@@ -302,8 +302,12 @@ def ashby(slug, name):
             comp = (j.get("compensation") or {}).get("compensationTierSummary") or None
             out.append(job(name, j["title"], j["jobUrl"], posted, loc, j.get("descriptionPlain", ""), "Ashby", comp))
     return out
-def workday(board, name):
-    tenant, wd, site = board.split("|"); base = f"https://{tenant}.{wd}.myworkdayjobs.com"; out = []
+def workday(board, name, mws=False):
+    if mws:   # Workday's second domain: https://wd1.myworkdaysite.com/en-US/recruiting/<tenant>/<site>
+        wd, tenant, site = board.split("|"); base = f"https://{wd}.myworkdaysite.com"; job_base = f"{base}/en-US/recruiting/{tenant}/{site}"
+    else:
+        tenant, wd, site = board.split("|"); base = f"https://{tenant}.{wd}.myworkdayjobs.com"; job_base = f"{base}/en-US/{site}"
+    out = []
     for q in ("analyst", "data", "analytics"):
         try:
             d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": q}).encode())
@@ -322,7 +326,7 @@ def workday(board, name):
             loc2 = info.get("location") or loc
             if info.get("location") and not us(loc2): continue
             if not info.get("location") and not us(loc): continue
-            out.append(job(name, j["title"], f"{base}/en-US/{site}{j['externalPath']}", (TODAY - datetime.timedelta(days=n)).isoformat(), loc2, strip(info.get("jobDescription")), "Workday"))
+            out.append(job(name, j["title"], f"{job_base}{j['externalPath']}", (TODAY - datetime.timedelta(days=n)).isoformat(), loc2, strip(info.get("jobDescription")), "Workday"))
     return out
 def smartrecruiters(slug, name):
     out = []
@@ -335,7 +339,68 @@ def smartrecruiters(slug, name):
             except Exception: txt = ""
             out.append(job(name, j["name"], f"https://jobs.smartrecruiters.com/{slug}/{j['id']}", posted, loc, txt, "SmartRecruiters"))
     return out
-FETCH = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby, "workday": workday, "smartrecruiters": smartrecruiters}
+def eightfold(board, name):
+    """Eightfold career sites (Microsoft, Qualcomm, PayPal, John Deere ...): public search API."""
+    host, domain = board.split("|"); out = []
+    for q in ("analyst", "data", "analytics"):
+        d = get(f"https://{host}/api/apply/v2/jobs?domain={domain}&query={urllib.parse.quote(q)}&location=United%20States&start=0&num=50&sort_by=timestamp")
+        for p in d.get("positions", []):
+            ts = p.get("t_create") or p.get("t_update") or 0
+            posted = datetime.date.fromtimestamp(ts).isoformat() if ts else ""
+            loc = p.get("location") or "; ".join(p.get("locations") or [])
+            if not posted or age(posted) > MAX_AGE or not relevant(p.get("name", "")) or not us(loc): continue
+            try: txt = strip(get(f"https://{host}/api/apply/v2/jobs/{p['id']}?domain={domain}").get("job_description"))
+            except Exception: txt = strip(p.get("job_description"))
+            url = p.get("canonicalPositionUrl") or f"https://{host}/careers/job/{p['id']}?domain={domain}"
+            out.append(job(name, p["name"], url, posted, loc, txt, "Eightfold"))
+        time.sleep(0.5)
+    return out
+def oracle(board, name):
+    """Oracle Cloud HCM Candidate Experience (Mayo Clinic, Cummins, many banks/hospitals/universities)."""
+    host, site = board.split("|"); out = []
+    for q in ("analyst", "data"):
+        url = (f"https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?onlyData=true&expand=requisitionList.secondaryLocations"
+               f"&finder=findReqs;siteNumber={site},keyword={urllib.parse.quote(q)},limit=50,sortBy=POSTING_DATES_DESC")
+        items = get(url).get("items", [])
+        for r in (items[0].get("requisitionList", []) if items else []):
+            posted = (r.get("PostedDate") or "")[:10]; loc = r.get("PrimaryLocation") or ""
+            if not posted or age(posted) > MAX_AGE or not relevant(r.get("Title", "")) or not us(loc + " " + (r.get("PrimaryLocationCountry") or "")): continue
+            try:
+                det = get(f"https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&onlyData=true&finder=ById;Id=%22{r['Id']}%22,siteNumber={site}")["items"][0]
+                txt = strip(" ".join(det.get(k) or "" for k in ("ExternalDescriptionStr", "ExternalResponsibilitiesStr", "ExternalQualificationsStr")))
+            except Exception: txt = strip(r.get("ShortDescriptionStr"))
+            out.append(job(name, r["Title"], f"https://{host}/hcmUI/CandidateExperience/en/sites/{site}/job/{r['Id']}", posted, loc, txt, "Oracle Cloud"))
+        time.sleep(0.5)
+    return out
+def workable(slug, name):
+    out = []
+    d = get(f"https://apply.workable.com/api/v3/accounts/{slug}/jobs", data=json.dumps({"query": "", "location": [], "department": [], "worktype": [], "remote": []}).encode())
+    for r in d.get("results", []):
+        posted = (r.get("published") or "")[:10]; l = r.get("location") or {}
+        loc = ", ".join(filter(None, [l.get("city"), l.get("region"), l.get("country")]))
+        if not posted or age(posted) > MAX_AGE or not relevant(r.get("title", "")) or not (l.get("countryCode") == "US" or us(loc)): continue
+        try:
+            det = get(f"https://apply.workable.com/api/v2/accounts/{slug}/jobs/{r['shortcode']}")
+            txt = strip((det.get("description") or "") + " " + (det.get("requirements") or ""))
+        except Exception: txt = ""
+        out.append(job(name, r["title"], f"https://apply.workable.com/{slug}/j/{r['shortcode']}/", posted, loc, txt, "Workable"))
+    return out
+def amazon(_board, name):
+    """amazon.jobs public search (Business/Data Analyst roles; Amazon is a major H-1B sponsor)."""
+    out = []
+    for q in ("business analyst", "data analyst", "business intelligence", "data scientist", "financial analyst"):
+        d = get(f"https://www.amazon.jobs/en/search.json?base_query={urllib.parse.quote(q)}&country=USA&result_limit=100&offset=0&sort=recent")
+        for r in d.get("jobs", []):
+            try: posted = datetime.datetime.strptime(r.get("posted_date", ""), "%B %d, %Y").date().isoformat()
+            except ValueError: continue
+            loc = r.get("normalized_location") or r.get("location") or ""
+            if age(posted) > MAX_AGE or not relevant(r.get("title", "")) or not us(loc + " USA"): continue
+            txt = strip(" ".join(r.get(k) or "" for k in ("description", "basic_qualifications", "preferred_qualifications")))
+            out.append(job(r.get("company_name") or "Amazon", r["title"], "https://www.amazon.jobs" + r.get("job_path", ""), posted, loc, txt, "amazon.jobs"))
+        time.sleep(1.0)
+    return out
+FETCH = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby, "workday": workday, "smartrecruiters": smartrecruiters,
+         "myworkdaysite": lambda b, n: workday(b, n, mws=True), "eightfold": eightfold, "oracle": oracle, "workable": workable, "amazon": amazon}
 
 # ---------------- H-1B history (USCIS H-1B Employer Data Hub, public) ----------------
 def norm_co(c):
@@ -404,7 +469,7 @@ def main():
     t0 = time.time(); res, errs, samples = [], {}, {}
     try: res += simplify()
     except Exception as e: errs["simplify"] = str(e)[:80]
-    tasks = [(k, b, name) for k, v in BOARDS.items() for b, name in v.items()]
+    tasks = [(k, b, name) for k, v in BOARDS.items() for b, name in v.items()] + [("amazon", "amazon", "Amazon")]
     def run(batch, workers):
         with cf.ThreadPoolExecutor(workers) as ex:
             futs = {ex.submit(FETCH[k], b, name): k for k, b, name in batch}
@@ -413,8 +478,8 @@ def main():
                 except Exception as e:
                     errs[futs[f]] = errs.get(futs[f], 0) + 1
                     samples.setdefault(futs[f], []).append(str(e)[:70])
-    run([t for t in tasks if t[0] != "workday"], 48)
-    run([t for t in tasks if t[0] == "workday"], 10)       # Workday: fewer parallel requests
+    run([t for t in tasks if t[0] not in ("workday", "myworkdaysite", "oracle", "eightfold")], 48)
+    run([t for t in tasks if t[0] in ("workday", "myworkdaysite", "oracle", "eightfold")], 10)   # big platforms: fewer parallel requests
     n_wd = sum(1 for t in tasks if t[0] == "workday")
     print(f"Workday companies reached: {n_wd - errs.get('workday', 0)}/{n_wd}")
     feed = [j for j in res if not j["jd"]]
@@ -428,25 +493,28 @@ def main():
         try: prev = {j["id"]: j for j in json.load(open(OUT)).get("jobs", [])}
         except Exception: pass
     seen, jobs = set(), []
+    funnel = {"scraped (relevant title, US, <=15 days)": len(res)}
+    def drop(reason): funnel[reason] = funnel.get(reason, 0) + 1
     for j in sorted(res, key=lambda j: (j["source"] == "Simplify new-grad",)):   # prefer direct ATS copy (has JD)
         key = (norm_co(j["company"]), re.sub(r"[^a-z0-9]+", " ", j["title"].lower()).strip())
-        if key in seen or j["url"] in seen or re.search(CLEARANCE_COS, j["company"], re.I): continue
+        if key in seen or j["url"] in seen: drop("duplicate"); continue
+        if re.search(CLEARANCE_COS, j["company"], re.I): drop("clearance employer"); continue
         seen.add(key); seen.add(j["url"])
-        if j["years"] is not None and j["years"] > 3: continue
-        if j["sponsor_jd"] == "no": continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
-        if timing_problem(j["jd"]): continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
-        if degree_problem(j["jd"]): continue             # strict: PhD/MD-only roles and required licenses (CPA/CFA/RN...) dropped
+        if j["years"] is not None and j["years"] > 3: drop("needs > 3 years"); continue
+        if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only"); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
+        if timing_problem(j["jd"]): drop("start date / grad window"); continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
+        if degree_problem(j["jd"]): drop("PhD / licence required"); continue             # strict: PhD/MD-only roles and required licenses (CPA/CFA/RN...) dropped
         j["opt"] = opt_related(j["title"], j["jd"])
-        if j["opt"] == "weak": continue                  # OPT: duties must be directly related to Business Analytics
-        if part_time(j["title"], j["jd"]): continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
+        if j["opt"] == "weak": drop("not Business-Analytics related (OPT)"); continue                  # OPT: duties must be directly related to Business Analytics
+        if part_time(j["title"], j["jd"]): drop("part-time / temp"); continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
         j["contract"] = bool(re.search(r"(contract(or)?|1099|c2c|corp[- ]to[- ]corp|freelance|apprentice)", (j["title"] + " " + j["jd"][:1500]).lower()))
         m, hit, miss = skill_match(j["title"], j["jd"])
-        if m is None or m < MIN_MATCH: continue          # candidate rule: keep only jobs with >= 80% skill match
+        if m is None or m < MIN_MATCH: drop("skill match < 80%"); continue          # candidate rule: keep only jobs with >= 80% skill match
         j["match"], j["missing"] = m, miss
         f, hits, hard = fit(j["title"], j["jd"])
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
         j["family"] = family(j["title"], j["jd"], j["ai"])
-        if not family_gate(j["family"], f, hits): continue    # section-specific: DS needs Python+ML, DA needs SQL+BI, BA needs SQL/Excel+finance/BI, AI needs AI+SQL/Python
+        if not family_gate(j["family"], f, hits): drop("section fit too low"); continue    # section-specific: DS needs Python+ML, DA needs SQL+BI, BA needs SQL/Excel+finance/BI, AI needs AI+SQL/Python
         j["fit"], j["why"] = f, hits
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
@@ -459,9 +527,11 @@ def main():
         print(f"GUARD: only {len(jobs)} jobs vs {prev_n} last time - NOT publishing; keeping previous list. Errors: {errs}")
         raise SystemExit(1)
     json.dump({"updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "count": len(jobs),
-               "boards": len(tasks), "errors": errs, "h1b_source": "USCIS H-1B Employer Data Hub" if table else "",
+               "boards": len(tasks), "errors": errs, "funnel": {**funnel, "shown": len(jobs)}, "h1b_source": "USCIS H-1B Employer Data Hub" if table else "",
                "jobs": jobs}, open(OUT, "w"), separators=(",", ":"))
     for k, v in samples.items(): print("sample errors", k, sorted(set(v))[:4])
+    print("FUNNEL", json.dumps({**funnel, "shown": len(jobs)}))
+    print("BY SOURCE", json.dumps(dict(__import__("collections").Counter(j["source"] for j in jobs))))
     print(f"{len(jobs)} jobs from {len(tasks)} boards in {time.time()-t0:.0f}s; board errors {errs}")
 
 if __name__ == "__main__":
