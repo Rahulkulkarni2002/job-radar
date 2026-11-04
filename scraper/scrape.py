@@ -111,9 +111,13 @@ def years_required(txt):
     t = (txt or "").lower()
     for w, n in WORDNUM.items(): t = re.sub(r"\b" + w + r"\b(?=\s*(\(\d+\)\s*)?\+?\s*(or more )?(years?|yrs?))", str(n), t)
     best = None
-    pat = r"(\d{1,2})\s*(?:\+|plus)\s*\)?\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:-|–|to)\s*\d{1,2}\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:years?|yrs?)\s+(?:of|in|as|at|working|within|doing|leading|managing|building|across|experience|professional|relevant|related)\b|(?:minimum|at least)\s+(?:of\s+)?(\d{1,2})\s*(?:years?|yrs?)"
+    pat = r"(\d{1,2})\s*(?:\+|plus)\s*\)?\s*(?:years?|yrs?)\b|(\d{1,2}\s*(?:-|–|to)\s*\d{1,2})\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:years?|yrs?)\s+(?:of|in|as|at|working|within|doing|leading|managing|building|across|experience|professional|relevant|related)\b|(?:minimum|at least)\s+(?:of\s+)?(\d{1,2})\s*(?:years?|yrs?)"
     for m in re.finditer(pat, t):
-        n = int(next(g for g in m.groups() if g))
+        g = next(x for x in m.groups() if x)
+        if re.search(r"(-|–|to)", g):   # range: "2-4 years" / "3-5 years" = mid-level -> use the top; "1-3", "0-2", "2-3", "1-4" -> use the bottom
+            lo, hi = [int(x) for x in re.findall(r"\d{1,2}", g)][:2]
+            n = hi if (lo >= 2 and hi >= 4) else lo
+        else: n = int(g)
         if n >= 15: continue
         pre = t[max(0, m.start() - 25):m.start()]
         if re.search(r"\b(for|over|more than|than|nearly|almost|since|past|within the (last|past)|history of|founded|age|aged|old)\s*$", pre): continue
@@ -262,6 +266,16 @@ def family_gate(fam, f, hits):
     if fam == "ot": return f >= 35 and bool(h & {"SQL", "Excel", "Python"}) and len(h) >= 3
     if fam == "ai": return f >= 30 and bool(h & {"SQL", "Python"}) and bool(h & {"GenAI", "ML"})
     return False
+
+DOMAIN_EXP = r"investment banking|management consulting|strategy consulting|consulting firm|private equity|venture capital|big ?4|public accounting|audit experience|saas fp&a|sell[- ]side|buy[- ]side|equity research"
+def domain_problem(jd):
+    """Required years must be in an industry he hasn't worked in (IB, consulting, PE/VC, Big 4 audit, SaaS FP&A)."""
+    t = (jd or "").lower()
+    for m in re.finditer(r"\d{1,2}\s*(?:\+|plus|-|–|to)?\s*\d{0,2}\s*\+?\s*(?:years?|yrs?)", t):
+        clause = re.split(r"[.;•·]|\s\*\s", t[m.start():m.start() + 220])[0]
+        if re.search(DOMAIN_EXP, clause) and not re.search(r"prefer|nice to have|a plus|bonus|or (related|similar|equivalent|analytical|quantitative)|or other", clause):
+            if not _section_is_preferred(t, m.start()): return clause[:150]
+    return None
 
 def part_time(title, jd):
     return bool(re.search(r"part[- ]time|adjunct|lecturer|\bper diem\b|\bprn\b|seasonal|temporary|\btemp\b|internship|\b(10|15|19) hours", (title + " " + (jd or "")[:1500]).lower())) and not re.search(r"\bfull[- ]time\b", title.lower())
@@ -618,7 +632,8 @@ def main():
         if j["years"] is not None and j["years"] > 3: drop("needs > 3 years", j); continue
         if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only"); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
         if timing_problem(j["jd"]): drop("start date / grad window"); continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
-        if degree_problem(j["jd"]): drop("PhD / licence required"); continue             # strict: PhD/MD-only roles and required licenses (CPA/CFA/RN...) dropped
+        if degree_problem(j["jd"]): drop("PhD / licence required"); continue
+        if domain_problem(j["jd"]): drop("needs IB / consulting / PE / Big4 experience", j); continue             # strict: PhD/MD-only roles and required licenses (CPA/CFA/RN...) dropped
         j["opt"] = opt_related(j["title"], j["jd"])
         if j["opt"] == "weak": drop("not Business-Analytics related (OPT)", j); continue                  # OPT: duties must be directly related to Business Analytics
         if part_time(j["title"], j["jd"]): drop("part-time / temp"); continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
