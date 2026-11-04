@@ -328,27 +328,34 @@ def workday(board, name, mws=False):
         wd, tenant, site = board.split("|"); base = f"https://{wd}.myworkdaysite.com"; job_base = f"{base}/en-US/recruiting/{tenant}/{site}"
     else:
         tenant, wd, site = board.split("|"); base = f"https://{tenant}.{wd}.myworkdayjobs.com"; job_base = f"{base}/en-US/{site}"
-    out = []
-    for q in ("analyst", "data", "analytics"):
-        try:
-            d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": q}).encode())
-        except urllib.error.HTTPError as e:
-            if e.code != 422: raise
-            # our request format was rejected (not a block): retry once with the minimal payload this tenant accepts
-            d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"appliedFacets": {}, "limit": 20, "offset": 0}).encode())
-        time.sleep(1.0)                                   # be polite: pause between searches on the same site
-        for j in d.get("jobPostings", []):
-            p = (j.get("postedOn") or "").lower()
-            n = 0 if "today" in p else 1 if "yesterday" in p else (99 if "30+" in p else int((re.findall(r"\d+", p) or [99])[0]))
-            loc = j.get("locationsText", "")
-            if n > MAX_AGE or not relevant(j["title"]) or (not us(loc) and "locations" not in loc.lower()): continue
-            try: info = get(f"{base}/wday/cxs/{tenant}/{site}{j['externalPath']}").get("jobPostingInfo", {})
-            except Exception: info = {}
-            loc2 = info.get("location") or loc
-            if info.get("location") and not us(loc2): continue
-            if not info.get("location") and not us(loc): continue
-            out.append(job(name, j["title"], f"{job_base}{j['externalPath']}", (TODAY - datetime.timedelta(days=n)).isoformat(), loc2, strip(info.get("jobDescription")), "Workday"))
+    out, seen_paths = [], set()
+    for q in ("analyst", "business analyst", "data", "analytics"):
+        for off in range(0, 100, 20):                 # read up to 100 results per search (big employers have hundreds)
+            try:
+                d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"appliedFacets": {}, "limit": 20, "offset": off, "searchText": q}).encode())
+            except urllib.error.HTTPError as e:
+                if e.code != 422 or off: raise
+                # our request format was rejected (not a block): retry once with the minimal payload this tenant accepts
+                d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"appliedFacets": {}, "limit": 20, "offset": 0}).encode())
+            time.sleep(1.0)                           # be polite: pause between requests to the same site
+            posts = d.get("jobPostings", [])
+            for j in posts:
+                path = j.get("externalPath")
+                if not path or path in seen_paths: continue
+                seen_paths.add(path)
+                p = (j.get("postedOn") or "").lower()
+                n = 0 if "today" in p else 1 if "yesterday" in p else (99 if "30+" in p else int((re.findall(r"\d+", p) or [99])[0]))
+                loc = j.get("locationsText", "")
+                if n > MAX_AGE or not relevant(j["title"]) or (not us(loc) and "locations" not in loc.lower()): continue
+                try: info = get(f"{base}/wday/cxs/{tenant}/{site}{path}").get("jobPostingInfo", {})
+                except Exception: info = {}
+                loc2 = info.get("location") or loc
+                if info.get("location") and not us(loc2): continue
+                if not info.get("location") and not us(loc): continue
+                out.append(job(name, j["title"], f"{job_base}{path}", (TODAY - datetime.timedelta(days=n)).isoformat(), loc2, strip(info.get("jobDescription")), "Workday"))
+            if len(posts) < 20 or d.get("total", 999) <= off + 20: break
     return out
+
 def smartrecruiters(slug, name):
     out = []
     for j in get(f"https://api.smartrecruiters.com/v1/companies/{slug}/postings?limit=100").get("content", []):
@@ -619,23 +626,26 @@ def main():
     funnel = {"scraped (relevant title, US, <=15 days)": len(res)}
     print("SCRAPED BY SOURCE (before filters)", json.dumps(dict(__import__("collections").Counter(j["source"] for j in res))))
     dropped_samples = {}
+    fam_funnel = {}
     def drop(reason, j=None):
         funnel[reason] = funnel.get(reason, 0) + 1
+        if j is not None:
+            f = family(j["title"], j.get("jd", ""), False); fam_funnel.setdefault(f, {}); fam_funnel[f][reason] = fam_funnel[f].get(reason, 0) + 1
         if j is not None and len(dropped_samples.setdefault(reason, [])) < 40: dropped_samples[reason].append(f"{j['company'][:22]} | {j['title'][:60]}")
     for j in sorted(res, key=lambda j: (j["source"] == "Simplify new-grad",)):   # prefer direct ATS copy (has JD)
         key = (norm_co(j["company"]), re.sub(r"[^a-z0-9]+", " ", j["title"].lower()).strip())
         if key in seen or j["url"] in seen: drop("duplicate"); continue
-        if re.search(CLEARANCE_COS, j["company"], re.I): drop("clearance employer"); continue
+        if re.search(CLEARANCE_COS, j["company"], re.I): drop("clearance employer", j); continue
         seen.add(key); seen.add(j["url"])
         if j["years"] is not None and j["years"] > 3: drop("needs > 3 years", j); continue
-        if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only"); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
-        if timing_problem(j["jd"]): drop("start date / grad window"); continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
-        if degree_problem(j["jd"]): drop("PhD / licence required"); continue
+        if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only", j); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
+        if timing_problem(j["jd"]): drop("start date / grad window", j); continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
+        if degree_problem(j["jd"]): drop("PhD / licence required", j); continue
         if domain_problem(j["jd"]): drop("needs IB / consulting / PE / Big4 experience", j); continue
         if engineering_problem(j["jd"]): drop("engineering / hardware role (C++, CUDA, FPGA...)", j); continue             # strict: PhD/MD-only roles and required licenses (CPA/CFA/RN...) dropped
         j["opt"] = opt_related(j["title"], j["jd"])
         if j["opt"] == "weak": drop("not Business-Analytics related (OPT)", j); continue                  # OPT: duties must be directly related to Business Analytics
-        if part_time(j["title"], j["jd"]): drop("part-time / temp"); continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
+        if part_time(j["title"], j["jd"]): drop("part-time / temp", j); continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
         j["contract"] = bool(re.search(r"(contract(or)?|1099|c2c|corp[- ]to[- ]corp|freelance|apprentice)", (j["title"] + " " + j["jd"][:1500]).lower()))
         m, hit, miss = skill_match(j["title"], j["jd"])
         if m is None or m < MIN_MATCH: drop("skill match < 80%", j); continue          # candidate rule: keep only jobs with >= 80% skill match
@@ -666,6 +676,7 @@ def main():
                "jobs": jobs}, open(OUT, "w"), separators=(",", ":"))
     for k, v in samples.items(): print("sample errors", k, sorted(set(v))[:4])
     print("FUNNEL", json.dumps({**funnel, "shown": len(jobs)}))
+    for f, d in fam_funnel.items(): print("SECTION FUNNEL", f, json.dumps(d), "shown", sum(1 for x in jobs if x.get("family") == f))
     for k, v in dropped_samples.items(): print("DROPPED[" + k + "]", " || ".join(v))
     print("BY SOURCE", json.dumps(dict(__import__("collections").Counter(j["source"] for j in jobs))))
     print(f"{len(jobs)} jobs from {len(tasks)} boards in {time.time()-t0:.0f}s; board errors {errs}")
