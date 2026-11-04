@@ -99,3 +99,6 @@ jupyter
 budgeting
 plotly
 polars
+statsmodels
+time series
+matplotlib
