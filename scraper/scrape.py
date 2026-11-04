@@ -106,38 +106,29 @@ def salary(txt, comp=None):
     return f"${lo/1000:.0f}K – ${hi/1000:.0f}K"
 WORDNUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
 def years_required(txt):
-    """Strictest REQUIRED years of experience found in any sentence about experience (preferred/nice-to-have ignored).
-    Handles '6+ years', '(6 + years)', '6-8 years', 'minimum of 5 years', 'at least five years', 'experience: 4 yrs'."""
+    """Strictest REQUIRED years of experience. Works on whitespace-collapsed JD text: a number is 'preferred' only if
+    the preference word is in the SAME clause (within ~90 chars, no clause break) or it sits under a Preferred/Bonus heading."""
     t = (txt or "").lower()
     for w, n in WORDNUM.items(): t = re.sub(r"\b" + w + r"\b(?=\s*(\(\d+\)\s*)?\+?\s*(or more )?(years?|yrs?))", str(n), t)
     best = None
-    for s in re.split(r"(?<=[.!?;])\s+|\n+|\s\*\s|•|·", t):
-        if not re.search(r"experience|exp\b|background|track record|working in|work in|history of", s): continue
-        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|years old|years of age|over \d+ years|for \d+ years,? (we|our|the company)", s): continue
-        for m in re.finditer(r"(\d{1,2})\s*(?:\+|\s*plus)?\s*(?:-|–|to|or)?\s*(?:\d{1,2})?\s*\+?\s*\)?\s*(?:years?|yrs?)\b", s):
-            n = int(m.group(1))
-            if n < 15: best = n if best is None else max(best, n)
-    # Also catch requirement phrasing WITHOUT the word "experience": "8+ years in management consulting", "3-5 years as an analyst"
-    for m in re.finditer(r"(\d{1,2})\s*(?:\+|plus)\s*years?\b|(\d{1,2})\s*(?:-|–|to)\s*\d{1,2}\s*years?\b|(\d{1,2})\s*years?\s+(?:in|of|as|at|working|within|doing|leading|managing|building|across)\b", t):
+    pat = r"(\d{1,2})\s*(?:\+|plus)\s*\)?\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:-|–|to)\s*\d{1,2}\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:years?|yrs?)\s+(?:of|in|as|at|working|within|doing|leading|managing|building|across|experience|professional|relevant|related)\b|(?:minimum|at least)\s+(?:of\s+)?(\d{1,2})\s*(?:years?|yrs?)"
+    for m in re.finditer(pat, t):
         n = int(next(g for g in m.groups() if g))
+        if n >= 15: continue
         pre = t[max(0, m.start() - 25):m.start()]
-        ctx = t[max(0, m.start() - 160):m.end() + 160]
         if re.search(r"\b(for|over|more than|than|nearly|almost|since|past|within the (last|past)|history of|founded|age|aged|old)\s*$", pre): continue
-        a_ = max(t.rfind(". ", 0, m.start()), t.rfind("; ", 0, m.start()), t.rfind(" * ", 0, m.start()), 0)
-        b_ = min([x for x in (t.find(". ", m.end()), t.find("; ", m.end()), t.find(" * ", m.end())) if x != -1] or [len(t)])
-        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired", t[a_:b_]): continue      # same sentence only
+        ctx = t[max(0, m.start() - 160):m.end() + 160]
         if re.search(r"years old|years of age|warranty|contract term|vesting|anniversar", ctx): continue
-        if n < 15: best = n if best is None else max(best, n)
+        # same clause only: from the previous clause break to the next one, capped at ~90 chars each side
+        left = t[max(0, m.start() - 90):m.start()]; right = t[m.end():m.end() + 90]
+        left = re.split(r"[.;:!?•·]|\s\*\s|\s-\s", left)[-1]; right = re.split(r"[.;:!?•·]|\s\*\s", right)[0]
+        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|is a plus", left + " " + right): continue
+        if _section_is_preferred(t, m.start()): continue
+        best = n if best is None else max(best, n)
     if best is not None: return best
     if re.search(r"new grad|recent graduate|entry[- ]level|university graduate|early career|campus|0-?\s?[12] years", t): return 0
     return None
 
-# ---------- strict eligibility checks (candidate: F-1 -> OPT starts 2027-01-28, graduates Dec 2026) ----------
-OPT_START, LATEST_START = datetime.date(2027, 1, 28), datetime.date(2027, 3, 31)
-GRAD = datetime.date(2026, 12, 15)
-NEG = r"\b(not|no|unable|cannot|can't|won't|will not|without|n't|ineligible|not eligible|unavailable|not available|does not|do not|are not|is not|must be (a )?(u\.?s\.? )?citizen|only u\.?s\.? citizens|citizenship (is )?required|permanent residen\w*|green card)\b"
-VISA = r"\b(sponsor\w*|visas?|h-?1b|h1-?b|f-?1|immigration|work authori[sz]ation|employment authori[sz]ation|authori[sz]ed to work)\b"
-EEO = r"without regard|regardless of|discriminat|equal (employment )?opportunity|protected (veteran|characteristic|status)|e-verify|affirmative action|fair chance"
 def sentences(t): return re.split(r"(?<=[.!?;])\s+|\n+|\s\*\s|•", t or "")
 def no_sponsorship(t):
     for s in sentences(t):
@@ -192,7 +183,7 @@ def _section_is_preferred(t, pos):
     """Is position `pos` inside a 'preferred' section? (looks at the closest section header before it)"""
     before = t[max(0, pos - 2500):pos]
     p = [m.end() for m in re.finditer(PREF_HDR, before)]; r = [m.end() for m in re.finditer(REQ_HDR, before)]
-    return bool(p) and (not r or max(p) > max(r))
+    return bool(p) and (not r or max(p) >= max(r))   # 'Preferred Qualifications' also matches 'qualifications' at the same spot
 def degree_problem(jd):
     """Reason string if a REQUIRED qualification needs a doctorate (no master's/experience alternative) or a licence he doesn't hold.
     Works on whitespace-collapsed JD text: decides required vs preferred from the nearest section header + local wording."""
