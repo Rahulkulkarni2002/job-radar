@@ -402,7 +402,7 @@ def amazon(_board, name):
             loc = r.get("normalized_location") or r.get("location") or ""
             if age(posted) > MAX_AGE or not relevant(r.get("title", "")) or not us(loc + " USA"): continue
             txt = strip(" ".join(r.get(k) or "" for k in ("description", "basic_qualifications", "preferred_qualifications")))
-            out.append(job(r.get("company_name") or "Amazon", r["title"], "https://www.amazon.jobs" + r.get("job_path", ""), posted, loc, txt, "amazon.jobs"))
+            out.append(job("Amazon", r["title"], "https://www.amazon.jobs" + r.get("job_path", ""), posted, loc, txt, "amazon.jobs"))
         time.sleep(1.0)
     return out
 # ---------- big-tech companies with their own careers systems ----------
@@ -639,6 +639,11 @@ def main():
     if prev_n >= 20 and len(jobs) < 0.4 * prev_n:
         print(f"GUARD: only {len(jobs)} jobs vs {prev_n} last time - NOT publishing; keeping previous list. Errors: {errs}")
         raise SystemExit(1)
+    cos = {}
+    for k, v in BOARDS.items():
+        for _b, n in v.items(): cos.setdefault(n.strip(), {"name": n.strip(), "ats": {"myworkdaysite": "Workday", "oracle": "Oracle Cloud"}.get(k, k.title())})
+    for n, a in (("Amazon", "amazon.jobs"), ("Apple", "Apple careers"), ("Google", "Google careers"), ("TikTok", "TikTok careers")): cos.setdefault(n, {"name": n, "ats": a})
+    json.dump(sorted(cos.values(), key=lambda c: c["name"].lower()), open(OUT.parent / "companies.json", "w"), separators=(",", ":"))
     json.dump({"updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), "count": len(jobs),
                "boards": len(tasks), "errors": errs, "funnel": {**funnel, "shown": len(jobs)}, "h1b_source": "USCIS H-1B Employer Data Hub" if table else "",
                "jobs": jobs}, open(OUT, "w"), separators=(",", ":"))
