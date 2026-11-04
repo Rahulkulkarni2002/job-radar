@@ -2892,7 +2892,7 @@
 "ebi|wd5|ebicareers": "Ensign-Bickford Industries",
 "westernunion|wd5|WesternUnionJobs": "Western Union",
 "spgi|wd5|SPGI_Careers": "S&P Global",
-"broadcom|wd1|external_career": "Broadcom",
+"broadcom|wd1|external_career": "Broadcom (VMware)",
 "nrel|wd5|NLR": "National Laboratory of the Rockies",
 "rfcuny|wd108|RFCUNY": "RFCUNY",
 "chess|wd1|CNMJOBS": "CNM Central New Mexico Community College",
@@ -3646,7 +3646,8 @@
 "faithtechnologies|wd1|fti": "Faith Technologies",
 "macfound|wd1|MAC_FOUND_EXT_CAREERS": "John D. and Catherine T. MacArthur Foundation",
 "uipath|wd1|UiPath": "UiPath",
-"uipath|wd5|UiPath": "UiPath"
+"uipath|wd5|UiPath": "UiPath",
+"broadcom|wd1|External_Career": "Broadcom (VMware)"
 },
 "smartrecruiters": {
 "BoydGaming": "Boyd Gaming",
