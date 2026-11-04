@@ -143,6 +143,9 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <input type="search" id="coQ" placeholder="Search a company (e.g. Google, Airbnb, Workday)…">
     <label class="ck"><input type="checkbox" id="coAll"> Show all scanned companies (incl. 0 matching roles)</label>
   </div>
+  <h3 style="margin:8px 0 6px">⭐ Your watchlist</h3>
+  <div class="card" style="margin-bottom:16px"><table><thead><tr><th>Company</th><th>Open roles that fit you</th><th>Status</th><th></th></tr></thead><tbody id="watchRows"></tbody></table></div>
+  <h3 style="margin:8px 0 6px">All companies</h3>
   <div class="meta" id="coMeta" style="margin-bottom:8px"></div>
   <div class="card"><table><thead><tr><th>Company</th><th>Open roles that fit you</th><th>Sections</th><th>Careers system</th><th></th></tr></thead><tbody id="coRows"></tbody></table></div>
 </section>
@@ -331,8 +334,27 @@ document.getElementById("copyFb").onclick=async()=>{const rows=Object.values(DIS
   const by={};rows.forEach(r=>(by[r.reason]=by[r.reason]||[]).push(r));
   const txt="Job Radar feedback — jobs I hid and why:\n\n"+Object.entries(by).map(([k,v])=>`## ${k} (${v.length})\n`+v.map(r=>`- ${r.company} — ${r.title} (${r.url})`).join("\n")).join("\n\n");
   try{await navigator.clipboard.writeText(txt);alert(`Copied ${rows.length} hidden jobs. Paste it to Claude in chat.`)}catch(e){prompt("Copy this and paste it to Claude:",txt)}};
+// ---------- Watchlist (companies the candidate asked for) ----------
+const WATCH=[["Apple","Apple","https://jobs.apple.com/en-us/search?location=united-states-USA"],["Google","Google","https://www.google.com/about/careers/applications/jobs/results/"],
+ ["YouTube → Google careers","Google","https://www.google.com/about/careers/applications/jobs/results/?company=YouTube"],["Amazon","Amazon","https://www.amazon.jobs/en/"],
+ ["TikTok","TikTok","https://lifeattiktok.com/search"],["Microsoft","Microsoft","https://jobs.careers.microsoft.com/global/en/search",1],["Meta","Meta","https://www.metacareers.com/jobs",1],
+ ["Tesla","Tesla","https://www.tesla.com/careers/search/",1],["Netflix","Netflix","https://explore.jobs.netflix.net/careers"],["NVIDIA","NVIDIA","https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite"],
+ ["Airbnb","Airbnb","https://careers.airbnb.com/positions/"],["Workday","Workday","https://workday.wd5.myworkdayjobs.com/Workday_Early_Career"],["LinkedIn","LinkedIn","https://careers.linkedin.com/"],
+ ["VMware → Broadcom","Broadcom (VMware)","https://broadcom.wd1.myworkdayjobs.com/External_Career"],["UiPath","UiPath","https://careers.uipath.com/"],["Salesforce","Salesforce","https://careers.salesforce.com/"],
+ ["Adobe","Adobe","https://careers.adobe.com/"],["Uber","Uber","https://www.uber.com/us/en/careers/"],["Stripe","Stripe","https://stripe.com/jobs"],["Databricks","Databricks","https://www.databricks.com/company/careers"],
+ ["JPMorgan Chase","JPMorgan Chase","https://careers.jpmorgan.com/"],["Qualcomm","Qualcomm","https://careers.qualcomm.com/",1],["PayPal","PayPal","https://careers.pypl.com/",1],["Y Combinator startups","__yc","https://www.workatastartup.com/"]];
+function renderWatch(){const live=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]);
+  document.getElementById("watchRows").innerHTML=WATCH.map(([label,co,url,manual])=>{
+    const n=co==="__yc"?live.filter(j=>j.yc).length:live.filter(j=>j.company===co||j.company.toLowerCase().startsWith(co.toLowerCase()+" ")).length;
+    const status=manual?'<span class="badge b-warn" title="Their site blocks automated scanning">check manually</span>':'<span class="badge b-good">scanned every 3 h</span>';
+    const view=n?(co==="__yc"?`<button class="btn pri" data-yc="1">View ${n}</button>`:`<button class="btn pri" data-co="${h(co)}">View ${n}</button>`):"";
+    return`<tr><td data-l="Company" class="first"><b>${h(label)}</b></td><td data-l="Open roles"><span class="num" style="color:var(${n?"--good":"--muted"})">${manual?"—":n}</span></td><td data-l="Status">${status}</td>
+      <td><div style="display:flex;gap:4px">${view}<a class="btn" href="${url}" target="_blank" rel="noopener">Careers page ↗</a></div></td></tr>`}).join("")}
+document.getElementById("watchRows").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.yc){document.getElementById("coType").value="yc";COMPANY="";show("jobs");render();return}
+  COMPANY=b.dataset.co;FAM="all";document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x.dataset.f==="all"));show("jobs");render()};
 // ---------- Companies tab ----------
-function renderCos(){const q=document.getElementById("coQ").value.toLowerCase().trim(),all=document.getElementById("coAll").checked;
+function renderCos(){renderWatch();const q=document.getElementById("coQ").value.toLowerCase().trim(),all=document.getElementById("coAll").checked;
   const live=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]);const by={};
   live.forEach(j=>{const c=by[j.company]||(by[j.company]={name:j.company,n:0,fams:new Set(),src:new Set()});c.n++;c.fams.add(famOf(j));c.src.add(j.source)});
   let rows=Object.values(by);
