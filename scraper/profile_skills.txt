@@ -95,3 +95,7 @@ xgboost
 zoho
 aws
 spark
+jupyter
+budgeting
+plotly
+polars
