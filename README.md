@@ -20,7 +20,7 @@ A personal job board that refreshes itself about every 1–3 hours (hourly sched
 - **OPT relatedness:** the job's duties must clearly be Business Analytics work (data analysis, statistics, forecasting, BI, ML, reporting/insights). Purely operational roles are dropped. Part-time/temp/adjunct roles are dropped (OPT needs ≥ 20 h/week). Contract roles are flagged (STEM OPT needs a W-2 employer enrolled in E-Verify).
 - **Sections:** 🔬 Data Scientist · 📊 Data Analyst · 💼 Business Analyst · 🤖 AI Analyst · 📈 Finance & Other Analyst (FP&A, pricing, risk, credit, investment, actuarial, market research…) — each judged on what that role needs (DS: Python + ML/stats; DA: SQL + BI/stats; BA: SQL/Excel + BI/forecasting/finance; AI: AI/GenAI + SQL/Python).
 - **Profile fit ≥ 45/100:** the JD must ask for your core stack — SQL or Python plus several of Tableau, ML, forecasting, statistics, A/B testing/causal, segmentation/churn, dashboards, Snowflake/Databricks/PySpark, FP&A, GenAI (weighted by how central each is to you). Each job shows *why* it matches.
-- Kept only if your skills cover **≥ 80%** of the JD's hard skills, and ≤ 3 years required.
+- Kept only if your skills cover **≥ 80%** (Data Scientist / Data Analyst) or **≥ 70%** (Business Analyst, Finance & Other, AI: their JDs list learn-on-the-job tools like Jira, Agile, UAT) of the JD's hard skills, and ≤ 3 years required.
 - **Website:** `docs/` is served by GitHub Pages and includes a **Jobs** tab and an **ATS** tab.
 - **Privacy:** your resume is read only inside your browser and is never uploaded or saved to this repo. Your chance % and ATS score are calculated on your own device.
 

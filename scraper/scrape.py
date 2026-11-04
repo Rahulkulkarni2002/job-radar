@@ -67,6 +67,7 @@ SYN = {"ai": {"generative ai", "machine learning"}, "artificial intelligence": {
        "statistics": {"statistical analysis"}, "experimentation": {"a/b testing"}, "forecast": {"forecasting"}, "budgeting": {"budget"}, "llm": {"generative ai"}, "llms": {"generative ai"}}
 PROFILE = set(l.strip() for l in open(pathlib.Path(__file__).resolve().parent / "profile_skills.txt") if l.strip() and not l.startswith("#"))
 MIN_MATCH = int(os.environ.get("MIN_MATCH", 80))
+MIN_MATCH_BROAD = int(os.environ.get("MIN_MATCH_BROAD", 70))
 def skill_terms(text):
     t = " " + re.sub(r"\s+", " ", (text or "").lower()) + " "
     h = {x for x in TERMS if TERM_RX[x].search(t)}
@@ -167,7 +168,7 @@ def timing_problem(t):
     return None
 
 # ---------- OPT: job must be directly related to M.S. Business Analytics ----------
-ANALYTIC_DUTIES = r"\b(data analysis|analy[sz]e (data|trends|results|performance|large)|analytics|statistic\w*|forecast\w*|predictive|modell?ing|machine learning|sql|python|\br\b|excel|tableau|power bi|looker|dashboards?|reporting|insights?|kpis?|metrics|business intelligence|data[- ]driven|quantitative|visuali[sz]\w*|optimi[sz]ation|experiment\w*|a/b test\w*|segmentation|data mining|data model\w*|trend analysis|root[- ]cause analysis)\b"
+ANALYTIC_DUTIES = r"\b(requirements (gathering|analysis|documentation)|business requirements|process (analysis|improvement|mapping|optimi[sz]ation)|business process|workflows?|root[- ]cause|gap analysis|use cases|user stories|uat|business analysis|data analysis|analy[sz]e (data|trends|results|performance|large)|analytics|statistic\w*|forecast\w*|predictive|modell?ing|machine learning|sql|python|\br\b|excel|tableau|power bi|looker|dashboards?|reporting|insights?|kpis?|metrics|business intelligence|data[- ]driven|quantitative|visuali[sz]\w*|optimi[sz]ation|experiment\w*|a/b test\w*|segmentation|data mining|data model\w*|trend analysis|root[- ]cause analysis)\b"
 ANALYTIC_TITLE = r"analy|data|scien|insight|intelligence|forecast|quant|statistic|fp&a|financ|pricing|strategy|decision|research|economist|planning|reporting|ai\b|machine learning|product"
 def opt_related(title, jd):
     """'strong' / 'ok' / 'weak' - how clearly the duties match a Business Analytics degree (for the OPT relatedness requirement)."""
@@ -648,7 +649,9 @@ def main():
         if part_time(j["title"], j["jd"]): drop("part-time / temp", j); continue      # OPT: needs >= 20 h/week; part-time/temp/adjunct dropped
         j["contract"] = bool(re.search(r"(contract(or)?|1099|c2c|corp[- ]to[- ]corp|freelance|apprentice)", (j["title"] + " " + j["jd"][:1500]).lower()))
         m, hit, miss = skill_match(j["title"], j["jd"])
-        if m is None or m < MIN_MATCH: drop("skill match < 80%", j); continue          # candidate rule: keep only jobs with >= 80% skill match
+        _fam0 = family(j["title"], j["jd"], False)
+        _min = MIN_MATCH if _fam0 in ("ds", "da") else MIN_MATCH_BROAD   # BA / Finance / AI roles list learn-on-the-job tools (Jira, Agile, UAT...)
+        if m is None or m < _min: drop(f"skill match < {_min}%", j); continue          # candidate rule: keep only jobs with >= 80% skill match
         j["match"], j["missing"] = m, miss
         f, hits, hard = fit(j["title"], j["jd"])
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
