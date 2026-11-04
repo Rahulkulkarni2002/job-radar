@@ -7,7 +7,7 @@
 
 **Quick links:** [Jobs](https://rahulkulkarni2002.github.io/job-radar/) · [Refresh now (Run workflow)](https://github.com/Rahulkulkarni2002/job-radar/actions/workflows/scrape.yml) · [Raw job data](docs/data/jobs.json)
 
-A personal job board that refreshes itself every 3 hours, around the clock, for analytics, data, AI and finance roles.
+A personal job board that refreshes itself about every 1–3 hours (hourly schedule; GitHub sometimes delays runs), for analytics, data, AI and finance roles.
 
 **How it works**
 - **Scraping:** a GitHub Action (`.github/workflows/scrape.yml`) checks about 2,700 company career boards on Greenhouse, Lever, Ashby, Workday and SmartRecruiters, plus company names discovered from the SimplifyJobs new-grad feed. **Only jobs confirmed on the company's own careers page are listed** (no job-board aggregators). It keeps only US roles posted in the last 15 days that ask for 3 years of experience or less.

@@ -1,7 +1,7 @@
 name: Scrape jobs
 on:
   schedule:
-    - cron: "17 */3 * * *"     # every 3 hours, 24/7
+    - cron: "23 * * * *"       # hourly request (GitHub often delays/skips scheduled runs, so this keeps real refreshes ~every 1-3 h)
   workflow_dispatch: {}        # "Run workflow" button for an instant refresh
 permissions:
   contents: write
