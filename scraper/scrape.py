@@ -273,7 +273,8 @@ def domain_problem(jd):
     t = (jd or "").lower()
     for m in re.finditer(r"\d{1,2}\s*(?:\+|plus|-|–|to)?\s*\d{0,2}\s*\+?\s*(?:years?|yrs?)", t):
         clause = re.split(r"[.;•·]|\s\*\s", t[m.start():m.start() + 220])[0]
-        if re.search(DOMAIN_EXP, clause) and not re.search(r"prefer|nice to have|a plus|bonus|or (related|similar|equivalent|analytical|quantitative)|or other", clause):
+        generic = r"tech(nology)? (company|companies|firm|startup|industry)|\btech\b|startup|analytics|\bdata\b|corporate|any industry|related (field|role|experience)|similar|equivalent|analytical role|quantitative role|strategic finance|finance team|operations role|business role|or other"
+        if re.search(DOMAIN_EXP, clause) and not re.search(r"prefer|nice to have|a plus|bonus", clause) and not re.search(generic, clause):
             if not _section_is_preferred(t, m.start()): return clause[:150]
     return None
 
