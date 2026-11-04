@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Rule tests (every reported mistake)
+        run: python scraper/test_rules.py
       - name: Scrape company career pages
         run: python scraper/scrape.py
       - name: Publish

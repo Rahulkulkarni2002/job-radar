@@ -121,7 +121,7 @@ def years_required(txt):
         if re.search(r"years old|years of age|warranty|contract term|vesting|anniversar", ctx): continue
         # same clause only: from the previous clause break to the next one, capped at ~90 chars each side
         left = t[max(0, m.start() - 90):m.start()]; right = t[m.end():m.end() + 90]
-        left = re.split(r"[.;:!?•·]|\s\*\s|\s-\s", left)[-1]; right = re.split(r"[.;:!?•·]|\s\*\s", right)[0]
+        left = re.split(r"[.;:!?•·]|\s\*\s|\s-\s", left)[-1]; right = re.split(r"[.,;:!?•·]|\s\*\s", right)[0]
         if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|is a plus", left + " " + right): continue
         if _section_is_preferred(t, m.start()): continue
         best = n if best is None else max(best, n)
@@ -191,6 +191,10 @@ def degree_problem(jd):
     for m in re.finditer(DOCTORATE, t):
         if _section_is_preferred(t, m.start()): continue
         win = t[max(0, m.start() - 90):m.end() + 140]
+        cut = re.search(PREF_HDR + "|" + REQ_HDR, t[m.end():m.end() + 140])
+        if cut: win = t[max(0, m.start() - 90):m.end() + cut.start()]          # stop at the next section heading
+        lead = re.split(PREF_HDR + "|" + REQ_HDR, t[max(0, m.start() - 90):m.start()])[-1]
+        win = lead + t[m.start():m.start() + (len(win) - (m.start() - max(0, m.start() - 90)))]
         if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|or pursuing", win): continue
         if re.search(LOWER_DEG, win): continue
         if not re.search(r"degree|required|qualification|must|field|holder|in (bio|computer|stat|math|phys|eng|econ|chem|neuro|epidem|psych)|\bwith\b|or an", win): continue
