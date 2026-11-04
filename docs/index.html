@@ -128,6 +128,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
       <div><div class="score" id="chance2" style="font-size:28px">–</div><div class="muted">est. chance of hearing back</div></div>
       <div class="muted" id="verdict" style="flex:1;min-width:200px"></div><div class="badge b-warn" id="atsCountdown"></div>
     </div>
+    <div id="compBar" class="chips" style="margin-top:10px"></div>
     <h4 style="margin-bottom:6px">Skill-by-skill — fix these first</h4>
     <div class="muted" style="font-size:12px;margin-bottom:6px">Sorted by priority. Required skills weigh 2×. Click a row to see the exact sentence from the job description.</div>
     <div id="gapTable"></div>
@@ -164,14 +165,16 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 // ---------- storage (safe) ----------
 const S={get(k,d){try{const v=localStorage.getItem("jr_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("jr_"+k,JSON.stringify(v))}catch(e){}}};
 // ---------- ATS lexicon (same as scraper/tools) ----------
-const LEX=`sql|python|r|sas|stata|spss|excel|advanced excel|vba|pivot tables|vlookup|power bi|tableau|looker|qlik|domo|alteryx|dbt|airflow|snowflake|databricks|bigquery|redshift|aws|azure|gcp|spark|pyspark|hadoop|hive|delta lake|duckdb|postgresql|mysql|etl|elt|etl/elt|data pipelines|data warehousing|data modeling|data mart|git|github|jupyter|docker|api|rest api|fastapi|streamlit|mlflow|pandas|numpy|scikit-learn|xgboost|lightgbm|catboost|random forest|prophet|tensorflow|pytorch|nlp|llm|llms|generative ai|genai|ai|artificial intelligence|machine learning|deep learning|statistics|statistical analysis|statistical inference|statistical modeling|regression|classification|clustering|segmentation|forecasting|time series|predictive modeling|predictive analytics|causal inference|uplift modeling|a/b testing|experimentation|hypothesis testing|bayesian|optimization|cross-validation|feature engineering|model deployment|model validation|dashboards|dashboard|data visualization|visualization|reporting|data storytelling|data cleaning|data quality|data validation|data analysis|data analytics|analytics|business intelligence|bi|kpis|kpi|metrics|insights|stakeholders|stakeholder management|cross-functional|communication|presentation|powerpoint|financial analysis|financial modeling|financial forecasting|fp&a|budgeting|budget|forecast|variance analysis|p&l|cash flow|accounts receivable|invoicing|month-end close|ratio analysis|pricing|revenue|cost analysis|cost forecasting|customer analytics|churn|retention|rfm|crm|marketing analytics|campaign|attribution|product analytics|operations|supply chain|demand planning|sap|oracle|netsuite|erp|salesforce|zoho|risk|credit risk|compliance|research|benchmarking|competitive analysis|business analytics|data science|data scientist|data analyst|analyst`;
+const LEX=`sql|python|r|sas|stata|spss|matlab|scala|java|javascript|excel|advanced excel|vba|pivot tables|vlookup|power bi|tableau|looker|qlik|domo|alteryx|ssrs|ssis|dbt|airflow|snowflake|databricks|bigquery|redshift|aws|azure|gcp|s3|sagemaker|spark|pyspark|hadoop|hive|kafka|delta lake|duckdb|postgresql|mysql|mongodb|nosql|etl|elt|data pipelines|data warehousing|data modeling|data mart|data governance|git|github|jupyter|docker|api|fastapi|streamlit|mlflow|pandas|numpy|scipy|statsmodels|scikit-learn|xgboost|lightgbm|catboost|random forest|prophet|tensorflow|pytorch|nlp|computer vision|llm|generative ai|rag|prompt engineering|chatgpt|copilot|ai|machine learning|deep learning|statistics|statistical analysis|statistical modeling|regression|classification|clustering|segmentation|forecasting|time series|predictive modeling|predictive analytics|causal inference|uplift modeling|a/b testing|experimentation|hypothesis testing|bayesian|optimization|linear programming|simulation|cross-validation|feature engineering|model deployment|dashboards|data visualization|reporting|data storytelling|data cleaning|data quality|data validation|data analysis|business intelligence|kpis|cohort analysis|funnel analysis|root cause analysis|process improvement|six sigma|agile|jira|confluence|smartsheet|sharepoint|powerpoint|requirements gathering|user stories|uat|financial analysis|financial modeling|financial forecasting|fp&a|budgeting|variance analysis|p&l|cash flow|accounts receivable|ratio analysis|pricing|cost analysis|customer analytics|churn|retention|rfm|crm|salesforce|hubspot|marketing analytics|attribution|product analytics|amplitude|mixpanel|supply chain|demand planning|inventory|sap|oracle|netsuite|erp|hyperion|risk|credit risk|compliance|benchmarking|competitive analysis|data scientist|data analyst|data science|business analytics|analyst`;
 const SOFT=new Set(["communication","presentation","stakeholders","stakeholder management","cross-functional","analyst","research","operations","risk","metrics","insights","revenue","campaign","pricing"]);
-const TERMS=[...new Set(LEX.split("|"))].filter(t=>!SOFT.has(t)).sort((a,b)=>b.length-a.length);
+const VARIANTS={"ml": "machine learning", "artificial intelligence": "ai", "genai": "generative ai", "gen ai": "generative ai", "llms": "llm", "large language models": "llm", "bi": "business intelligence", "powerbi": "power bi", "power-bi": "power bi", "ms excel": "excel", "microsoft excel": "excel", "ab testing": "a/b testing", "a-b testing": "a/b testing", "split testing": "a/b testing", "sklearn": "scikit-learn", "scikit learn": "scikit-learn", "postgres": "postgresql", "data modelling": "data modeling", "statistical modelling": "statistical modeling", "predictive modelling": "predictive modeling", "visualisation": "data visualization", "data visualisation": "data visualization", "visualization": "data visualization", "dashboard": "dashboards", "kpi": "kpis", "key performance indicators": "kpis", "forecast": "forecasting", "forecasts": "forecasting", "budget": "budgeting", "optimisation": "optimization", "data warehouse": "data warehousing", "data warehouses": "data warehousing", "amazon web services": "aws", "google cloud": "gcp", "microsoft azure": "azure", "natural language processing": "nlp", "statistical": "statistics", "stats": "statistics", "data analytics": "data analysis", "analytics": "data analysis", "experiments": "experimentation", "a/b tests": "a/b testing", "ab tests": "a/b testing", "etl/elt": "etl", "extract transform load": "etl", "financial planning and analysis": "fp&a", "profit and loss": "p&l", "customer segmentation": "segmentation", "churn prediction": "churn", "regression analysis": "regression", "time-series": "time series", "pyspark": "pyspark", "apache spark": "spark", "excel vba": "vba"};
+const TERMS=[...new Set([...LEX.split("|"),...Object.keys(VARIANTS)])].filter(t=>!SOFT.has(t)).sort((a,b)=>b.length-a.length);
 const SYN={"ai":["generative ai","machine learning","artificial intelligence"],"artificial intelligence":["ai"],"genai":["generative ai"],"bi":["business intelligence","tableau"],"business intelligence":["bi","tableau"],"visualization":["data visualization","tableau"],"dashboard":["dashboards"],"data analysis":["data analytics","analytics"],"statistics":["statistical analysis","statistical inference"],"experimentation":["a/b testing","uplift modeling"],"forecast":["forecasting"]};
 const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 const RX=Object.fromEntries(TERMS.map(t=>[t,new RegExp("(?<![a-z0-9])"+esc(t)+"(?![a-z0-9])")]));
-function terms(text){const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" ";const h=new Set(TERMS.filter(x=>RX[x].test(t)));
-  [["dashboard","dashboards"],["kpi","kpis"],["llm","llms"],["forecast","forecasting"],["budget","budgeting"],["etl","etl/elt"],["elt","etl/elt"]].forEach(([a,b])=>{if(h.has(a)&&h.has(b))h.delete(a)});return h}
+function formsIn(text){const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" ";const m=new Map();
+  TERMS.forEach(x=>{if(RX[x].test(t)){const c=VARIANTS[x]||x;if(!m.has(c))m.set(c,new Set());m.get(c).add(x)}});return m}
+function terms(text){return new Set(formsIn(text).keys())}
 function ats(resume,jd){const want=terms(jd),have=terms(resume);if(want.size<3)return null;const hit=[],miss=[];
   want.forEach(k=>((have.has(k)||(SYN[k]||[]).some(s=>have.has(s)))?hit:miss).push(k));return{score:Math.round(100*hit.length/want.size),hit:hit.sort(),miss:miss.sort(),n:want.size}}
 // ---------- technical vs non-technical ----------
@@ -216,9 +219,23 @@ function evidenceFor(k){const e=EVIDENCE.find(([ks])=>ks.includes(k));return e?e
 const PREF_RX=/prefer|nice to have|a plus|\bplus\b|bonus|ideally|desired|familiarity|exposure to/i;
 function sentencesOf(t){return (t||"").split(/(?<=[.!?;])\s+|\n+|\s\*\s|•|·/).map(x=>x.trim()).filter(Boolean)}
 function countTerm(text,term){const m=(" "+text.toLowerCase().replace(/\s+/g," ")+" ").match(new RegExp("(?<![a-z0-9])"+esc(term)+"(?![a-z0-9])","g"));return m?m.length:0}
-function analyze(resume,jd){const want=terms(jd),have=terms(resume);if(want.size<3)return null;const sents=sentencesOf(jd);const items=[];
-  want.forEach(k=>{const ss=sents.filter(x=>RX[k].test(" "+x.toLowerCase()+" "));const req=ss.length?ss.some(x=>!PREF_RX.test(x)):true;
-    const n=countTerm(jd,k),rn=countTerm(resume,k),syn=(SYN[k]||[]).find(x=>have.has(x)),rel=(RELATED[k]||[]).filter(x=>have.has(x));
+const ATS_W={hard:.70,title:.10,education:.10,experience:.05,soft:.05};
+const TITLE_STOP=new Set("i ii iii iv the and of for to a an new grad senior junior associate remote hybrid us usa level early career".split(" "));
+function titleComp(resume,title){const ws=(title.toLowerCase().match(/[a-z]+/g)||[]).filter(x=>!TITLE_STOP.has(x));if(!ws.length)return 1;const r=resume.toLowerCase();return ws.filter(x=>new RegExp("\\b"+esc(x)).test(r)).length/ws.length}
+const DEG={phd:3,doctor:3,master:2,"m.s.":2,mba:2,bachelor:1,"b.s.":1,degree:1};
+function degLevel(t){t=t.toLowerCase();return Math.max(0,...Object.entries(DEG).filter(([k])=>new RegExp("(?<![a-z])"+esc(k)).test(t)).map(([,v])=>v))}
+function eduComp(resume,jd){const edu=sentencesOf(jd).filter(x=>/degree|bachelor|master|phd|mba/i.test(x)&&!PREF_RX.test(x)).join(" ");if(!edu)return 1;
+  const need=Math.min(degLevel(edu),2)||1,lvl=degLevel(resume)>=need?1:.5;const f=edu.toLowerCase().match(/business|analytics|statistics|economics|finance|mathematics|computer science|data science|engineering|quantitative|information systems|accounting/g);
+  if(!f)return lvl;const r=resume.toLowerCase();return .7*lvl+.3*((f.some(x=>r.includes(x))||f.includes("quantitative"))?1:.5)}
+function expComp(jd){const yoe=+S.get("yoe",2);let need=0;
+  sentencesOf(jd).forEach(x=>{const l=x.toLowerCase();if(PREF_RX.test(l)||/\b(for|over|more than|than|nearly|since)\s*$/.test(l))return;
+    for(const m of l.matchAll(/(\d{1,2})\s*(?:\+|plus)\s*years?|(\d{1,2})\s*(?:-|–|to)\s*\d{1,2}\s*years?|(\d{1,2})\s*years?\s+(?:of|in|as|working)/g)){const n=+(m[1]||m[2]||m[3]);if(n<15&&!/\b(for|over|more than|than)\s*$/.test(l.slice(0,m.index)))need=Math.max(need,n)}});
+  if(!need)return 1;return yoe>=need?1:yoe>=need-1?.6:0}
+const SOFT_T=["communication","stakeholder management","stakeholders","cross-functional","collaboration","presentation","leadership","problem solving","attention to detail","storytelling","time management"];
+function softComp(resume,jd){const j=jd.toLowerCase(),r=resume.toLowerCase(),want=SOFT_T.filter(x=>j.includes(x));return want.length?want.filter(x=>r.includes(x)).length/want.length:1}
+function analyze(resume,jd,jdTitle){const wantF=formsIn(jd),haveF=formsIn(resume),want=new Set(wantF.keys()),have=new Set(haveF.keys());if(want.size<3)return null;const sents=sentencesOf(jd);const items=[];
+  want.forEach(k=>{const fs=[...wantF.get(k)];const ss=sents.filter(x=>fs.some(f=>RX[f].test(" "+x.toLowerCase()+" ")));const req=ss.length?ss.some(x=>!PREF_RX.test(x)):true;
+    const forms=[...wantF.get(k)];const n=Math.max(1,ss.length),rn=forms.reduce((a,f)=>a+countTerm(resume,f),0);const vform=have.has(k)&&rn===0?[...haveF.get(k)][0]:null;const syn=vform||(SYN[k]||[]).find(x=>have.has(x)),rel=(RELATED[k]||[]).filter(x=>have.has(x));
     const pri=req&&n>=2?"H":req?"M":"L";let status,action;
     const ev=evidenceFor(k);
     if(TITLE_TERMS.has(k)&&rn===0){status="title";action=k.startsWith("data scien")?`This is the job's field/title, not a skill to list. Put “Data Scientist” as the headline under your name and describe your ML projects (churn, uplift, forecasting) as data science work.`:`This is the job title. Use “${k.replace(/\b\w/g,c=>c.toUpperCase())}” as the headline under your name — ATS weighs title match heavily.`}
@@ -228,12 +245,15 @@ function analyze(resume,jd){const want=terms(jd),have=terms(resume);if(want.size
     else if(ev){status="elsewhere";action=`You HAVE this — it's just not in this resume. Bring back ${ev}. Write “${k}” word-for-word in that bullet and in Skills.`}
     else if(rel.length){status="related";action=`Not on your resume, but you have ${rel.map(x=>"“"+x+"”").join(", ")}. If you've genuinely used ${k} (course, project, job), add “${k}” to Skills and one bullet. If not, don't add it — mention ${rel[0]} as transferable in your cover letter.`}
     else{status="missing";action=req?`Required here and not on your resume. Add it only if you have real experience. Otherwise this is a true gap: expect it to cost points with the ATS and the recruiter.`:`Preferred only. Skip it unless you've genuinely used it. It won't block you on its own.`}
-    items.push({k,req,pri,n,rn,status,action,quote:(ss[0]||"").slice(0,240)})});
-  const w=i=>i.req?2:1,got=i=>i.status==="match"?1:(i.status==="wording"||i.status==="title")?.5:0;   // score = what THIS resume shows
-  const score=Math.round(100*items.reduce((a,i)=>a+w(i)*got(i),0)/items.reduce((a,i)=>a+w(i),0));
+    items.push({k,req,pri,n,rn,status,action,variant:!!vform,quote:(ss[0]||"").slice(0,240)})});
+  // ATS v2 (same as the resume tool): required 2x, repeated 2x/3x+ = x1.25/x1.5; exact JD wording 1.0, known variant .75, synonym/title .5
+  const w=i=>(i.req?2:1)*(i.n>=3?1.5:i.n===2?1.25:1),got=i=>i.status==="match"?1:i.status==="wording"?(i.variant?.75:.5):i.status==="title"?.5:0;
+  const hard=items.reduce((a,i)=>a+w(i)*got(i),0)/items.reduce((a,i)=>a+w(i),0);
+  const comp={hard,title:titleComp(resume,jdTitle||jd.split(/[.\n]/)[0]),education:eduComp(resume,jd),experience:expComp(jd),soft:softComp(resume,jd)};
+  const score=Math.round(100*Object.entries(ATS_W).reduce((a,[k,v])=>a+v*comp[k],0));
   const order={H:0,M:1,L:2},st={title:0,elsewhere:1,missing:2,related:3,wording:4,match:5};
   items.sort((a,b)=>st[a.status]-st[b.status]||order[a.pri]-order[b.pri]||b.n-a.n);
-  return{score,items,n:items.length,hit:items.filter(i=>i.status==="match").length}}
+  return{score,items,n:items.length,hit:items.filter(i=>i.status==="match").length,components:Object.fromEntries(Object.entries(comp).map(([k,v])=>[k,Math.round(100*v)]))}}
 // ---------- chance estimate ----------
 function daysAgo(d){return Math.max(0,Math.round((Date.now()-new Date(d+"T12:00:00Z"))/864e5))}
 function sponsorRating(j){if(j.sponsor_jd==="no")return"no";if(j.sponsor_jd==="yes")return"open";const a=j.h1b_approvals;
@@ -384,6 +404,7 @@ function runATS(){const pick=DATA.jobs.find(j=>j.id===document.getElementById("j
   const sc=document.getElementById("score");sc.textContent=r.score+"%";sc.style.color=`var(${r.score>=90?"--good":r.score>=80?"--warn":"--bad"})`;
   const c=pick&&!pasted?chance(pick,r.score):chance({posted:new Date().toISOString().slice(0,10),sponsor_jd:"unknown",years:null},r.score);
   document.getElementById("chance2").textContent=(c*100).toFixed(c<.1?1:0)+"%";
+  const C=r.components||{};document.getElementById("verdict").dataset.c=JSON.stringify(C);
   const gaps=r.items.filter(i=>i.status!=="match"),hits=r.items.filter(i=>i.status==="match"),reqMiss=gaps.filter(i=>i.req&&i.status!=="wording").length;
   document.getElementById("verdict").innerHTML=r.score>=90?`<b>Strong match</b> — ${r.hit}/${r.n} skills. ${gaps.length?"Fix the wording items below and apply.":"Apply."}`:
     r.score>=80?`<b>Close</b> — ${r.hit}/${r.n} skills. ${reqMiss} required skill(s) missing; fix any you genuinely have.`:`<b>Weak</b> — ${reqMiss} required skill(s) missing. Tailor first, or skip if they're core to the role.`;
@@ -393,6 +414,8 @@ function runATS(){const pick=DATA.jobs.find(j=>j.id===document.getElementById("j
     <tr class="q" hidden><td colspan="4">JD: “${h(i.quote)}”</td></tr>`;
   const head='<table class="gt"><thead><tr><th>Skill</th><th>In the job</th><th>Your resume</th><th>What to do</th></tr></thead><tbody>';
   document.getElementById("gapTable").innerHTML=gaps.length?head+gaps.map(row).join("")+"</tbody></table>":'<p class="muted">Nothing missing 🎉</p>';
+  const CL={hard:"Hard skills 70%",title:"Job title 10%",education:"Education 10%",experience:"Experience 5%",soft:"Soft skills 5%"};
+  document.getElementById("compBar").innerHTML=Object.entries(C).map(([k,v])=>`<span style="background:var(${v>=85?"--good-bg":v>=60?"--warn-bg":"--bad-bg"});color:var(${v>=85?"--good":v>=60?"--warn":"--bad"})">${CL[k]}: <b>${v}%</b></span>`).join("");
   document.getElementById("hitTable").innerHTML=hits.length?head+hits.map(row).join("")+"</tbody></table>":""}
 // profile
 const yoe=document.getElementById("yoe"),ns=document.getElementById("needSpon");yoe.value=S.get("yoe",2);ns.checked=S.get("needSpon",true);
