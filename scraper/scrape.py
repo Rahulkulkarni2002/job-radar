@@ -129,6 +129,14 @@ def years_required(txt):
     if re.search(r"new grad|recent graduate|entry[- ]level|university graduate|early career|campus|0-?\s?[12] years", t): return 0
     return None
 
+
+# ---------- strict eligibility checks (candidate: F-1 -> OPT starts 2027-01-28, graduates Dec 2026) ----------
+OPT_START, LATEST_START = datetime.date(2027, 1, 28), datetime.date(2027, 3, 31)
+GRAD = datetime.date(2026, 12, 15)
+NEG = r"\b(not|no|unable|cannot|can't|won't|will not|without|n't|ineligible|not eligible|unavailable|not available|does not|do not|are not|is not|must be (a )?(u\.?s\.? )?citizen|only u\.?s\.? citizens|citizenship (is )?required|permanent residen\w*|green card)\b"
+VISA = r"\b(sponsor\w*|visas?|h-?1b|h1-?b|f-?1|immigration|work authori[sz]ation|employment authori[sz]ation|authori[sz]ed to work)\b"
+EEO = r"without regard|regardless of|discriminat|equal (employment )?opportunity|protected (veteran|characteristic|status)|e-verify|affirmative action|fair chance"
+
 def sentences(t): return re.split(r"(?<=[.!?;])\s+|\n+|\s\*\s|•", t or "")
 def no_sponsorship(t):
     for s in sentences(t):
