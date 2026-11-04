@@ -255,7 +255,7 @@ const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong
 function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,ct=document.getElementById("coType").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
-    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(ct==="yc"&&!j.yc)return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(COMPANY&&j.company!==COMPANY)return false;if(FAM!=="all"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
+    if(spon==="ok"&&s==="no")return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(ct==="yc"&&!j.yc)return false;if(ct.startsWith("co:")&&j.company!==ct.slice(3))return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(COMPANY&&j.company!==COMPANY)return false;if(FAM!=="all"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
     if(SHOW_APPLIED){if(!applied.has(j.id))return false}else if(hideA&&applied.has(j.id))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
   const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,fit:r=>r.j.fit??-1,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
@@ -326,7 +326,7 @@ function renderCos(){const q=document.getElementById("coQ").value.toLowerCase().
     <td data-l="Careers system" class="muted">${h([...r.src].join(", "))}</td>
     <td>${r.n?`<button class="btn pri" data-co="${h(r.name)}">View ${r.n} role${r.n>1?"s":""}</button>`:'<span class="muted">nothing that fits right now</span>'}</td></tr>`).join("")||'<tr><td colspan="5" class="muted">No company matches — ask Claude to add it.</td></tr>';}
 document.getElementById("coQ").addEventListener("input",renderCos);document.getElementById("coAll").addEventListener("change",renderCos);
-document.getElementById("coRows").onclick=e=>{const b=e.target.closest("button[data-co]");if(!b)return;COMPANY=b.dataset.co;FAM="all";
+document.getElementById("coRows").onclick=e=>{const b=e.target.closest("button[data-co]");if(!b)return;COMPANY=b.dataset.co;const sel=document.getElementById("coType");sel.value="co:"+COMPANY;if(sel.value!=="co:"+COMPANY)sel.value="all";FAM="all";
   document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x.dataset.f==="all"));show("jobs");render()};
 // ---------- events ----------
 document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.f===FAM);b.onclick=()=>{FAM=b.dataset.f;S.set("fam",FAM);
@@ -347,7 +347,13 @@ document.getElementById("rows").onclick=async e=>{const b=e.target.closest("butt
   if(b.dataset.ats){RESUME_VIEW=null;document.getElementById("jobPick").value=b.dataset.ats;document.getElementById("jdText").value="";show("ats");runATS()}};
 function show(t){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","cos","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);if(t==="cos")renderCos();window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.t));
-function fillPicker(){const sel=document.getElementById("jobPick");DATA.jobs.filter(j=>j.jd).forEach(j=>{const o=document.createElement("option");o.value=j.id;o.textContent=`${j.company} — ${j.title}`;sel.appendChild(o)})}
+function fillCompanies(){const sel=document.getElementById("coType"),cur=sel.value;const by={};
+  DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]).forEach(j=>by[j.company]=(by[j.company]||0)+1);
+  const list=Object.entries(by).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  sel.innerHTML='<option value="all">All companies ('+list.length+')</option><option value="yc">🟧 YC startups only</option><optgroup label="Companies with roles that fit you">'+
+    list.map(([c,n])=>`<option value="co:${h(c)}">${h(c)} (${n})</option>`).join("")+"</optgroup>";
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur}
+function fillPicker(){fillCompanies();const sel=document.getElementById("jobPick");DATA.jobs.filter(j=>j.jd).forEach(j=>{const o=document.createElement("option");o.value=j.id;o.textContent=`${j.company} — ${j.title}`;sel.appendChild(o)})}
 // resume upload
 const drop=document.getElementById("drop"),file=document.getElementById("file");drop.onclick=()=>file.click();
 drop.ondragover=e=>{e.preventDefault()};drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])};file.onchange=()=>file.files[0]&&readFile(file.files[0]);
