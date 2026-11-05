@@ -64,7 +64,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 <body>
 <header><div class="wrap top">
   <div><h1>Job Radar</h1><div class="meta"><span id="meta">Loading…</span> · <span title="Site version">v 2026-11-02b</span></div></div>
-  <div class="tabs"><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="cos">Companies</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
+  <div class="tabs"><button class="tab" data-t="today">🎯 Today's 20</button><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="cos">Companies</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
 </div></header>
 
 <div class="wrap"><div id="dateBar" style="margin-top:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px"></div></div>
@@ -93,6 +93,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <select id="foundDay"><option value="any">Found: any day</option></select>
     <select id="coType"><option value="all">All companies</option><option value="yc">🟧 YC startups only</option></select>
     <select id="minMatch"><option value="0">Keyword coverage: section default</option><option value="80">Keyword coverage ≥ 80%</option><option value="90">≥ 90%</option><option value="0">Any match</option></select>
+    <label class="ck"><input type="checkbox" id="incStretch"> Include stretch roles</label>
     <label class="ck"><input type="checkbox" id="hideApplied" checked> Hide applied</label>
     <button class="btn" id="showApplied" title="Jobs you marked as applied">Applied (0)</button>
     <button class="btn" id="showHidden" title="Jobs you dismissed with ✕">Hidden (0)</button>
@@ -273,7 +274,7 @@ function chance(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",true
   if(need)p*={no:.02,open:.85,strong:.9,some:.6,none:.15,unknown:.4}[sponsorRating(j)];   // no-H-1B-record companies often auto-reject "needs sponsorship"
   if(j.years!=null)p*=j.years<=yoe+1?1:j.years<=yoe+2?.6:.3;return Math.min(p,.6)}
 // ---------- data ----------
-let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false,SHOW_APPLIED=false,STATUS={};const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
+let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1;const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false,SHOW_APPLIED=false,STATUS={},TODAY_MODE=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
 fetch("data/applied.json?"+Date.now()).then(r=>r.ok?r.json():{applied:{}}).then(a=>{Object.keys(a.applied||{}).forEach(id=>applied.add(id));STATUS=a.status||{};render()}).catch(()=>{});
 fetch("data/companies.json?"+Date.now()).then(r=>r.ok?r.json():[]).then(c=>{ALLCOS=c}).catch(()=>{});
@@ -286,10 +287,11 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,ct=document.getElementById("coType").value,fd=document.getElementById("foundDay").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
     if(spon==="ok"&&s==="no")return false;if(spon==="h1b"&&!["open","strong","some"].includes(s))return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(ct==="yc"&&!j.yc)return false;if(fd!=="any"&&foundDay(j)!==fd)return false;if(ct.startsWith("co:")&&j.company!==ct.slice(3))return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(COMPANY&&j.company!==COMPANY)return false;if(FAM!=="all"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
-    if(SHOW_APPLIED){if(!applied.has(j.id))return false}else if(hideA&&applied.has(j.id))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
+    if(!TODAY_MODE&&!document.getElementById("incStretch").checked&&(j.stretch||[]).length)return false;if(SHOW_APPLIED){if(!applied.has(j.id))return false}else if(hideA&&applied.has(j.id))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
   const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,fit:r=>r.j.fit??-1,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
-  document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
+  if(TODAY_MODE)rows=today20();
+  if(!TODAY_MODE)document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
   const nh=Object.keys(DISMISSED).length;const sh=document.getElementById("showHidden");sh.textContent=SHOW_HIDDEN?`← Back to jobs`:`Hidden (${nh})`;sh.classList.toggle("pri",SHOW_HIDDEN);
   const sa=document.getElementById("showApplied");const na=DATA.jobs.filter(j=>applied.has(j.id)).length;sa.textContent=SHOW_APPLIED?"← Back to jobs":`Applied (${na})`;sa.classList.toggle("pri",SHOW_APPLIED);
   const base=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]);
@@ -300,7 +302,7 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
   const tb=document.getElementById("rows");tb.innerHTML="";document.getElementById("empty").hidden=rows.length>0;
   for(const r of rows.slice(0,600)){const j=r.j,d=daysAgo(j.posted),isNew=Date.now()-new Date(j.first_seen)<864e5,[sl,sc]=SP[r.spon];
     const tr=document.createElement("tr");if(applied.has(j.id))tr.className="applied";
-    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${STATUS[j.id]==="rejected"?'<span class="badge b-bad">Rejected</span> ':STATUS[j.id]?`<span class="badge b-good">${h(STATUS[j.id])}</span> `:""}${j.yc?'<span class="badge" style="background:#ff6600;color:#fff" title="Y Combinator company">YC</span> ':""}${j.ai?'<span class="badge b-good">AI</span> ':""}<span class="badge b-kind">${FAM_LABEL[famOf(j)]||""}</span> ${j.opt?`<span class="badge ${j.opt==="strong"?"b-good":"b-kind"}" title="How clearly the duties relate to your M.S. Business Analytics (OPT requires a directly related job)">🎓 OPT: ${j.opt}</span> `:""}${j.contract?'<span class="badge b-warn" title="Contract/apprentice — OK for OPT, but STEM OPT needs a W-2 employer that uses E-Verify">📝 Contract</span> ':""}<span class="badge b-kind">${{"technical":"🧮 Technical","balanced":"⚖️ Balanced","non-technical":"🗣️ Non-technical"}[roleKind(j)]}</span> ${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}<br><span title="Scraped from the company\'s own careers page">🏢 ${h(j.company)} careers page · ${h(j.source)}</span></div></td>
+    tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${(j.stretch||[]).length?`<span class="badge b-warn" title="${h(j.stretch.join('; '))}">Stretch: ${h(j.stretch[0])}</span> `:""}${STATUS[j.id]==="rejected"?'<span class="badge b-bad">Rejected</span> ':STATUS[j.id]?`<span class="badge b-good">${h(STATUS[j.id])}</span> `:""}${j.yc?'<span class="badge" style="background:#ff6600;color:#fff" title="Y Combinator company">YC</span> ':""}${j.ai?'<span class="badge b-good">AI</span> ':""}<span class="badge b-kind">${FAM_LABEL[famOf(j)]||""}</span> ${j.opt?`<span class="badge ${j.opt==="strong"?"b-good":"b-kind"}" title="How clearly the duties relate to your M.S. Business Analytics (OPT requires a directly related job)">🎓 OPT: ${j.opt}</span> `:""}${j.contract?'<span class="badge b-warn" title="Contract/apprentice — OK for OPT, but STEM OPT needs a W-2 employer that uses E-Verify">📝 Contract</span> ':""}<span class="badge b-kind">${{"technical":"🧮 Technical","balanced":"⚖️ Balanced","non-technical":"🗣️ Non-technical"}[roleKind(j)]}</span> ${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}<br><span title="Scraped from the company\'s own careers page">🏢 ${h(j.company)} careers page · ${h(j.source)}</span></div></td>
      <td data-l="Posted">${d===0?"today":d+"d ago"}<div class="co" title="When Job Radar first found it">found ${foundLabel(j)}</div></td><td data-l="Salary">${h(j.salary||"—")}</td>
      <td data-l="Sponsorship"><span class="badge ${sc}" title="${j.h1b_approvals!=null?"USCIS H-1B approvals: "+j.h1b_approvals:"JD wording"}">${sl}</span></td>
      <td data-l="My chance"><span class="num">${(r.chance*100).toFixed(r.chance<.1?1:0)}%</span></td>
@@ -377,12 +379,21 @@ function renderCos(){renderWatch();const q=document.getElementById("coQ").value.
 document.getElementById("coQ").addEventListener("input",renderCos);document.getElementById("coAll").addEventListener("change",renderCos);
 document.getElementById("coRows").onclick=e=>{const b=e.target.closest("button[data-co]");if(!b)return;COMPANY=b.dataset.co;const sel=document.getElementById("coType");sel.value="co:"+COMPANY;if(sel.value!=="co:"+COMPANY)sel.value="all";FAM="all";
   document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x.dataset.f==="all"));show("jobs");render()};
+// ---------- 🎯 Today's 20 ----------
+function today20(){const now=new Date(),today=localDay(now),wk=Date.now()-7*864e5;
+  const pool=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]&&sponsorRating(j)!=="no").map(rowData);
+  const score=r=>r.chance*(1-.18*((r.j.stretch||[]).length))*(r.j.fit?(.6+r.j.fit/250):.8);
+  const fresh=pool.filter(r=>foundDay(r.j)===today).sort((a,b)=>score(b)-score(a));
+  const recent=pool.filter(r=>foundDay(r.j)!==today&&new Date(r.j.first_seen||r.j.posted)>=wk).sort((a,b)=>score(b)-score(a));
+  const pick=[...fresh,...recent].slice(0,20);
+  document.getElementById("hint").innerHTML=`<b>🎯 Your 20 for ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b> — ${Math.min(fresh.length,20)} new today${pick.length>fresh.length?`, plus the best ${pick.length-Math.min(fresh.length,20)} from this week you haven't acted on`:""}. Apply, ✓ mark applied, or ✕ hide — tomorrow's 20 replace them. <span class="muted">“Stretch” = misses a soft rule (shown why); hard blockers (won't sponsor, clearance, PhD, 5+ yrs, start date) are never included.</span>`;
+  return pick}
 // ---------- events ----------
 document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.f===FAM);b.onclick=()=>{FAM=b.dataset.f;S.set("fam",FAM);
   document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
 document.querySelectorAll("#kindSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.k===KIND);b.onclick=()=>{KIND=b.dataset.k;S.set("kind",KIND);
   document.querySelectorAll("#kindSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
-["q","spon","age","foundDay","roleType","coType","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+["q","spon","age","foundDay","incStretch","roleType","coType","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
 document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;sortDir=sortKey===k?-sortDir:-1;sortKey=k;render()});
 document.getElementById("rows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.ap){const id=b.dataset.ap;applied.has(id)?applied.delete(id):applied.add(id);S.set("applied",[...applied]);render()}
@@ -394,7 +405,7 @@ document.getElementById("rows").onclick=async e=>{const b=e.target.closest("butt
   if(b.dataset.up){upJob=b.dataset.up;document.getElementById("rowFile").value="";document.getElementById("rowFile").click();return}
   if(b.dataset.det){const pj=JOBATS[b.dataset.det];if(pj&&pj.text){RESUME_VIEW=pj;}document.getElementById("jobPick").value=b.dataset.det;document.getElementById("jdText").value="";show("ats");runATS();return}
   if(b.dataset.ats){RESUME_VIEW=null;document.getElementById("jobPick").value=b.dataset.ats;document.getElementById("jdText").value="";show("ats");runATS()}};
-function show(t){document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","cos","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);if(t==="cos")renderCos();window.scrollTo(0,0)}
+function show(t){TODAY_MODE=(t==="today");if(t==="today"){t="jobs";document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t==="today"));["jobs","cos","ats","me"].forEach(x=>document.getElementById(x).hidden=x!=="jobs");render();window.scrollTo(0,0);return}document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","cos","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);if(t==="cos")renderCos();if(t==="jobs")render();window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.t));
 // ---------- dates (all shown in YOUR local time) ----------
 function localDay(d){return d.toLocaleDateString("en-CA")}               // YYYY-MM-DD in local time
@@ -422,7 +433,7 @@ function fillCompanies(){const sel=document.getElementById("coType"),cur=sel.val
   sel.innerHTML='<option value="all">All companies ('+list.length+')</option><option value="yc">🟧 YC startups only</option><optgroup label="Companies with roles that fit you">'+
     list.map(([c,n])=>`<option value="co:${h(c)}">${h(c)} (${n})</option>`).join("")+"</optgroup>";
   if([...sel.options].some(o=>o.value===cur))sel.value=cur}
-function fillPicker(){fillCompanies();fillFoundDays();renderDateBar();const sel=document.getElementById("jobPick");DATA.jobs.filter(j=>j.jd).forEach(j=>{const o=document.createElement("option");o.value=j.id;o.textContent=`${j.company} — ${j.title}`;sel.appendChild(o)})}
+function fillPicker(){fillCompanies();fillFoundDays();renderDateBar();if(!window.__opened){window.__opened=1;show("today")}const sel=document.getElementById("jobPick");DATA.jobs.filter(j=>j.jd).forEach(j=>{const o=document.createElement("option");o.value=j.id;o.textContent=`${j.company} — ${j.title}`;sel.appendChild(o)})}
 // resume upload
 const drop=document.getElementById("drop"),file=document.getElementById("file");drop.onclick=()=>file.click();
 drop.ondragover=e=>{e.preventDefault()};drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])};file.onchange=()=>file.files[0]&&readFile(file.files[0]);

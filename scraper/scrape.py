@@ -638,7 +638,9 @@ def main():
         if key in seen or j["url"] in seen: drop("duplicate"); continue
         if re.search(CLEARANCE_COS, j["company"], re.I): drop("clearance employer", j); continue
         seen.add(key); seen.add(j["url"])
-        if j["years"] is not None and j["years"] > 3: drop("needs > 3 years", j); continue
+        stretch = []                                     # soft reasons: job is still shown, labelled "Stretch", ranked lower
+        if j["years"] is not None and j["years"] > 4: drop("needs > 4 years", j); continue
+        if j["years"] == 4: stretch.append("asks 4 years")
         if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only", j); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
         if timing_problem(j["jd"]): drop("start date / grad window", j); continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
         if degree_problem(j["jd"]): drop("PhD / licence required", j); continue
@@ -651,22 +653,27 @@ def main():
         m, hit, miss = skill_match(j["title"], j["jd"])
         _fam0 = family(j["title"], j["jd"], False)
         _min = MIN_MATCH if _fam0 in ("ds", "da") else MIN_MATCH_BROAD   # BA / Finance / AI roles list learn-on-the-job tools (Jira, Agile, UAT...)
-        if m is None or m < _min: drop(f"skill match < {_min}%", j); continue          # candidate rule: keep only jobs with >= 80% skill match
+        if m is None or m < 55: drop("skill match < 55%", j); continue                  # hard floor
+        if m < _min: stretch.append(f"keyword coverage {m}% (< {_min}%)")
         j["match"], j["missing"] = m, miss
         f, hits, hard = fit(j["title"], j["jd"])
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
         j["family"] = family(j["title"], j["jd"], j["ai"])
-        if not family_gate(j["family"], f, hits): drop("section fit too low", j); continue    # section-specific: DS needs Python+ML, DA needs SQL+BI, BA needs SQL/Excel+finance/BI, AI needs AI+SQL/Python
+        if not family_gate(j["family"], f, hits):
+            if f < 25 or not (set(hits) & {"SQL", "Python", "Excel", "Tableau"}): drop("section fit too low", j); continue
+            stretch.append("partial skill fit")
         j["fit"], j["why"] = f, hits
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["yc"] = norm_co(j["company"]) in YC_NAMES
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+        if j["sponsor_jd"] != "yes" and j["h1b_approvals"] == 0: stretch.append("no H-1B record")
+        j["stretch"] = stretch                            # [] = meets every rule; non-empty = shown in Today's 20 as "Stretch"
         jobs.append(j)
     jobs.sort(key=lambda j: j["posted"], reverse=True)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     # SAFETY GUARD: a sudden collapse means the scrape broke - keep the last good list instead of publishing it
     prev_n = len(prev)
-    if prev_n >= 20 and len(jobs) < 0.4 * prev_n:
+    if prev_n >= 20 and len(jobs) < 0.3 * prev_n:
         print(f"GUARD: only {len(jobs)} jobs vs {prev_n} last time - NOT publishing; keeping previous list. Errors: {errs}")
         raise SystemExit(1)
     cos = {}
