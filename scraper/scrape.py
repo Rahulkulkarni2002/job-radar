@@ -654,7 +654,9 @@ def main():
         _fam0 = family(j["title"], j["jd"], False)
         _min = MIN_MATCH if _fam0 in ("ds", "da") else MIN_MATCH_BROAD   # BA / Finance / AI roles list learn-on-the-job tools (Jira, Agile, UAT...)
         if m is None or m < 55: drop("skill match < 55%", j); continue                  # hard floor
-        if m < _min: stretch.append(f"keyword coverage {m}% (< {_min}%)")
+        _f_pre = fit(j["title"], j["jd"])[0]
+        if m < _min and not (_f_pre >= 85 and m >= 60):   # JD asks for HIS core stack -> extra tools listed don't make it a stretch
+            stretch.append(f"keyword coverage {m}% (< {_min}%)")
         j["match"], j["missing"] = m, miss
         f, hits, hard = fit(j["title"], j["jd"])
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6

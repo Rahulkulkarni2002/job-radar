@@ -92,6 +92,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
     <select id="roleType"><option value="all">AI + non-AI</option><option value="ai">AI roles only</option><option value="nonai">Non-AI only</option></select>
     <select id="foundDay"><option value="any">Found: any day</option></select>
     <select id="coType"><option value="all">All companies</option><option value="yc">🟧 YC startups only</option></select>
+    <select id="minFit"><option value="0">Fit: any</option><option value="90">Fit ≥ 90</option><option value="80">Fit ≥ 80</option><option value="70">Fit ≥ 70</option></select>
     <select id="minMatch"><option value="0">Keyword coverage: section default</option><option value="80">Keyword coverage ≥ 80%</option><option value="90">≥ 90%</option><option value="0">Any match</option></select>
     <label class="ck"><input type="checkbox" id="incStretch"> Include stretch roles</label>
     <label class="ck"><input type="checkbox" id="hideApplied" checked> Hide applied</label>
@@ -286,7 +287,7 @@ const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong
 function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,ct=document.getElementById("coType").value,fd=document.getElementById("foundDay").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
-    if(spon==="ok"&&s==="no")return false;if(spon==="h1b"&&!["open","strong","some"].includes(s))return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(ct==="yc"&&!j.yc)return false;if(fd!=="any"&&foundDay(j)!==fd)return false;if(ct.startsWith("co:")&&j.company!==ct.slice(3))return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(COMPANY&&j.company!==COMPANY)return false;if(FAM!=="all"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
+    if(spon==="ok"&&s==="no")return false;if(spon==="h1b"&&!["open","strong","some"].includes(s))return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(ct==="yc"&&!j.yc)return false;if(fd!=="any"&&foundDay(j)!==fd)return false;const mf=+document.getElementById("minFit").value;if(mf&&(j.fit||0)<mf)return false;if(ct.startsWith("co:")&&j.company!==ct.slice(3))return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(COMPANY&&j.company!==COMPANY)return false;if(FAM!=="all"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
     if(!TODAY_MODE&&!document.getElementById("incStretch").checked&&(j.stretch||[]).length)return false;if(SHOW_APPLIED){if(!applied.has(j.id))return false}else if(hideA&&applied.has(j.id))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
   const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,fit:r=>r.j.fit??-1,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
@@ -391,7 +392,7 @@ function today20(){const now=new Date(),today=localDay(now),wk=Date.now()-7*864e
     if(y===2)m*=1.1;if(y===3)m*=.7;if(y===4)m*=.45;           // asks more years than he has (~2)
     if(/\bdata scientist\b/.test(t)&&!/associate|junior|entry|new grad|\bi\b|1$/.test(t))m*=.65;   // generic DS titles = most competitive pools
     if(/\b(ii|2|iii|3|senior|sr|lead)\b/.test(t))m*=.6;
-    if(["da","ba"].includes(famOf(r.j)))m*=1.15;              // analyst roles: his profile is more competitive
+    if(["da","ba"].includes(famOf(r.j)))m*=1.15;if((r.j.fit||0)>=90)m*=1.3;              // analyst roles: his profile is more competitive
     return m};
   const score=r=>r.chance*lvl(r)*(1-.18*((r.j.stretch||[]).length))*(r.j.fit?(.6+r.j.fit/250):.8);
   const fresh=pool.filter(r=>foundDay(r.j)===today).sort((a,b)=>score(b)-score(a));
@@ -404,7 +405,7 @@ document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",
   document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
 document.querySelectorAll("#kindSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.k===KIND);b.onclick=()=>{KIND=b.dataset.k;S.set("kind",KIND);
   document.querySelectorAll("#kindSeg button").forEach(x=>x.classList.toggle("on",x===b));render()}});
-["q","spon","age","foundDay","incStretch","roleType","coType","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
+["q","spon","age","foundDay","incStretch","minFit","roleType","coType","minMatch","hideApplied","onlyNew"].forEach(id=>document.getElementById(id).addEventListener("input",render));
 document.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{const k=th.dataset.s;sortDir=sortKey===k?-sortDir:-1;sortKey=k;render()});
 document.getElementById("rows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;
   if(b.dataset.ap){const id=b.dataset.ap;applied.has(id)?applied.delete(id):applied.add(id);S.set("applied",[...applied]);render()}
