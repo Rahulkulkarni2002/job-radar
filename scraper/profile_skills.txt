@@ -1,5 +1,5 @@
 # Skills the candidate has (no personal info). Jobs are kept only if >= MIN_MATCH% of the JD's skills are here.
-# Confirmed by candidate 2026-11-06. LEARNING (not counted): aws, hive, hadoop. NOT used: powerpoint, jira/agile, r, power bi, looker, bigquery, crm/salesforce.
+# Confirmed by candidate 2026-11-06. Hive/Hadoop kept on resume (counted); LEARNING (not counted): aws. NOT used: powerpoint, jira/agile, r, power bi, looker, bigquery, crm/salesforce.
 a/b testing
 accounts receivable
 advanced excel
@@ -113,3 +113,5 @@ visualization
 vlookup
 xgboost
 zoho
+hive
+hadoop

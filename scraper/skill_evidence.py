@@ -23,7 +23,6 @@ CLOSE = {
     "bigquery": "Snowflake / SQL", "redshift": "Snowflake / SQL", "postgresql": "SQL", "mysql": "SQL",
     "airflow": "Databricks Jobs orchestration", "dbt": "SQL transforms in medallion pipeline",
     "aws": "learning AWS; Databricks cloud projects", "azure": "Databricks (cloud)", "gcp": "Databricks (cloud)", "s3": "learning AWS", "sagemaker": "MLflow (learning AWS)",
-    "hive": "learning; Spark SQL on Databricks", "hadoop": "learning; PySpark on Databricks",
     "deep learning": "built a neural network (hands-on)", "rag": "built with LLM APIs (hands-on)",
     "r": "Python (pandas/statsmodels)", "sas": "Python stats", "stata": "Python stats", "spss": "Python stats", "matlab": "Python",
     "optimization": "AI & Prescriptive Analytics coursework", "linear programming": "AI & Prescriptive Analytics coursework",
