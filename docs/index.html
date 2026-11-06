@@ -420,14 +420,16 @@ function readyWhy(j){const t=j.title||"",no=[];
   const sr=sponsorRating(j);if(!(sr==="open"||sr==="strong"||(sr==="some"&&(j.h1b_approvals||0)>=3)))no.push("sponsorship");
   if((LVL_SENIOR.test(t)||LVL_MID.test(t))&&!INFLATED_SR.test(t.trim()))no.push("level");
   if(daysAgo(j.posted)>15)no.push("old");if(j.contract)no.push("contract");if(j.opt!=="strong")no.push("OPT");
-  if((j.missing||[]).length)no.push("gap: "+j.missing.join(", "));                                   // candidate's rule: ANY gap -> not shown
-  const tools=(j.close||[]).map(x=>x[0]).filter(c=>!CONCEPT_OK.has(c));if(tools.length)no.push("tool you don't have: "+tools.join(", "));
+  const hard=[...(j.missing||[]),...(j.close||[]).map(x=>x[0])].filter(g=>HARD_GAPS.has(g));   // candidate's rule: a gap in a different world (CRM, ERP, other languages...) -> not shown
+  if(hard.length)no.push("different-world gap: "+hard.join(", "));                              // doable gaps (Python libs, BI/SQL/cloud cousins, workplace tools) are fine
   return no}
+// NOT doable quickly: a whole different system, language or regulated domain
+const HARD_GAPS=new Set(["crm","salesforce","hubspot","sap","oracle","netsuite","erp","hyperion","workday","java","javascript","scala","c++","c#","computer vision","kafka","credit risk","compliance","six sigma","ssis","ssrs","sas","mainframe","cobol","epic","cerner","actuarial"]);
 const CONCEPT_OK=new Set(["optimization","linear programming","simulation","variance analysis","financial modeling","fp&a","p&l","product analytics","funnel analysis","attribution","inventory","supply chain","data governance"]);
 function today20(){const now=new Date(),today=localDay(now);
   const pool=DATA.jobs.filter(j=>!readyWhy(j).length&&!/skillbridge|military|veteran/i.test(j.title)).map(rowData).sort((a,b)=>b.chance-a.chance);
   const pick=pool.slice(0,20),fresh=pick.filter(r=>foundDay(r.j)===today);
-  document.getElementById("hint").innerHTML=`<b>✅ Ready to apply — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${pick.length} role${pick.length===1?"":"s"} with <b>nothing on paper that blocks a call</b> (${fresh.length} new today). Each one: <b>zero skill gaps</b> (nothing in the JD you haven't done) · asks ≤ 2 yrs · not II/Senior · sponsors H-1B (3+ filings or says so) · OPT-related · full-time · posted ≤ 15 days.${pick.length<20?` <span class="muted">Fewer than 20 today — the list is never padded with risky roles.</span>`:""} Apply, then ✓ mark applied.`;
+  document.getElementById("hint").innerHTML=`<b>✅ Ready to apply — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${pick.length} role${pick.length===1?"":"s"} with <b>nothing on paper that blocks a call</b> (${fresh.length} new today). Each one: <b>no different-world gaps</b> (only doable ones like a Python library or a cousin BI/SQL/cloud tool) · asks ≤ 2 yrs · not II/Senior · sponsors H-1B (3+ filings or says so) · OPT-related · full-time · posted ≤ 15 days.${pick.length<20?` <span class="muted">Fewer than 20 today — the list is never padded with risky roles.</span>`:""} Apply, then ✓ mark applied.`;
   return pick}
 // ---------- events ----------
 document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.f===FAM);b.onclick=()=>{FAM=b.dataset.f;S.set("fam",FAM);
