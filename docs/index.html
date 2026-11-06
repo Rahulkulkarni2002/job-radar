@@ -66,7 +66,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 <body>
 <header><div class="wrap top">
   <div><h1>Job Radar</h1><div class="meta"><span id="meta">Loading…</span> · <span title="Site version">v 2026-11-02b</span></div></div>
-  <div class="tabs"><button class="tab" data-t="today">🎯 Today's 20</button><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="cos">Companies</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
+  <div class="tabs"><button class="tab" data-t="today">🎯 Best 20 this week</button><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="cos">Companies</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
 </div></header>
 
 <div class="wrap"><div id="dateBar" style="margin-top:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px"></div></div>
@@ -74,6 +74,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 <!-- JOBS -->
 <section id="jobs">
   <div class="seg fam" id="famSeg" role="tablist" aria-label="Role family">
+    <button data-f="top">🏆 Top 20 of the day <span class="cnt"></span></button>
     <button data-f="all" class="on">All <span class="cnt"></span></button>
     <button data-f="ds">🔬 Data Scientist &amp; similar <span class="cnt"></span></button>
     <button data-f="da">📊 Data Analyst &amp; similar <span class="cnt"></span></button>
@@ -301,17 +302,19 @@ const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong
 function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,ct=document.getElementById("coType").value,fd=document.getElementById("foundDay").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
-    if(spon==="ok"&&s==="no")return false;if(spon==="h1b"&&!["open","strong","some"].includes(s))return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(ct==="yc"&&!j.yc)return false;if(fd!=="any"&&foundDay(j)!==fd)return false;const mf=+document.getElementById("minFit").value;if(mf&&(j.fit||0)<mf)return false;if(ct.startsWith("co:")&&j.company!==ct.slice(3))return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(COMPANY&&j.company!==COMPANY)return false;if(FAM!=="all"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
-    if(!TODAY_MODE&&!document.getElementById("incStretch").checked&&(j.stretch||[]).length)return false;if(SHOW_APPLIED){if(!isApplied(j))return false}else if(hideA&&isApplied(j))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
+    if(spon==="ok"&&s==="no")return false;if(spon==="h1b"&&!["open","strong","some"].includes(s))return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(ct==="yc"&&!j.yc)return false;if(fd!=="any"&&foundDay(j)!==fd)return false;const mf=+document.getElementById("minFit").value;if(mf&&(j.fit||0)<mf)return false;if(ct.startsWith("co:")&&j.company!==ct.slice(3))return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(COMPANY&&j.company!==COMPANY)return false;if(FAM!=="all"&&FAM!=="top"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
+    if(!TODAY_MODE&&FAM!=="top"&&!document.getElementById("incStretch").checked&&(j.stretch||[]).length)return false;if(SHOW_APPLIED){if(!isApplied(j))return false}else if(hideA&&isApplied(j))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
   const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,fit:r=>r.j.fit??-1,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
+  if(!TODAY_MODE&&FAM==="top"){rows=topOfDay(rows);if(USER_SORT)rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir)}
   if(TODAY_MODE){rows=today20();if(USER_SORT)rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir)}
   document.querySelectorAll("th[data-s]").forEach(th=>{const on=USER_SORT||!TODAY_MODE?th.dataset.s===sortKey:false;th.classList.toggle("sorted",on);th.querySelector(".arr").textContent=on?(sortDir>0?"▲":"▼"):"⇅";th.title=(th.dataset.t||"")+(th.dataset.t?" — ":"")+"click to sort (click again to reverse)"});
-  if(!TODAY_MODE)document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
+  if(!TODAY_MODE&&FAM==="top")document.getElementById("hint").innerHTML=`<b>🏆 Top 20 of the day</b> — the ${rows.length} best-chance roles found in the last 24 hours (all sections), best first. <span class="muted">Your filters (sponsorship, technical/non-technical, company) still apply.</span>`;
+  else if(!TODAY_MODE)document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
   const nh=Object.keys(DISMISSED).length;const sh=document.getElementById("showHidden");sh.textContent=SHOW_HIDDEN?`← Back to jobs`:`Hidden (${nh})`;sh.classList.toggle("pri",SHOW_HIDDEN);
   const sa=document.getElementById("showApplied");const na=DATA.jobs.filter(j=>isApplied(j)).length;sa.textContent=SHOW_APPLIED?"← Back to jobs":`Applied (${na})`;sa.classList.toggle("pri",SHOW_APPLIED);
   const base=DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]);
-  document.querySelectorAll("#famSeg button").forEach(b=>{const f=b.dataset.f;b.querySelector(".cnt").textContent="("+(f==="all"?base.length:base.filter(j=>famOf(j)===f).length)+")"});
+  document.querySelectorAll("#famSeg button").forEach(b=>{const f=b.dataset.f;b.querySelector(".cnt").textContent=f==="top"?"":"("+(f==="all"?base.length:base.filter(j=>famOf(j)===f).length)+")"});
   const chip=document.getElementById("coChip");chip.hidden=!COMPANY;
   if(COMPANY)chip.innerHTML=`<span class="badge b-new" style="font-size:13px;padding:5px 10px">Company: ${h(COMPANY)} <a href="#" id="coClear" style="color:inherit;margin-left:6px;text-decoration:none">✕</a></span>`;
   const cc=document.getElementById("coClear");if(cc)cc.onclick=e=>{e.preventDefault();COMPANY="";render()};
@@ -397,6 +400,10 @@ function renderCos(){renderWatch();const q=document.getElementById("coQ").value.
 document.getElementById("coQ").addEventListener("input",renderCos);document.getElementById("coAll").addEventListener("change",renderCos);
 document.getElementById("coRows").onclick=e=>{const b=e.target.closest("button[data-co]");if(!b)return;COMPANY=b.dataset.co;const sel=document.getElementById("coType");sel.value="co:"+COMPANY;if(sel.value!=="co:"+COMPANY)sel.value="all";FAM="all";
   document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x.dataset.f==="all"));show("jobs");render()};
+// ---------- 🏆 Top 20 of the day: best-chance roles first seen in the last 24 h ----------
+function topOfDay(rows){const cut=Date.now()-24*36e5,today=localDay(new Date());
+  return rows.filter(r=>{const t=r.j.first_seen?Date.parse(r.j.first_seen.replace(/Z?$/,"Z")):Date.parse(r.j.posted+"T12:00:00");return t>=cut||foundDay(r.j)===today})
+    .sort((a,b)=>b.chance-a.chance).slice(0,20)}
 // ---------- 🎯 Today's 20 ----------
 function today20(){const now=new Date(),today=localDay(now),wk=Date.now()-7*864e5;
   const pool=DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]&&sponsorRating(j)!=="no"&&!/skillbridge|military|veteran/i.test(j.title)).map(rowData);
