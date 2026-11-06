@@ -1,6 +1,8 @@
 # Skills the candidate has (no personal info). Jobs are kept only if >= MIN_MATCH% of the JD's skills are here.
+# Confirmed by candidate 2026-11-06. LEARNING (not counted): aws, hive, hadoop. NOT used: powerpoint, jira/agile, r, power bi, looker, bigquery, crm/salesforce.
 a/b testing
 accounts receivable
+advanced excel
 ai
 analyst
 analytics
@@ -8,12 +10,14 @@ api
 benchmarking
 bi
 budget
+budgeting
 business analytics
 business intelligence
 campaign
 cash flow
 catboost
 causal inference
+chatgpt
 churn
 classification
 clustering
@@ -35,6 +39,7 @@ data scientist
 data storytelling
 data validation
 data visualization
+data warehousing
 databricks
 delta lake
 demand planning
@@ -52,22 +57,31 @@ forecasting
 generative ai
 git
 github
-hadoop
-hive
+hypothesis testing
 insights
 invoicing
+jupyter
 kpis
 lightgbm
+llm
 machine learning
 marketing analytics
+matplotlib
 metrics
 mlflow
 model deployment
 model validation
+neural networks
 numpy
 pandas
+pivot tables
+plotly
+polars
+predictive analytics
 predictive modeling
 pricing
+process improvement
+prompt engineering
 prophet
 pyspark
 python
@@ -80,25 +94,22 @@ retention
 revenue
 rfm
 risk
+root cause analysis
 scikit-learn
 segmentation
 snowflake
+spark
 sql
 statistical analysis
 statistical inference
+statistical modeling
 statistics
+statsmodels
 streamlit
 tableau
+time series
 uplift modeling
 visualization
+vlookup
 xgboost
 zoho
-aws
-spark
-jupyter
-budgeting
-plotly
-polars
-statsmodels
-time series
-matplotlib

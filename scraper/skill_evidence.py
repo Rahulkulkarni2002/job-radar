@@ -22,7 +22,9 @@ CLOSE = {
     "power bi": "Tableau", "looker": "Tableau", "qlik": "Tableau", "domo": "Tableau",
     "bigquery": "Snowflake / SQL", "redshift": "Snowflake / SQL", "postgresql": "SQL", "mysql": "SQL",
     "airflow": "Databricks Jobs orchestration", "dbt": "SQL transforms in medallion pipeline",
-    "azure": "AWS (learning) + Databricks", "gcp": "AWS (learning) + Databricks", "s3": "AWS (learning)", "sagemaker": "AWS (learning) + MLflow",
+    "aws": "learning AWS; Databricks cloud projects", "azure": "Databricks (cloud)", "gcp": "Databricks (cloud)", "s3": "learning AWS", "sagemaker": "MLflow (learning AWS)",
+    "hive": "learning; Spark SQL on Databricks", "hadoop": "learning; PySpark on Databricks",
+    "deep learning": "built a neural network (hands-on)", "rag": "built with LLM APIs (hands-on)",
     "r": "Python (pandas/statsmodels)", "sas": "Python stats", "stata": "Python stats", "spss": "Python stats", "matlab": "Python",
     "optimization": "AI & Prescriptive Analytics coursework", "linear programming": "AI & Prescriptive Analytics coursework",
     "simulation": "AI & Prescriptive Analytics coursework",
@@ -33,11 +35,11 @@ CLOSE = {
     "attribution": "uplift modeling (incremental revenue)",
     "inventory": "inventory planning insight (Retail dashboard)", "supply chain": "demand forecasting (Prophet)",
     "data governance": "data validation, leakage checks, secrets kept out of code",
-    "advanced excel": "Excel trend analysis (Inventa)", "pivot tables": "Excel trend analysis (Inventa)",
 }
 # When the JD names HIS tool too, the other tool is almost always an alternative ("Tableau or Power BI") -> full credit
-ALTERNATIVES = [({"tableau"}, {"power bi", "looker", "qlik", "domo"}), ({"python"}, {"r", "sas", "stata", "spss", "matlab", "scala"}),
-                ({"snowflake", "databricks"}, {"bigquery", "redshift"}), ({"aws"}, {"azure", "gcp"}), ({"sql"}, {"postgresql", "mysql"})]
+ALTERNATIVES = [  # NOTE: aws removed from "mine" (learning only)
+({"tableau"}, {"power bi", "looker", "qlik", "domo"}), ({"python"}, {"r", "sas", "stata", "spss", "matlab", "scala"}),
+                ({"snowflake", "databricks"}, {"bigquery", "redshift"}), ({"sql"}, {"postgresql", "mysql"})]
 
 def credit(want, have):
     """want: JD skill terms; have: set of terms he has. -> (score 0-100, said[(skill, evidence)], close[(skill, evidence)], alts[skill], gaps[skill])"""

@@ -204,10 +204,10 @@ const RELATED={"power bi":["tableau"],"looker":["tableau"],"qlik":["tableau"],"d
  "aws":["snowflake","databricks"],"azure":["databricks"],"gcp":["snowflake"],"bigquery":["snowflake","sql"],"redshift":["snowflake","sql"],"spark":["pyspark"],"dbt":["sql","etl"],"airflow":["databricks"],
  "a/b testing":["uplift modeling","experimentation"],"hypothesis testing":["statistical inference"],"experimentation":["uplift modeling"],"optimization":["forecasting"],"nlp":["generative ai"],"llm":["generative ai"],"llms":["generative ai"],
  "financial modeling":["forecasting","ratio analysis"],"variance analysis":["budget","forecasting"],"fp&a":["budget","forecasting","financial analysis"],"p&l":["financial analysis"],
- "erp":["zoho"],"sap":["zoho"],"oracle":["zoho"],"netsuite":["zoho"],"crm":["zoho"],"salesforce":["zoho"],"supply chain":["forecasting"],"demand planning":["forecasting","prophet"],
+ "supply chain":["forecasting"],"demand planning":["forecasting","prophet"],
  "product analytics":["churn","segmentation"],"advanced excel":["excel"],"pivot tables":["excel"],"vlookup":["excel"],"vba":["excel","python"],"statistical modeling":["regression","predictive modeling"],
  "time series":["forecasting","prophet"],"data warehousing":["snowflake"],"data mart":["snowflake"],"deep learning":["machine learning"],"tensorflow":["scikit-learn"],"pytorch":["scikit-learn"],
- "docker":["fastapi"],"kpi":["dashboards"],"kpis":["dashboards"],"credit risk":["ratio analysis"],"attribution":["uplift modeling"],"powerpoint":["data storytelling"]};
+ "docker":["fastapi"],"kpi":["dashboards"],"kpis":["dashboards"],"credit risk":["ratio analysis"],"attribution":["uplift modeling"]};
 // Where the candidate has REAL evidence for a skill (from his public GitHub projects / experience).
 const EVIDENCE=[
  [["statistics","statistical analysis","statistical inference","hypothesis testing","regression"],"Email Campaign Uplift Modeling — T-learner causal inference on 64K customers with 1,000-iteration bootstrap; Inventa — statistical trend analysis of cash flow; or Qualcomm — regression ensemble, leave-one-out CV"],
@@ -226,7 +226,10 @@ const EVIDENCE=[
  [["matplotlib"],"your Uplift, Bank Ratio and Segmentation notebooks (Matplotlib charts) — list “Matplotlib” in Skills"],
  [["jupyter"],"your Customer Churn project notebook (churn.ipynb) — list “Jupyter” in Skills"],
  [["budgeting","budget"],"Qualcomm capstone — monthly budget forecasts built from historical S-curves across 21 open programs"],
- [["hive","hadoop"],"the Skills line from your Data Scientist resume (Hadoop, Hive — Scalable Analytics coursework)"],
+ [["hive","hadoop"],"you're learning these — write “Hive / Hadoop (learning)” only if the JD asks; not counted as a skill yet"],
+ [["pivot tables","vlookup","advanced excel"],"you've used Excel pivot tables and VLOOKUP — list them in Skills when the JD asks"],
+ [["neural networks","deep learning"],"you've built a neural network hands-on — name the project/class when you list it"],
+ [["llm","llms","prompt engineering","chatgpt","generative ai"],"you've built with LLM / GenAI APIs hands-on, plus your Generative AI certificate — name the project when you list it"],
  [["spark"],"Snowflake–Databricks pipeline built in PySpark — write it as “Spark (PySpark)”"],
  [["generative ai","ai"],"Generative AI certification and AI & Prescriptive Analytics coursework (UCSD)"]];
 const TITLE_TERMS=new Set(["data scientist","data analyst","business analytics","data science"]);
