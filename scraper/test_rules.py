@@ -3,6 +3,8 @@ if any fails, the workflow stops and the site keeps the last good list."""
 import pathlib, sys
 src = (pathlib.Path(__file__).parent / "scrape.py").read_text()
 ns = {"__name__": "rules_test", "__file__": str(pathlib.Path(__file__).parent / "scrape.py")}; exec(src, ns)
+import sys as _s; _s.path.insert(0, str(pathlib.Path(__file__).parent)); from required_gaps import required_gaps as _RG
+RG = lambda t, gaps: _RG(t, gaps, [], ns["TERM_RX"], ns["_section_is_preferred"])
 Y, D, NS, TP, DOM, ENG, REL = ns["years_required"], ns["degree_problem"], ns["no_sponsorship"], ns["timing_problem"], ns["domain_problem"], ns["engineering_problem"], ns["relevant"]
 CASES = [
  ("years", "State Street: Strong experience (6 + years) in Product Analysis.", 6),
@@ -39,6 +41,11 @@ CASES = [
  ("senior", "Huron: The Data & Analytics Product Owner, Senior Associate supports agile development teams", True),
  ("senior", "TKO: Working closely with the Senior Financial Analyst, event P&L leads, you will", False),
  ("senior", "You will present to senior leadership and support the lead data scientist.", False),
+ ("reqgap", ("F5: Responsibilities: connect our SharePoint, Salesforce, Snowflake systems. Qualifications: 2-3 years in data analytics. Experience working with CRM data such as Salesforce is a plus.", ["salesforce", "crm"]), []),
+ ("reqgap", ("David AI: Requirements: SQL and Python. BONUS POINTS IF YOU HAVE - Hands-on experience building ETL pipelines (e.g., dbt, Airflow, Dagster).", ["dbt", "airflow"]), []),
+ ("reqgap", ("Molina: Required qualifications: Experience with Microsoft Azure, Amazon Web Services (AWS), or Hadoop.", ["azure", "aws"]), []),
+ ("reqgap", ("Requirements: 2+ years of experience building reports in Power BI.", ["power bi"]), ["power bi"]),
+ ("reqgap", ("Qualifications: Proficiency with Salesforce reporting and dashboards required.", ["salesforce"]), ["salesforce"]),
  ("domain", "2-4 years of experience in technology investment banking or strategy consulting with software clients", True),
  ("domain", "Jerry: 1+ year of experience at a consulting firm, bank or tech company.", False),
  ("domain", "3+ years in management consulting or investment banking required.", True),
@@ -68,8 +75,8 @@ CASES = [
 ]
 fails = 0
 for kind, text, want in CASES:
-    got = {"years": lambda t: Y(t), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)
+    got = {"years": lambda t: Y(t), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "reqgap": lambda t: RG(t[0], t[1]), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)
     ok = got == want; fails += not ok
-    print(("PASS " if ok else "FAIL ") + f"{kind:7} expected {want!s:5} got {got!s:5} | {text[:80]}")
+    print(("PASS " if ok else "FAIL ") + f"{kind:7} expected {want!s:5} got {got!s:5} | {str(text)[:80]}")
 print(f"{len(CASES) - fails}/{len(CASES)} rule tests passed")
 sys.exit(1 if fails else 0)

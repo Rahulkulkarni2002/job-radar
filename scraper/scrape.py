@@ -76,6 +76,7 @@ def skill_terms(text):
     return h
 import sys as _sys; _sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from skill_evidence import credit as skill_credit
+from required_gaps import required_gaps
 def skill_match(title, jd):
     want = skill_terms(title + " " + jd)
     if len(want) < 4: return None, [], []      # too few skills in the JD to judge
@@ -679,6 +680,8 @@ def main():
         if m < _min and not (_f_pre >= 85 and m >= 60):   # JD asks for HIS core stack -> extra tools listed don't make it a stretch
             stretch.append(f"keyword coverage {m}% (< {_min}%)")
         j["match"], j["missing"] = m, miss
+        _rg = required_gaps(j["jd"], miss, [list(x) for x in hit[2]], TERM_RX, _section_is_preferred)
+        if _rg: drop("requires a skill outside your set: " + ", ".join(_rg[:3]), j); continue      # confirmed skill set (SKILLS.md): never show jobs that REQUIRE what he hasn't done
         j["said"], j["close"], j["alt"] = [list(x) for x in hit[1]], [list(x) for x in hit[2]], hit[3]   # real skills under the JD's word / close equivalents (with evidence)
         f, hits, hard = fit(j["title"], j["jd"])
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
