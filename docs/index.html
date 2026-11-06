@@ -66,7 +66,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 <body>
 <header><div class="wrap top">
   <div><h1>Job Radar</h1><div class="meta"><span id="meta">Loading…</span> · <span title="Site version">v 2026-11-02b</span></div></div>
-  <div class="tabs"><button class="tab" data-t="today">🎯 Best 20 this week</button><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="cos">Companies</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
+  <div class="tabs"><button class="tab" data-t="today">✅ Ready to apply</button><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="cos">Companies</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
 </div></header>
 
 <div class="wrap"><div id="dateBar" style="margin-top:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px"></div></div>
@@ -409,14 +409,21 @@ function topOfDay(rows){const cut=Date.now()-24*36e5,today=localDay(new Date());
   return rows.filter(r=>{const t=r.j.first_seen?Date.parse(r.j.first_seen.replace(/Z?$/,"Z")):Date.parse(r.j.posted+"T12:00:00");return t>=cut||foundDay(r.j)===today})
     .sort((a,b)=>b.chance-a.chance).slice(0,20)}
 // ---------- 🎯 Today's 20 ----------
-function today20(){const now=new Date(),today=localDay(now),wk=Date.now()-7*864e5;
-  const pool=DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]&&sponsorRating(j)!=="no"&&!/skillbridge|military|veteran/i.test(j.title)).map(rowData);
-  // Ranking learned from outcomes (Farther, TransUnion rejections): favour truly entry-level roles where a ~2-yr new grad is competitive
-  const ENTRY=/\b(associate|junior|jr\.?|entry[- ]level|new grad|graduate|early career|analyst i\b|analyst 1\b|\bi\b$|0-2|1-2|0-1)\b/i;
-  const score=r=>r.chance*(["da","ba"].includes(famOf(r.j))?1.1:1);
-  const week=pool.filter(r=>new Date(r.j.first_seen||r.j.posted)>=wk||daysAgo(r.j.posted)<=7).sort((a,b)=>score(b)-score(a));
-  const pick=week.slice(0,20),fresh=pick.filter(r=>foundDay(r.j)===today);
-  document.getElementById("hint").innerHTML=`<b>🎯 Your 20 for ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b> — the ${pick.length} roles with your best chance this week (${fresh.length} of them new today), best first. Apply, ✓ mark applied, or ✕ hide — tomorrow's 20 replace them. <span class="muted">“Stretch” = misses a soft rule (shown why); hard blockers (won't sponsor, clearance, PhD, 5+ yrs, start date) are never included.</span>`;
+// ✅ READY: only roles with nothing on paper that blocks a call (the candidate's rule: "no gap, nothing that would stop me")
+const INFLATED_SR=/^(sr\.?|senior) (business|data|financial|risk|marketing|credit|pricing|product) analyst\b/i;
+function readyWhy(j){const t=j.title||"",no=[];
+  if(isApplied(j))no.push("applied");if(DISMISSED[j.id])no.push("hidden");
+  if((j.stretch||[]).some(x=>!/^keyword coverage/.test(x)))no.push("stretch");
+  if(j.years!=null&&j.years>2)no.push("asks "+j.years+"+ yrs");
+  if((j.fit||0)<70||(j.fit_core??j.fit??0)<50)no.push("fit");
+  const sr=sponsorRating(j);if(!(sr==="open"||sr==="strong"||(sr==="some"&&(j.h1b_approvals||0)>=3)))no.push("sponsorship");
+  if((LVL_SENIOR.test(t)||LVL_MID.test(t))&&!INFLATED_SR.test(t.trim()))no.push("level");
+  if(daysAgo(j.posted)>15)no.push("old");if(j.contract)no.push("contract");if(j.opt!=="strong")no.push("OPT");
+  return no}
+function today20(){const now=new Date(),today=localDay(now);
+  const pool=DATA.jobs.filter(j=>!readyWhy(j).length&&!/skillbridge|military|veteran/i.test(j.title)).map(rowData).sort((a,b)=>b.chance-a.chance);
+  const pick=pool.slice(0,20),fresh=pick.filter(r=>foundDay(r.j)===today);
+  document.getElementById("hint").innerHTML=`<b>✅ Ready to apply — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${pick.length} role${pick.length===1?"":"s"} with <b>nothing on paper that blocks a call</b> (${fresh.length} new today). Each one: no required skill you lack · asks ≤ 2 yrs · not II/Senior · sponsors H-1B (3+ filings or says so) · OPT-related · full-time · posted ≤ 15 days.${pick.length<20?` <span class="muted">Fewer than 20 today — the list is never padded with risky roles.</span>`:""} Apply, then ✓ mark applied.`;
   return pick}
 // ---------- events ----------
 document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.f===FAM);b.onclick=()=>{FAM=b.dataset.f;S.set("fam",FAM);
