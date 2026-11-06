@@ -1,12 +1,15 @@
 # Skills the candidate has (no personal info). Jobs are kept only if >= MIN_MATCH% of the JD's skills are here.
 # Confirmed by candidate 2026-11-06. Hive/Hadoop kept on resume (counted); LEARNING (not counted): aws. NOT used: powerpoint, jira/agile, r, power bi, looker, bigquery, crm/salesforce.
+# 2026-11-06: + Omni project (RAG agent: pgvector/Postgres in Docker, hybrid search, ReAct tool calling, FastAPI, Streamlit, LLM-as-judge eval)
 a/b testing
 accounts receivable
 advanced excel
 ai
+ai agents
 analyst
 analytics
 api
+beautifulsoup
 benchmarking
 bi
 budget
@@ -43,8 +46,10 @@ data warehousing
 databricks
 delta lake
 demand planning
+docker
 duckdb
 elt
+embeddings
 etl
 etl/elt
 excel
@@ -54,9 +59,12 @@ feature engineering
 financial analysis
 financial forecasting
 forecasting
+gemini
 generative ai
 git
 github
+hadoop
+hive
 hypothesis testing
 insights
 invoicing
@@ -64,6 +72,8 @@ jupyter
 kpis
 lightgbm
 llm
+llm agents
+llm evaluation
 machine learning
 marketing analytics
 matplotlib
@@ -74,9 +84,11 @@ model validation
 neural networks
 numpy
 pandas
+pgvector
 pivot tables
 plotly
 polars
+postgresql
 predictive analytics
 predictive modeling
 pricing
@@ -85,18 +97,21 @@ prompt engineering
 prophet
 pyspark
 python
+rag
 random forest
 ratio analysis
 regression
 reporting
 research
 retention
+retrieval augmented generation
 revenue
 rfm
 risk
 root cause analysis
 scikit-learn
 segmentation
+semantic search
 snowflake
 spark
 sql
@@ -108,10 +123,11 @@ statsmodels
 streamlit
 tableau
 time series
+tool calling
 uplift modeling
+vector databases
 visualization
 vlookup
+web scraping
 xgboost
 zoho
-hive
-hadoop

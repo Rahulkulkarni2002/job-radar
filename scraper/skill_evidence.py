@@ -20,10 +20,11 @@ SAME = {
 }
 CLOSE = {
     "power bi": "Tableau", "looker": "Tableau", "qlik": "Tableau", "domo": "Tableau",
-    "bigquery": "Snowflake / SQL", "redshift": "Snowflake / SQL", "postgresql": "SQL", "mysql": "SQL",
+    "bigquery": "Snowflake / SQL", "redshift": "Snowflake / SQL", 
     "airflow": "Databricks Jobs orchestration", "dbt": "SQL transforms in medallion pipeline",
     "aws": "learning AWS; Databricks cloud projects", "azure": "Databricks (cloud)", "gcp": "Databricks (cloud)", "s3": "learning AWS", "sagemaker": "MLflow (learning AWS)",
-    "deep learning": "neural network (Customer Analytics coursework)", "rag": "LLM APIs (Customer Analytics coursework)",
+    "deep learning": "neural network (Customer Analytics coursework)",
+    "nlp": "text chunking + embeddings + RAG (Omni project)", "mysql": "PostgreSQL (Omni)", "nosql": "pgvector / PostgreSQL (Omni)",
     "r": "Python (pandas/statsmodels)", "sas": "Python stats", "stata": "Python stats", "spss": "Python stats", "matlab": "Python",
     "optimization": "AI & Prescriptive Analytics coursework", "linear programming": "AI & Prescriptive Analytics coursework",
     "simulation": "AI & Prescriptive Analytics coursework",
