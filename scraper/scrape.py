@@ -643,7 +643,10 @@ def main():
         if j is not None and len(dropped_samples.setdefault(reason, [])) < 40: dropped_samples[reason].append(f"{j['company'][:22]} | {j['title'][:60]}")
     for j in sorted(res, key=lambda j: (j["source"] == "Simplify new-grad",)):   # prefer direct ATS copy (has JD)
         key = (norm_co(j["company"]), re.sub(r"[^a-z0-9]+", " ", j["title"].lower()).strip())
-        if key in seen or j["url"] in seen: drop("duplicate"); continue
+        _req = re.search(r"_((?:JR|R|REQ)-?\d{4,}(?:-\d+)?)(?:[/?]|$)", j["url"], re.I)      # Workday requisition id: same job posted on 2 career sites under different titles
+        reqkey = (norm_co(j["company"]), _req.group(1).upper()) if _req else None
+        if key in seen or j["url"] in seen or (reqkey and reqkey in seen): drop("duplicate"); continue
+        if reqkey: seen.add(reqkey)
         if re.search(CLEARANCE_COS, j["company"], re.I): drop("clearance employer", j); continue
         seen.add(key); seen.add(j["url"])
         stretch = []                                     # soft reasons: job is still shown, labelled "Stretch", ranked lower
