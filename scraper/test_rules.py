@@ -19,6 +19,16 @@ CASES = [
  ("years", "1-3 years of experience in analytics.", 1),
  ("years", "2-3 years of SQL experience.", 2),
  ("years", "0-2 years of experience; new grads welcome.", 0),
+ ("years", "Zoox: BA/BS degree, preferably in Finance, Economics, Accounting, Data Science, or a quantitative field 6+ years experience in FP&A, marketing finance 2+ years of direct experience building driver-based models", 6),
+ ("years", "Jefferson: Experience - Required 2 years or of clinical/healthcare experience. Serves patients at 32 hospitals campuses.", 2),
+ ("years", "2 years or more of experience in analytics.", 2),
+ ("years", "Ideally 3+ years in analytics. 1+ years of SQL required.", 1),
+ ("senior", "Zoox: As a Senior Financial Analyst supporting Marketing and Commercial, you will partner with key stakeholders", True),
+ ("senior", "As a Data Analyst, you will partner with senior leaders across Finance.", False),
+ ("senior", "Build varied experience and grow toward future opportunities such as Senior Product Analyst or Product Manager.", False),
+ ("senior", "Drive special projects as a lead analyst based on needs. Recognized as senior leadership partner.", False),
+ ("senior", "New Balance: As a Senior Data Scientist, you will join our forecasting team", True),
+ ("senior", "You will present to senior leadership and support the lead data scientist.", False),
  ("domain", "2-4 years of experience in technology investment banking or strategy consulting with software clients", True),
  ("domain", "Jerry: 1+ year of experience at a consulting firm, bank or tech company.", False),
  ("domain", "3+ years in management consulting or investment banking required.", True),
@@ -47,7 +57,7 @@ CASES = [
 ]
 fails = 0
 for kind, text, want in CASES:
-    got = {"years": lambda t: Y(t), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t))}[kind](text)
+    got = {"years": lambda t: Y(t), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)
     ok = got == want; fails += not ok
     print(("PASS " if ok else "FAIL ") + f"{kind:7} expected {want!s:5} got {got!s:5} | {text[:80]}")
 print(f"{len(CASES) - fails}/{len(CASES)} rule tests passed")

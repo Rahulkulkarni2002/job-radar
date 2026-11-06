@@ -97,13 +97,21 @@ def salary(txt, comp=None):
     if lo < 20000 or hi > 600000: return ""
     return f"${lo/1000:.0f}K – ${hi/1000:.0f}K"
 WORDNUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+def senior_in_jd(title, jd):
+    """Title says 'Analyst' but the JD says 'As a Senior Financial Analyst...' (Zoox) -> it's a senior role."""
+    if re.search(TITLE_EXCLUDE, title.lower()): return None
+    j = (jd or "")[:3000]
+    m = re.search(r"(?<!such )\bas an? (senior|sr\.?|principal|staff)\s+(\w+\s+){0,3}(analyst|scientist|engineer|associate|specialist|consultant|strategist|economist)\b", j, re.I) \
+        or re.search(r"\bthis is an? (senior|principal|staff)[- ]level\b", j, re.I)
+    return m.group(0)[:80] if m else None
+
 def years_required(txt):
     """Strictest REQUIRED years of experience. Works on whitespace-collapsed JD text: a number is 'preferred' only if
     the preference word is in the SAME clause (within ~90 chars, no clause break) or it sits under a Preferred/Bonus heading."""
     t = (txt or "").lower()
     for w, n in WORDNUM.items(): t = re.sub(r"\b" + w + r"\b(?=\s*(\(\d+\)\s*)?\+?\s*(or more )?(years?|yrs?))", str(n), t)
     best = None
-    pat = r"(\d{1,2})\s*(?:\+|plus)\s*\)?\s*(?:years?|yrs?)\b|(\d{1,2}\s*(?:-|–|to)\s*\d{1,2})\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:years?|yrs?)\s+(?:of|in|as|at|working|within|doing|leading|managing|building|across|experience|professional|relevant|related)\b|(?:minimum|at least)\s+(?:of\s+)?(\d{1,2})\s*(?:years?|yrs?)"
+    pat = r"(\d{1,2})\s*(?:\+|plus)\s*\)?\s*(?:years?|yrs?)\b|(\d{1,2}\s*(?:-|–|to)\s*\d{1,2})\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:years?|yrs?)\s+(?:of|or|in|as|at|working|within|doing|leading|managing|building|across|experience|professional|relevant|related)\b|(?:minimum|at least)\s+(?:of\s+)?(\d{1,2})\s*(?:years?|yrs?)"
     for m in re.finditer(pat, t):
         g = next(x for x in m.groups() if x)
         if re.search(r"(-|–|to)", g):   # range: "2-4 years" / "3-5 years" = mid-level -> use the top; "1-3", "0-2", "2-3", "1-4" -> use the bottom
@@ -118,11 +126,11 @@ def years_required(txt):
         # same clause only: from the previous clause break to the next one, capped at ~90 chars each side
         left = t[max(0, m.start() - 90):m.start()]; right = t[m.end():m.end() + 90]
         left = re.split(r"[.;:!?•·]|\s\*\s|\s-\s", left)[-1]; right = re.split(r"[.,;:!?•·]|\s\*\s", right)[0]
-        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|is a plus", left + " " + right): continue
+        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|is a plus", left[-45:] + " " + right): continue   # only words close by: flattened bullets ("degree, preferably in X ... field 6+ years") must not leak
         if _section_is_preferred(t, m.start()): continue
         best = n if best is None else max(best, n)
     if best is not None: return best
-    if re.search(r"new grad|recent graduate|entry[- ]level|university graduate|early career|campus|0-?\s?[12] years", t): return 0
+    if re.search(r"new grad|recent graduate|entry[- ]level|university graduate|early career|\bcampus (hire|hiring|recruit\w*|program)|0-?\s?[12] years", t): return 0
     return None
 
 
@@ -639,6 +647,7 @@ def main():
         if re.search(CLEARANCE_COS, j["company"], re.I): drop("clearance employer", j); continue
         seen.add(key); seen.add(j["url"])
         stretch = []                                     # soft reasons: job is still shown, labelled "Stretch", ranked lower
+        if senior_in_jd(j["title"], j["jd"]): drop("senior role (stated in JD)", j); continue
         if j["years"] is not None and j["years"] > 4: drop("needs > 4 years", j); continue
         if j["years"] == 4: stretch.append("asks 4 years")
         if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only", j); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
