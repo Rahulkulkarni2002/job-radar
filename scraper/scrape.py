@@ -74,11 +74,14 @@ def skill_terms(text):
     for a, b in [("dashboard", "dashboards"), ("kpi", "kpis"), ("llm", "llms"), ("forecast", "forecasting"), ("budget", "budgeting"), ("etl", "etl/elt"), ("elt", "etl/elt")]:
         if a in h and b in h: h.discard(a)
     return h
+import sys as _sys; _sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from skill_evidence import credit as skill_credit
 def skill_match(title, jd):
     want = skill_terms(title + " " + jd)
     if len(want) < 4: return None, [], []      # too few skills in the JD to judge
     hit = sorted(k for k in want if k in PROFILE or SYN.get(k, set()) & PROFILE)
-    return round(100 * len(hit) / len(want)), hit, sorted(want - set(hit))
+    score, said, close, alts, gaps = skill_credit(want, set(hit))     # honest credit: same-skill-other-word = full, close equivalent = half
+    return score, (hit, said, close, alts), gaps
 def skill_fit(jd):
     """None if no JD text; else number of distinct core skills mentioned."""
     if not jd: return None
@@ -573,8 +576,9 @@ def h1b_table():
     if counts: json.dump(counts, open(cache, "w"))
     elif cache.exists(): counts = json.load(open(cache))
     return counts
+H1B_ALIAS = {"gen digital": "nortonlifelock", "gen": "nortonlifelock", "x": "twitter", "meta": "facebook", "alphabet": "google"}   # renamed companies (filings are under the old name)
 def h1b_lookup(table, company):
-    n = norm_co(company)
+    n = norm_co(company); n = H1B_ALIAS.get(n, n)
     if not n or not table: return None
     if n in table: return table[n]
     first = n.split()[0] if n.split() else n
@@ -675,13 +679,15 @@ def main():
         if m < _min and not (_f_pre >= 85 and m >= 60):   # JD asks for HIS core stack -> extra tools listed don't make it a stretch
             stretch.append(f"keyword coverage {m}% (< {_min}%)")
         j["match"], j["missing"] = m, miss
+        j["said"], j["close"], j["alt"] = [list(x) for x in hit[1]], [list(x) for x in hit[2]], hit[3]   # real skills under the JD's word / close equivalents (with evidence)
         f, hits, hard = fit(j["title"], j["jd"])
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
         j["family"] = family(j["title"], j["jd"], j["ai"])
         if not family_gate(j["family"], f, hits):
             if f < 25 or not (set(hits) & {"SQL", "Python", "Excel", "Tableau"}): drop("section fit too low", j); continue
             stretch.append("partial skill fit")
-        j["fit"], j["why"] = f, hits
+        j["fit_core"], j["why"] = f, hits
+        j["fit"] = round(.5 * f + .5 * m)              # Fit = your core skills it uses (50%) + honest share of ITS skills you have (50%) -> fit and coverage agree
         j["h1b_approvals"] = h1b_lookup(table, j["company"])
         j["yc"] = norm_co(j["company"]) in YC_NAMES
         j["first_seen"] = prev.get(j["id"], {}).get("first_seen") or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
