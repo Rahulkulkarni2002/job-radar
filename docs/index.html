@@ -287,35 +287,37 @@ function chanceWhy(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",t
   return{p:Math.min(p,.5),why}}
 function chance(j,atsScore){return chanceWhy(j,atsScore).p}
 // ---------- data ----------
-let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1,USER_SORT=false;const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false,SHOW_APPLIED=false,STATUS={},TODAY_MODE=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
+let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1,USER_SORT=false;const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false,SHOW_APPLIED=false,STATUS={},STATUS_KEYS={},TODAY_MODE=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
-fetch("data/applied.json?"+Date.now()).then(r=>r.ok?r.json():{applied:{}}).then(a=>{Object.keys(a.applied||{}).forEach(id=>applied.add(id));STATUS=a.status||{};render()}).catch(()=>{});
+fetch("data/applied.json?"+Date.now()).then(r=>r.ok?r.json():{applied:{}}).then(a=>{Object.keys(a.applied||{}).forEach(id=>applied.add(id));STATUS=a.status||{};STATUS_KEYS=a.keys||{};APPLIED_KEYS_N=-1;render()}).catch(()=>{});
 fetch("data/companies.json?"+Date.now()).then(r=>r.ok?r.json():[]).then(c=>{ALLCOS=c}).catch(()=>{});
 fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{DATA=d;document.getElementById("meta").textContent=
   `${d.count} open roles · updated ${d.updated} · ${d.boards} company career sites scanned ~every 1–3 h`;fillPicker();render()})
   .catch(()=>document.getElementById("meta").textContent="Could not load jobs.json");
+const rkey=j=>(j.company+"|"+j.title).toLowerCase().replace(/[^a-z0-9|]+/g," ").trim();let APPLIED_KEYS=new Set(),APPLIED_KEYS_N=-1;
+function isApplied(j){if(applied.has(j.id))return true;if(APPLIED_KEYS_N!==applied.size+DATA.jobs.length){APPLIED_KEYS=new Set([...Object.keys(STATUS_KEYS),...DATA.jobs.filter(x=>applied.has(x.id)).map(rkey)]);APPLIED_KEYS_N=applied.size+DATA.jobs.length}return APPLIED_KEYS.has(rkey(j))}
 function rowData(j){const r=RESUME&&j.jd?analyze(RESUME,j.title+". "+j.jd):null;const m=j.match??null;return{j,ats:r,match:m,miss:j.missing||[],chance:chance(j,r?r.score:m),spon:sponsorRating(j)}}
 const SP={no:["Won't sponsor","b-bad"],open:["Sponsors (in JD)","b-good"],strong:["H-1B: strong","b-good"],some:["H-1B: some","b-warn"],none:["No H-1B record","b-warn"],unknown:["Unknown","b-warn"]};
 function render(){const q=document.getElementById("q").value.toLowerCase().trim(),spon=document.getElementById("spon").value,
   maxAge=+document.getElementById("age").value,minM=+document.getElementById("minMatch").value,rt=document.getElementById("roleType").value,ct=document.getElementById("coType").value,fd=document.getElementById("foundDay").value,hideA=document.getElementById("hideApplied").checked,onlyNew=document.getElementById("onlyNew").checked;
   let rows=DATA.jobs.map(rowData).filter(({j,spon:s})=>{if(q&&!(j.title+" "+j.company+" "+j.location+" "+j.jd).toLowerCase().includes(q))return false;
     if(spon==="ok"&&s==="no")return false;if(spon==="h1b"&&!["open","strong","some"].includes(s))return false;if(spon==="good"&&!["open","strong"].includes(s))return false;if(daysAgo(j.posted)>maxAge)return false;if(rt==="ai"&&!j.ai)return false;if(ct==="yc"&&!j.yc)return false;if(fd!=="any"&&foundDay(j)!==fd)return false;const mf=+document.getElementById("minFit").value;if(mf&&(j.fit||0)<mf)return false;if(ct.startsWith("co:")&&j.company!==ct.slice(3))return false;if(KIND!=="all"&&roleKind(j)!==KIND)return false;if(COMPANY&&j.company!==COMPANY)return false;if(FAM!=="all"&&famOf(j)!==FAM)return false;if(rt==="nonai"&&j.ai)return false;if(minM&&rowData(j).match!=null&&rowData(j).match<minM)return false;
-    if(!TODAY_MODE&&!document.getElementById("incStretch").checked&&(j.stretch||[]).length)return false;if(SHOW_APPLIED){if(!applied.has(j.id))return false}else if(hideA&&applied.has(j.id))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
+    if(!TODAY_MODE&&!document.getElementById("incStretch").checked&&(j.stretch||[]).length)return false;if(SHOW_APPLIED){if(!isApplied(j))return false}else if(hideA&&isApplied(j))return false;if(!SHOW_APPLIED&&SHOW_HIDDEN!==!!DISMISSED[j.id])return false;if(onlyNew&&lastVisit&&j.first_seen<=lastVisit.slice(0,16)+"Z")return false;return true});
   const val={title:r=>r.j.title,posted:r=>r.j.posted,salary:r=>parseInt((r.j.salary.match(/\d+/)||[0])[0]),spon:r=>["no","unknown","none","some","open","strong"].indexOf(r.spon),chance:r=>r.chance,fit:r=>r.j.fit??-1,ats:r=>r.match??-1,rats:r=>{const pj=JOBATS[r.j.id];const a=pj&&pj.text?analyze(pj.text,r.j.title+". "+r.j.jd):r.ats;return a?a.score:-1}};
   rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir);
   if(TODAY_MODE){rows=today20();if(USER_SORT)rows.sort((a,b)=>(val[sortKey](a)>val[sortKey](b)?1:-1)*sortDir)}
   document.querySelectorAll("th[data-s]").forEach(th=>{const on=USER_SORT||!TODAY_MODE?th.dataset.s===sortKey:false;th.classList.toggle("sorted",on);th.querySelector(".arr").textContent=on?(sortDir>0?"▲":"▼"):"⇅";th.title=(th.dataset.t||"")+(th.dataset.t?" — ":"")+"click to sort (click again to reverse)"});
   if(!TODAY_MODE)document.getElementById("hint").textContent=RESUME?`${rows.length} jobs · Skill match = your full skill set · Resume ATS = the resume you uploaded (tailor it if < 90%)`:`${rows.length} jobs · Skill match = your full skill set · upload a resume in the ATS tab to see its ATS score per job`;
   const nh=Object.keys(DISMISSED).length;const sh=document.getElementById("showHidden");sh.textContent=SHOW_HIDDEN?`← Back to jobs`:`Hidden (${nh})`;sh.classList.toggle("pri",SHOW_HIDDEN);
-  const sa=document.getElementById("showApplied");const na=DATA.jobs.filter(j=>applied.has(j.id)).length;sa.textContent=SHOW_APPLIED?"← Back to jobs":`Applied (${na})`;sa.classList.toggle("pri",SHOW_APPLIED);
-  const base=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]);
+  const sa=document.getElementById("showApplied");const na=DATA.jobs.filter(j=>isApplied(j)).length;sa.textContent=SHOW_APPLIED?"← Back to jobs":`Applied (${na})`;sa.classList.toggle("pri",SHOW_APPLIED);
+  const base=DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]);
   document.querySelectorAll("#famSeg button").forEach(b=>{const f=b.dataset.f;b.querySelector(".cnt").textContent="("+(f==="all"?base.length:base.filter(j=>famOf(j)===f).length)+")"});
   const chip=document.getElementById("coChip");chip.hidden=!COMPANY;
   if(COMPANY)chip.innerHTML=`<span class="badge b-new" style="font-size:13px;padding:5px 10px">Company: ${h(COMPANY)} <a href="#" id="coClear" style="color:inherit;margin-left:6px;text-decoration:none">✕</a></span>`;
   const cc=document.getElementById("coClear");if(cc)cc.onclick=e=>{e.preventDefault();COMPANY="";render()};
   const tb=document.getElementById("rows");tb.innerHTML="";document.getElementById("empty").hidden=rows.length>0;
   for(const r of rows.slice(0,600)){const j=r.j,d=daysAgo(j.posted),isNew=Date.now()-new Date(j.first_seen)<864e5,[sl,sc]=SP[r.spon];
-    const tr=document.createElement("tr");if(applied.has(j.id))tr.className="applied";
+    const tr=document.createElement("tr");if(isApplied(j))tr.className="applied";
     tr.innerHTML=`<td class="first"><div class="role">${h(j.title)} ${(j.stretch||[]).length?`<span class="badge b-warn" title="${h(j.stretch.join('; '))}">Stretch: ${h(j.stretch[0])}</span> `:""}${STATUS[j.id]==="rejected"?'<span class="badge b-bad">Rejected</span> ':STATUS[j.id]?`<span class="badge b-good">${h(STATUS[j.id])}</span> `:""}${j.yc?'<span class="badge" style="background:#ff6600;color:#fff" title="Y Combinator company">YC</span> ':""}${j.ai?'<span class="badge b-good">AI</span> ':""}<span class="badge b-kind">${FAM_LABEL[famOf(j)]||""}</span> ${j.opt?`<span class="badge ${j.opt==="strong"?"b-good":"b-kind"}" title="How clearly the duties relate to your M.S. Business Analytics (OPT requires a directly related job)">🎓 OPT: ${j.opt}</span> `:""}${j.contract?'<span class="badge b-warn" title="Contract/apprentice — OK for OPT, but STEM OPT needs a W-2 employer that uses E-Verify">📝 Contract</span> ':""}<span class="badge b-kind">${{"technical":"🧮 Technical","balanced":"⚖️ Balanced","non-technical":"🗣️ Non-technical"}[roleKind(j)]}</span> ${isNew?'<span class="badge b-new">NEW</span>':""}</div><div class="co">${h(j.company)} · ${h(j.location||"")}${j.years!=null?" · "+(j.years===0?"entry level":j.years+"+ yrs"):""}<br><span title="Scraped from the company\'s own careers page">🏢 ${h(j.company)} careers page · ${h(j.source)}</span></div></td>
      <td data-l="Posted">${d===0?"today":d+"d ago"}<div class="co" title="When Job Radar first found it">found ${foundLabel(j)}</div></td><td data-l="Salary">${h(j.salary||"—")}</td>
      <td data-l="Sponsorship"><span class="badge ${sc}" title="${j.h1b_approvals!=null?"USCIS H-1B approvals: "+j.h1b_approvals:"JD wording"}">${sl}</span></td>
@@ -332,7 +334,7 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
         return`<span class="num" style="color:var(${an.score>=90?"--good":an.score>=80?"--warn":"--bad"})">${an.score}%</span>
           <div class="co" title="${h(pj?pj.name:"general resume")}">${h((pj?pj.name:"general resume").slice(0,24))}</div>${top}<div class="co" data-ttl="${pj?pj.until:RESUME_UNTIL}"></div>
           <div style="display:flex;gap:4px;margin-top:4px"><button class="btn" data-det="${j.id}">Details</button><button class="btn" data-up="${j.id}">${pj?"Re-upload":"Upload"}</button></div>`})()}</td>
-     <td data-l=""><div class="acts"><a class="btn pri" href="${h(j.url)}" target="_blank" rel="noopener">Apply</a><button class="btn" data-ats="${j.id}" title="Check ATS for this role">ATS</button><button class="btn" data-prep="${j.id}" title="Copy a message for Claude to build your resume + cover letter + answers (ATS loop, apply if ≥85%)">🤖 Prepare</button>${DISMISSED[j.id]?`<button class="btn" data-undo="${j.id}" title="Hidden: ${h(DISMISSED[j.id].reason)}">Undo ✕</button>`:`<button class="btn x" data-x="${j.id}" title="I'm not applying — hide this job">✕</button>`}<button class="btn" data-ap="${j.id}" title="${applied.has(j.id)?"Undo applied":"Mark as applied"}">${applied.has(j.id)?"↩":"✓"}</button></div></td>`;
+     <td data-l=""><div class="acts"><a class="btn pri" href="${h(j.url)}" target="_blank" rel="noopener">Apply</a><button class="btn" data-ats="${j.id}" title="Check ATS for this role">ATS</button><button class="btn" data-prep="${j.id}" title="Copy a message for Claude to build your resume + cover letter + answers (ATS loop, apply if ≥85%)">🤖 Prepare</button>${DISMISSED[j.id]?`<button class="btn" data-undo="${j.id}" title="Hidden: ${h(DISMISSED[j.id].reason)}">Undo ✕</button>`:`<button class="btn x" data-x="${j.id}" title="I'm not applying — hide this job">✕</button>`}<button class="btn" data-ap="${j.id}" title="${isApplied(j)?"Undo applied":"Mark as applied"}">${isApplied(j)?"↩":"✓"}</button></div></td>`;
     tb.appendChild(tr)}}
 function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 // ---------- auto-reset: uploaded resumes & ATS scores clear after 30 s ----------
@@ -368,7 +370,7 @@ const WATCH=[["Apple","Apple","https://jobs.apple.com/en-us/search?location=unit
  ["VMware → Broadcom","Broadcom (VMware)","https://broadcom.wd1.myworkdayjobs.com/External_Career"],["UiPath","UiPath","https://careers.uipath.com/"],["Salesforce","Salesforce","https://careers.salesforce.com/"],
  ["Adobe","Adobe","https://careers.adobe.com/"],["Uber","Uber","https://www.uber.com/us/en/careers/"],["Stripe","Stripe","https://stripe.com/jobs"],["Databricks","Databricks","https://www.databricks.com/company/careers"],
  ["JPMorgan Chase","JPMorgan Chase","https://careers.jpmorgan.com/"],["Qualcomm","Qualcomm","https://careers.qualcomm.com/",1],["PayPal","PayPal","https://careers.pypl.com/",1],["Y Combinator startups","__yc","https://www.workatastartup.com/"]];
-function renderWatch(){const live=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]);
+function renderWatch(){const live=DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]);
   document.getElementById("watchRows").innerHTML=WATCH.map(([label,co,url,manual])=>{
     const n=co==="__yc"?live.filter(j=>j.yc).length:live.filter(j=>j.company===co||j.company.toLowerCase().startsWith(co.toLowerCase()+" ")).length;
     const status=manual?'<span class="badge b-warn" title="Their site blocks automated scanning">check manually</span>':'<span class="badge b-good">scanned every 3 h</span>';
@@ -380,7 +382,7 @@ document.getElementById("watchRows").onclick=e=>{const b=e.target.closest("butto
   COMPANY=b.dataset.co;FAM="all";document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x.dataset.f==="all"));show("jobs");render()};
 // ---------- Companies tab ----------
 function renderCos(){renderWatch();const q=document.getElementById("coQ").value.toLowerCase().trim(),all=document.getElementById("coAll").checked;
-  const live=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]);const by={};
+  const live=DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]);const by={};
   live.forEach(j=>{const c=by[j.company]||(by[j.company]={name:j.company,n:0,fams:new Set(),src:new Set()});c.n++;c.fams.add(famOf(j));c.src.add(j.source)});
   let rows=Object.values(by);
   if(all){const have=new Set(rows.map(r=>r.name.toLowerCase()));ALLCOS.forEach(c=>{if(!have.has(c.name.toLowerCase())){rows.push({name:c.name,n:0,fams:new Set(),src:new Set([c.ats])});have.add(c.name.toLowerCase())}})}
@@ -397,14 +399,13 @@ document.getElementById("coRows").onclick=e=>{const b=e.target.closest("button[d
   document.querySelectorAll("#famSeg button").forEach(x=>x.classList.toggle("on",x.dataset.f==="all"));show("jobs");render()};
 // ---------- 🎯 Today's 20 ----------
 function today20(){const now=new Date(),today=localDay(now),wk=Date.now()-7*864e5;
-  const pool=DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]&&sponsorRating(j)!=="no"&&!/skillbridge|military|veteran/i.test(j.title)).map(rowData);
+  const pool=DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]&&sponsorRating(j)!=="no"&&!/skillbridge|military|veteran/i.test(j.title)).map(rowData);
   // Ranking learned from outcomes (Farther, TransUnion rejections): favour truly entry-level roles where a ~2-yr new grad is competitive
   const ENTRY=/\b(associate|junior|jr\.?|entry[- ]level|new grad|graduate|early career|analyst i\b|analyst 1\b|\bi\b$|0-2|1-2|0-1)\b/i;
   const score=r=>r.chance*(["da","ba"].includes(famOf(r.j))?1.1:1);
-  const fresh=pool.filter(r=>foundDay(r.j)===today).sort((a,b)=>score(b)-score(a));
-  const recent=pool.filter(r=>foundDay(r.j)!==today&&new Date(r.j.first_seen||r.j.posted)>=wk).sort((a,b)=>score(b)-score(a));
-  const pick=[...fresh,...recent].slice(0,20);
-  document.getElementById("hint").innerHTML=`<b>🎯 Your 20 for ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b> — ${Math.min(fresh.length,20)} new today${pick.length>fresh.length?`, plus the best ${pick.length-Math.min(fresh.length,20)} from this week you haven't acted on`:""}. Apply, ✓ mark applied, or ✕ hide — tomorrow's 20 replace them. <span class="muted">“Stretch” = misses a soft rule (shown why); hard blockers (won't sponsor, clearance, PhD, 5+ yrs, start date) are never included.</span>`;
+  const week=pool.filter(r=>new Date(r.j.first_seen||r.j.posted)>=wk||daysAgo(r.j.posted)<=7).sort((a,b)=>score(b)-score(a));
+  const pick=week.slice(0,20),fresh=pick.filter(r=>foundDay(r.j)===today);
+  document.getElementById("hint").innerHTML=`<b>🎯 Your 20 for ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b> — the ${pick.length} roles with your best chance this week (${fresh.length} of them new today), best first. Apply, ✓ mark applied, or ✕ hide — tomorrow's 20 replace them. <span class="muted">“Stretch” = misses a soft rule (shown why); hard blockers (won't sponsor, clearance, PhD, 5+ yrs, start date) are never included.</span>`;
   return pick}
 // ---------- events ----------
 document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.f===FAM);b.onclick=()=>{FAM=b.dataset.f;S.set("fam",FAM);
@@ -446,7 +447,7 @@ function renderDateBar(){const now=new Date(),upd=DATA.updated?new Date(DATA.upd
   const l=document.getElementById("newTodayLink");if(l)l.onclick=e=>{e.preventDefault();show("jobs");const sel=document.getElementById("foundDay");sel.value=localDay(new Date());if(sel.value!==localDay(new Date()))sel.value="any";render()}}
 setInterval(()=>{if(DATA.jobs.length)renderDateBar()},60000);
 function fillCompanies(){const sel=document.getElementById("coType"),cur=sel.value;const by={};
-  DATA.jobs.filter(j=>!applied.has(j.id)&&!DISMISSED[j.id]).forEach(j=>by[j.company]=(by[j.company]||0)+1);
+  DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]).forEach(j=>by[j.company]=(by[j.company]||0)+1);
   const list=Object.entries(by).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
   sel.innerHTML='<option value="all">All companies ('+list.length+')</option><option value="yc">🟧 YC startups only</option><optgroup label="Companies with roles that fit you">'+
     list.map(([c,n])=>`<option value="co:${h(c)}">${h(c)} (${n})</option>`).join("")+"</optgroup>";
