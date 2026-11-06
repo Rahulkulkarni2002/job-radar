@@ -101,6 +101,23 @@ def salary(txt, comp=None):
     if lo < 20000 or hi > 600000: return ""
     return f"${lo/1000:.0f}K – ${hi/1000:.0f}K"
 WORDNUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+def role_experience_problem(jd):
+    """REQUIRED experience of a kind he doesn't have (his ~2 yrs are Business Support Analyst + a 4-month capstone):
+    'N+ years of data scientist experience', '2+ years as a data/research scientist, statistician...', textbooks / research papers."""
+    t = re.sub(r"\s+", " ", (jd or "").lower())
+    pats = [r"(\d{1,2})\s*\+?\s*(?:years?|yrs?) (?:of |as an? )?(?:data(?:/research)? scientist|research scientist|applied scientist|machine learning (?:engineer|scientist)|statistician)\b(?! or (?:analyst|business|data analyst))",
+            r"(\d{1,2})\s*\+?\s*(?:years?|yrs?) (?:of )?(?:experience )?(?:as an? )?(?:data|research) scientist",
+            r"(\d{1,2})\s*\+?\s*(?:years?|yrs?) of (?:creating|contributing to|writing|publishing)[^.;]{0,60}(?:textbooks?|research papers?|publications?|educational content)",
+            r"(?:publications?|published research) (?:in|at) (?:top|peer[- ]reviewed|leading) (?:conferences?|journals?|venues?)"]
+    for rx in pats:
+        for m in re.finditer(rx, t):
+            if _section_is_preferred(t, m.start()): continue
+            seg = t[max(0, m.start() - 80):m.end() + 60]
+            if re.search(r"prefer|a plus|nice to have|bonus|ideally", seg): continue
+            n = int(m.group(1)) if m.groups() and m.group(1) and m.group(1).isdigit() else 1
+            if n >= 1: return m.group(0)[:90]
+    return None
+
 def senior_in_jd(title, jd):
     """Title says 'Analyst' but the JD says 'As a Senior Financial Analyst...' (Zoox) -> it's a senior role."""
     if re.search(TITLE_EXCLUDE, title.lower()): return None
@@ -434,7 +451,7 @@ def workable(slug, name):
 def amazon(_board, name):
     """amazon.jobs public search (Business/Data Analyst roles; Amazon is a major H-1B sponsor)."""
     out = []
-    for q in ("business analyst", "data analyst", "business intelligence", "data scientist", "financial analyst"):
+    for q in ("business analyst", "data analyst", "business intelligence", "data scientist", "financial analyst", "data scientist i", "business analyst i", "university graduate", "2027 university graduate"):
         d = get(f"https://www.amazon.jobs/en/search.json?base_query={urllib.parse.quote(q)}&country=USA&result_limit=100&offset=0&sort=recent")
         for r in d.get("jobs", []):
             try: posted = datetime.datetime.strptime(r.get("posted_date", ""), "%B %d, %Y").date().isoformat()
@@ -661,6 +678,7 @@ def main():
         seen.add(key); seen.add(j["url"])
         stretch = []                                     # soft reasons: job is still shown, labelled "Stretch", ranked lower
         if senior_in_jd(j["title"], j["jd"]): drop("senior role (stated in JD)", j); continue
+        if role_experience_problem(j["jd"]): drop("requires data-scientist-title / publication experience", j); continue   # Amazon basic quals etc.
         if j["years"] is not None and j["years"] > 4: drop("needs > 4 years", j); continue
         if j["years"] == 4: stretch.append("asks 4 years")
         if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only", j); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)

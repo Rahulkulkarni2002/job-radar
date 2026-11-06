@@ -46,6 +46,11 @@ CASES = [
  ("reqgap", ("Molina: Required qualifications: Experience with Microsoft Azure, Amazon Web Services (AWS), or Hadoop.", ["azure", "aws"]), []),
  ("reqgap", ("Requirements: 2+ years of experience building reports in Power BI.", ["power bi"]), ["power bi"]),
  ("reqgap", ("Qualifications: Proficiency with Salesforce reporting and dashboards required.", ["salesforce"]), ["salesforce"]),
+ ("roleexp", "Amazon Music: - 1+ years of SQL experience - 2+ years of data/research scientist, statistician or quantitative analyst in an internet-based company experience - 1+ years of creating or contributing to mathematical textbooks, research papers, or educational content experience", True),
+ ("roleexp", "Amazon OTS: - 3+ years of data querying languages experience - 3+ years of data scientist experience", True),
+ ("roleexp", "Requirements: 2+ years of experience in data analysis, data science or a related field.", False),
+ ("roleexp", "Preferred qualifications: 2+ years of data scientist experience.", False),
+ ("roleexp", "You will partner with data scientists. Requirements: 1+ years of SQL or Python.", False),
  ("domain", "2-4 years of experience in technology investment banking or strategy consulting with software clients", True),
  ("domain", "Jerry: 1+ year of experience at a consulting firm, bank or tech company.", False),
  ("domain", "3+ years in management consulting or investment banking required.", True),
@@ -75,7 +80,7 @@ CASES = [
 ]
 fails = 0
 for kind, text, want in CASES:
-    got = {"years": lambda t: Y(t), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "reqgap": lambda t: RG(t[0], t[1]), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)
+    got = {"years": lambda t: Y(t), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "roleexp": lambda t: bool(ns["role_experience_problem"](t)), "reqgap": lambda t: RG(t[0], t[1]), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)
     ok = got == want; fails += not ok
     print(("PASS " if ok else "FAIL ") + f"{kind:7} expected {want!s:5} got {got!s:5} | {str(text)[:80]}")
 print(f"{len(CASES) - fails}/{len(CASES)} rule tests passed")
