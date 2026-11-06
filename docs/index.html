@@ -416,7 +416,7 @@ function readyWhy(j){const t=j.title||"",no=[];
   if(isApplied(j))no.push("applied");if(DISMISSED[j.id])no.push("hidden");
   if((j.stretch||[]).some(x=>!/^keyword coverage/.test(x)))no.push("stretch");
   if(j.years!=null&&j.years>2)no.push("asks "+j.years+"+ yrs");
-  if((j.fit||0)<70||(j.fit_core??j.fit??0)<50)no.push("fit");
+  if((j.fit||0)<85||(j.fit_core??j.fit??0)<60)no.push("fit");   // candidate: fit below 85 felt weak
   const sr=sponsorRating(j);if(!(sr==="open"||sr==="strong"||(sr==="some"&&(j.h1b_approvals||0)>=3)))no.push("sponsorship");
   if((LVL_SENIOR.test(t)||LVL_MID.test(t))&&!INFLATED_SR.test(t.trim()))no.push("level");
   if(daysAgo(j.posted)>15)no.push("old");if(j.contract)no.push("contract");if(j.opt!=="strong")no.push("OPT");
@@ -429,7 +429,7 @@ const CONCEPT_OK=new Set(["optimization","linear programming","simulation","vari
 function today20(){const now=new Date(),today=localDay(now);
   const pool=DATA.jobs.filter(j=>!readyWhy(j).length&&!/skillbridge|military|veteran/i.test(j.title)).map(rowData).sort((a,b)=>b.chance-a.chance);
   const pick=pool.slice(0,20),fresh=pick.filter(r=>foundDay(r.j)===today);
-  document.getElementById("hint").innerHTML=`<b>✅ Ready to apply — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${pick.length} role${pick.length===1?"":"s"} with <b>nothing on paper that blocks a call</b> (${fresh.length} new today). Each one: <b>no different-world gaps</b> (only doable ones like a Python library or a cousin BI/SQL/cloud tool) · asks ≤ 2 yrs · not II/Senior · sponsors H-1B (3+ filings or says so) · OPT-related · full-time · posted ≤ 15 days.${pick.length<20?` <span class="muted">Fewer than 20 today — the list is never padded with risky roles.</span>`:""} Apply, then ✓ mark applied.`;
+  document.getElementById("hint").innerHTML=`<b>✅ Ready to apply — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${pick.length} role${pick.length===1?"":"s"} with <b>nothing on paper that blocks a call</b> (${fresh.length} new today). Each one: <b>no different-world gaps</b> (only doable ones like a Python library or a cousin BI/SQL/cloud tool) · fit ≥ 85 · asks ≤ 2 yrs · not II/Senior · sponsors H-1B (3+ filings or says so) · OPT-related · full-time · posted ≤ 15 days.${pick.length<20?` <span class="muted">Fewer than 20 today — the list is never padded with risky roles.</span>`:""} Apply, then ✓ mark applied.`;
   return pick}
 // ---------- events ----------
 document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.f===FAM);b.onclick=()=>{FAM=b.dataset.f;S.set("fam",FAM);
