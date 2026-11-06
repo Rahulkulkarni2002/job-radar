@@ -102,7 +102,9 @@ def senior_in_jd(title, jd):
     if re.search(TITLE_EXCLUDE, title.lower()): return None
     j = (jd or "")[:3000]
     m = re.search(r"(?<!such )\bas an? (senior|sr\.?|principal|staff)\s+(\w+\s+){0,3}(analyst|scientist|engineer|associate|specialist|consultant|strategist|economist)\b", j, re.I) \
-        or re.search(r"\bthis is an? (senior|principal|staff)[- ]level\b", j, re.I)
+        or re.search(r"\bthis is an? (senior|principal|staff)[- ]level\b", j, re.I) \
+        or re.search(r"\bthe (senior|sr\.?|principal|staff)\s+(\w+\s+){0,3}(analyst|scientist|engineer|associate|specialist|strategist|economist) (will|is responsible|role)\b", j, re.I) \
+        or re.search(r",\s*(senior|principal) associate\b", j, re.I)
     return m.group(0)[:80] if m else None
 
 def years_required(txt):
@@ -111,7 +113,7 @@ def years_required(txt):
     t = (txt or "").lower()
     for w, n in WORDNUM.items(): t = re.sub(r"\b" + w + r"\b(?=\s*(\(\d+\)\s*)?\+?\s*(or more )?(years?|yrs?))", str(n), t)
     best = None
-    pat = r"(\d{1,2})\s*(?:\+|plus)\s*\)?\s*(?:years?|yrs?)\b|(\d{1,2}\s*(?:-|–|to)\s*\d{1,2})\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:years?|yrs?)\s+(?:of|or|in|as|at|working|within|doing|leading|managing|building|across|experience|professional|relevant|related)\b|(?:minimum|at least)\s+(?:of\s+)?(\d{1,2})\s*(?:years?|yrs?)"
+    pat = r"(\d{1,2})\s*(?:\+|plus|or more)\s*\)?\s*(?:years?|yrs?)\b|(\d{1,2}\s*(?:-|–|to)\s*\d{1,2})\s*\+?\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:years?|yrs?)['’]\s+\w|(\d{1,2})\s*(?:years?|yrs?)\s+(?:of|or|in|as|at|working|within|doing|leading|managing|building|across|experience|professional|relevant|related)\b|(?:minimum|at least)\s+(?:of\s+)?(\d{1,2})\s*(?:years?|yrs?)"
     for m in re.finditer(pat, t):
         g = next(x for x in m.groups() if x)
         if re.search(r"(-|–|to)", g):   # range: "2-4 years" / "3-5 years" = mid-level -> use the top; "1-3", "0-2", "2-3", "1-4" -> use the bottom
@@ -126,7 +128,9 @@ def years_required(txt):
         # same clause only: from the previous clause break to the next one, capped at ~90 chars each side
         left = t[max(0, m.start() - 90):m.start()]; right = t[m.end():m.end() + 90]
         left = re.split(r"[.;:!?•·]|\s\*\s|\s-\s", left)[-1]; right = re.split(r"[.,;:!?•·]|\s\*\s", right)[0]
-        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|is a plus", left[-45:] + " " + right): continue   # only words close by: flattened bullets ("degree, preferably in X ... field 6+ years") must not leak
+        _l = re.sub(r"\b(preferred|desired|a plus)\s*$", "", left[-45:])          # "degree preferred 3-5 years": that 'preferred' belongs to the degree
+        _r = re.split(r"\bpreferred (education|qualifications?|skills|experience|requirements)|" + PREF_HDR, right)[0]   # "...5 years in finance preferred education:" = next heading
+        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|is a plus", _l + " " + _r): continue   # only words close by: flattened bullets ("degree, preferably in X ... field 6+ years") must not leak
         if _section_is_preferred(t, m.start()): continue
         best = n if best is None else max(best, n)
     if best is not None: return best
@@ -194,7 +198,8 @@ REQ_HDR = r"(required|minimum|basic|must[- ]have) (qualifications|skills|experie
 def _section_is_preferred(t, pos):
     """Is position `pos` inside a 'preferred' section? (looks at the closest section header before it)"""
     before = t[max(0, pos - 2500):pos]
-    p = [m.end() for m in re.finditer(PREF_HDR, before)]; r = [m.end() for m in re.finditer(REQ_HDR, before)]
+    real = lambda m: not re.search(r"\b(the|all|of|any|these|those|our|meet|meets)\s+$", before[max(0, m.start() - 20):m.start()])
+    p = [m.end() for m in re.finditer(PREF_HDR, before) if real(m)]; r = [m.end() for m in re.finditer(REQ_HDR, before) if real(m)]
     return bool(p) and (not r or max(p) >= max(r))   # 'Preferred Qualifications' also matches 'qualifications' at the same spot
 def degree_problem(jd):
     """Reason string if a REQUIRED qualification needs a doctorate (no master's/experience alternative) or a licence he doesn't hold.
@@ -432,7 +437,7 @@ def amazon(_board, name):
             except ValueError: continue
             loc = r.get("normalized_location") or r.get("location") or ""
             if age(posted) > MAX_AGE or not relevant(r.get("title", "")) or not us(loc + " USA"): continue
-            txt = strip(" ".join(r.get(k) or "" for k in ("description", "basic_qualifications", "preferred_qualifications")))
+            txt = strip(" ".join((h + " " + (r.get(k) or "")) for k, h in (("description", ""), ("basic_qualifications", " Basic qualifications:"), ("preferred_qualifications", " Preferred qualifications:")) if r.get(k)))
             out.append(job("Amazon", r["title"], "https://www.amazon.jobs" + r.get("job_path", ""), posted, loc, txt, "amazon.jobs"))
         time.sleep(1.0)
     return out
