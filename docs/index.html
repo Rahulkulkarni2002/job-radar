@@ -280,7 +280,6 @@ function chanceWhy(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",t
   const a=atsScore??70;p*=a<60?.5:a<75?.85:a<85?1.1:1.3;if(a<60)why.push(`keywords ${a}%`);
   if(LVL_SENIOR.test(t)){p*=.25;why.push("senior level")}else if(LVL_MID.test(t)){p*=.45;why.push("level II (mid)")}else if(LVL_ENTRY.test(t)){p*=1.5;why.push("entry level ✓")}
   if(j.years!=null){p*=j.years<=yoe?1:j.years<=yoe+1?.6:j.years<=yoe+2?.35:.15;if(j.years>yoe)why.push(`asks ${j.years}+ yrs`)}
-  if(MEGA.test(j.company||"")){p*=.55;why.push("huge applicant pool")}
   if(/^data scientist( ii?)?$/i.test(t.trim())&&!LVL_ENTRY.test(t)){p*=.8}
   const d=daysAgo(j.posted);p*=d<=2?1.4:d<=5?1.15:d<=10?.9:.65;if(d>10)why.push("older post");
   if(need){p*={no:.02,open:.95,strong:1,some:.7,none:.2,unknown:.45}[sponsorRating(j)];if(["none","unknown"].includes(sponsorRating(j)))why.push("no H-1B record")}
