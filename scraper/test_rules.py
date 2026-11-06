@@ -48,6 +48,7 @@ CASES = [
  ("title_ok", "AI/ML Researcher", False),
  ("title_ok", "Research Analyst - Oil & Chemicals", True),
  ("title_ok", "AI Analyst", True),
+ ("title_ok", "Economist, Customer Experience and Business Trends", False),
  ("title_ok", "Military SkillBridge – Social Impact Data & Insights Analyst", False),
  ("eng", "Normal Computing: Strong Python skills, plus some experience with a systems language (C++, Rust, or similar); validate ideas against our simulators and FPGA prototypes and against silicon", True),
  ("eng", "Data Analyst: SQL, Python, Tableau; build dashboards for leadership.", False),
