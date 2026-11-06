@@ -52,8 +52,12 @@ AI_TITLE = r"\b(ai|a\.i\.|genai|gen ai|generative ai|artificial intelligence|llm
 ALWAYS = r"data analyst|business analyst|analytics engineer|ai analyst|data scientist|bi analyst|bi developer|insights? analyst|product analyst|financial analyst|fp&a|decision scien|reporting analyst|pricing analyst|revenue analyst|strategy (and|&) operations|business intelligence|marketing analyst|operations analyst|research analyst|credit analyst|risk analyst|data associate|analytics associate|people analytics|forecasting analyst|planning analyst|quantitative analyst|economist|machine learning analyst"
 CORE = r"\b(analyst|analytics|data|insights?|intelligence|forecast\w*|pricing|fp&a|financ\w+ anal\w+|statistic\w*|quantitative|decision|ai|machine learning)\b"
 NOT_FIT = r"architect|engineer|engineering|research scientist|materials|chemist|biolog|physic|\blab\b|laboratory|clinical|geospatial|\bgis\b|programmer|developer|full stack|technologist|mechanic|specialist|generalist|coordinator|support|care\b|security|\bit\b|cloud|temporary|temp\b|inventory|workplace|vice president|assistant|administrator|representative|sales|recruit|nurse|teacher|tutor|driver|annotator|rater|trainer|writer|editor"
+# "Sr." analyst titles that are really entry level (Capital One "Sr. Business Analyst" = Sr. Associate, the MS-grad hire).
+# They pass the title gate; the main loop keeps them ONLY if the JD's required years are <= 2.
+TITLE_INFLATED = r"^(sr\.?|senior) (business|data|financial|risk|marketing|credit|pricing|product) analyst\b"
 def relevant(t):
     t = t.lower()
+    if re.search(TITLE_INFLATED, t.strip()) and not re.search(r"\b(ii|iii|lead|manager|principal|staff)\b", t): return True
     if re.search(TITLE_EXCLUDE, t): return False
     if re.search(ALWAYS, t) or (re.search(AI_TITLE, t) and not re.search(r"engineer|architect|scientist, ml|researcher, ml|annotator|rater|trainer|tutor|writer", t)): return True
     return bool(re.search(CORE, t)) and not re.search(NOT_FIT, t)
@@ -677,6 +681,7 @@ def main():
         if re.search(CLEARANCE_COS, j["company"], re.I): drop("clearance employer", j); continue
         seen.add(key); seen.add(j["url"])
         stretch = []                                     # soft reasons: job is still shown, labelled "Stretch", ranked lower
+        if re.search(TITLE_INFLATED, j["title"].lower().strip()) and (j["years"] is None or j["years"] > 2): drop("senior title (JD asks > 2 yrs or doesn't say)", j); continue
         if senior_in_jd(j["title"], j["jd"]): drop("senior role (stated in JD)", j); continue
         if role_experience_problem(j["jd"]): drop("requires data-scientist-title / publication experience", j); continue   # Amazon basic quals etc.
         if j["years"] is not None and j["years"] > 4: drop("needs > 4 years", j); continue
