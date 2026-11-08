@@ -23,6 +23,7 @@ h1{font-size:18px;margin:0}.meta{color:var(--muted);font-size:12px}
 .bar{display:flex;gap:8px;flex-wrap:wrap;padding:10px 0}
 input,select,textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
 input[type=search]{flex:1;min-width:180px}label.ck{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+#jobs.ready-mode #famSeg,#jobs.ready-mode #kindSeg,#jobs.ready-mode .bar{display:none}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 th[data-s]:hover{color:var(--ink)}th .arr{font-size:11px;margin-left:3px;opacity:.35}th.sorted .arr{opacity:1;color:var(--accent)}
 @media(max-width:900px){th,td{padding:8px 6px}th{white-space:normal}}
@@ -324,7 +325,7 @@ function render(){const q=document.getElementById("q").value.toLowerCase().trim(
   const nh=Object.keys(DISMISSED).length;const sh=document.getElementById("showHidden");sh.textContent=SHOW_HIDDEN?`← Back to jobs`:`Hidden (${nh})`;sh.classList.toggle("pri",SHOW_HIDDEN);
   const sa=document.getElementById("showApplied");const na=DATA.jobs.filter(j=>isApplied(j)).length;sa.textContent=SHOW_APPLIED?"← Back to jobs":`Applied (${na})`;sa.classList.toggle("pri",SHOW_APPLIED);
   const base=DATA.jobs.filter(j=>!isApplied(j)&&!DISMISSED[j.id]);
-  document.querySelectorAll("#famSeg button").forEach(b=>{const f=b.dataset.f;b.querySelector(".cnt").textContent=f==="top"?"":"("+(f==="all"?base.length:base.filter(j=>famOf(j)===f).length)+")"});
+  document.querySelectorAll("#famSeg button").forEach(b=>{const f=b.dataset.f;b.querySelector(".cnt").textContent=f==="top"?"":"("+countWith(()=>{FAM=f})+")"});
   const chip=document.getElementById("coChip");chip.hidden=!COMPANY;
   if(COMPANY)chip.innerHTML=`<span class="badge b-new" style="font-size:13px;padding:5px 10px">Company: ${h(COMPANY)} <a href="#" id="coClear" style="color:inherit;margin-left:6px;text-decoration:none">✕</a></span>`;
   const cc=document.getElementById("coClear");if(cc)cc.onclick=e=>{e.preventDefault();COMPANY="";render()};
@@ -445,7 +446,7 @@ const CONCEPT_OK=new Set(["optimization","linear programming","simulation","vari
 function today20(){const now=new Date(),today=localDay(now);
   const pool=DATA.jobs.filter(j=>!readyWhy(j).length&&!/skillbridge|military|veteran/i.test(j.title)).map(rowData).sort((a,b)=>(isFamous(b.j)-isFamous(a.j))||(b.chance-a.chance));   // candidate: famous companies first
   const pick=pool.slice(0,20),fresh=pick.filter(r=>foundDay(r.j)===today);
-  document.getElementById("hint").innerHTML=`<b>✅ Ready to apply — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${pick.length} role${pick.length===1?"":"s"} with <b>nothing on paper that blocks a call</b> (${fresh.length} new today). Each one: <b>no different-world gaps</b> (only doable ones like a Python library or a cousin BI/SQL/cloud tool) · fit ≥ 75 · asks ≤ 3 yrs · not Senior · sponsors H-1B (3+ filings or says so) · OPT-related · full-time · posted ≤ 15 days.${pick.length<20?` <span class="muted">Fewer than 20 today — the list is never padded with risky roles.</span>`:""} Apply, then ✓ mark applied.`;
+  document.getElementById("hint").innerHTML=`<b>✅ Ready to apply — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${pick.length} role${pick.length===1?"":"s"} with <b>nothing on paper that blocks a call</b> (${fresh.length} new today). Each one: <b>no different-world gaps</b> (only doable ones like a Python library or a cousin BI/SQL/cloud tool) · fit ≥ 75 · asks ≤ 3 yrs · not Senior · sponsors H-1B (3+ filings or says so) · OPT-related · full-time · posted ≤ 15 days.${pick.length<20?` <span class="muted">Fewer than 20 today — the list is never padded with risky roles.</span>`:""} Apply, then ✓ mark applied. <a href="#" id="toAll" style="font-weight:600">See all ${DATA.jobs.length} roles with sections and filters → Jobs tab</a>`;setTimeout(()=>{const l=document.getElementById("toAll");if(l)l.onclick=e=>{e.preventDefault();show("jobs")}},0);
   return pick}
 // ---------- events ----------
 document.querySelectorAll("#famSeg button").forEach(b=>{b.classList.toggle("on",b.dataset.f===FAM);b.onclick=()=>{FAM=b.dataset.f;S.set("fam",FAM);
@@ -464,7 +465,7 @@ document.getElementById("rows").onclick=async e=>{const b=e.target.closest("butt
   if(b.dataset.up){upJob=b.dataset.up;document.getElementById("rowFile").value="";document.getElementById("rowFile").click();return}
   if(b.dataset.det){const pj=JOBATS[b.dataset.det];if(pj&&pj.text){RESUME_VIEW=pj;}document.getElementById("jobPick").value=b.dataset.det;document.getElementById("jdText").value="";show("ats");runATS();return}
   if(b.dataset.ats){RESUME_VIEW=null;document.getElementById("jobPick").value=b.dataset.ats;document.getElementById("jdText").value="";show("ats");runATS()}};
-function show(t){TODAY_MODE=(t==="today");if(t==="today"){t="jobs";document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t==="today"));["jobs","cos","ats","me"].forEach(x=>document.getElementById(x).hidden=x!=="jobs");render();window.scrollTo(0,0);return}document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","cos","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);if(t==="cos")renderCos();if(t==="jobs")render();window.scrollTo(0,0)}
+function show(t){TODAY_MODE=(t==="today");document.getElementById("jobs").classList.toggle("ready-mode",TODAY_MODE);if(t==="today"){t="jobs";document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t==="today"));["jobs","cos","ats","me"].forEach(x=>document.getElementById(x).hidden=x!=="jobs");render();window.scrollTo(0,0);return}document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","cos","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);if(t==="cos")renderCos();if(t==="jobs")render();window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.t));
 // ---------- dates (all shown in YOUR local time) ----------
 function localDay(d){return d.toLocaleDateString("en-CA")}               // YYYY-MM-DD in local time
