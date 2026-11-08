@@ -183,8 +183,8 @@ const TERMS=[...new Set([...LEX.split("|"),...Object.keys(VARIANTS)])].filter(t=
 const SYN={"ai":["generative ai","machine learning","artificial intelligence"],"artificial intelligence":["ai"],"genai":["generative ai"],"bi":["business intelligence","tableau"],"business intelligence":["bi","tableau"],"visualization":["data visualization","tableau"],"dashboard":["dashboards"],"data analysis":["data analytics","analytics"],"statistics":["statistical analysis","statistical inference"],"experimentation":["a/b testing","uplift modeling"],"forecast":["forecasting"]};
 const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
 const RX=Object.fromEntries(TERMS.map(t=>[t,new RegExp("(?<![a-z0-9])"+esc(t)+"(?![a-z0-9])")]));
-function formsIn(text){const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" ";const m=new Map();
-  TERMS.forEach(x=>{if(RX[x].test(t)){const c=VARIANTS[x]||x;if(!m.has(c))m.set(c,new Set());m.get(c).add(x)}});return m}
+function formsIn(text){const t=" "+(text||"").toLowerCase().replace(/\s+/g," ")+" ";const m=new Map();const noPBI=t.replace(/power[\s-]?bi/g," ");
+  TERMS.forEach(x=>{if(RX[x].test(x==="bi"?noPBI:t)){const c=VARIANTS[x]||x;if(!m.has(c))m.set(c,new Set());m.get(c).add(x)}});return m}
 function terms(text){return new Set(formsIn(text).keys())}
 function ats(resume,jd){const want=terms(jd),have=terms(resume);if(want.size<3)return null;const hit=[],miss=[];
   want.forEach(k=>((have.has(k)||(SYN[k]||[]).some(s=>have.has(s)))?hit:miss).push(k));return{score:Math.round(100*hit.length/want.size),hit:hit.sort(),miss:miss.sort(),n:want.size}}
@@ -257,11 +257,13 @@ function analyze(resume,jd,jdTitle){const wantF=formsIn(jd),haveF=formsIn(resume
   want.forEach(k=>{const fs=[...wantF.get(k)];const ss=sents.filter(x=>fs.some(f=>RX[f].test(" "+x.toLowerCase()+" ")));const req=ss.length?ss.some(x=>!PREF_RX.test(x)):true;
     const forms=[...wantF.get(k)];const n=Math.max(1,ss.length),rn=forms.reduce((a,f)=>a+countTerm(resume,f),0);const vform=have.has(k)&&rn===0?[...haveF.get(k)][0]:null;const syn=vform||(SYN[k]||[]).find(x=>have.has(x)),rel=(RELATED[k]||[]).filter(x=>have.has(x));
     const pri=req&&n>=2?"H":req?"M":"L";let status,action;
+    const stem=x=>x.toLowerCase().split(/\s+/).map(w=>w.replace(/(ing|es|s|e|ed)$/,"")).join(" ");const sameStem=vform&&forms.some(f=>stem(f)===stem(vform));
     const ev=evidenceFor(k);
     if(TITLE_TERMS.has(k)&&rn===0){status="title";action=k.startsWith("data scien")?`This is the job's field/title, not a skill to list. Put “Data Scientist” as the headline under your name and describe your ML projects (churn, uplift, forecasting) as data science work.`:`This is the job title. Use “${k.replace(/\b\w/g,c=>c.toUpperCase())}” as the headline under your name — ATS weighs title match heavily.`}
     else if(rn>0&&TITLE_TERMS.has(k)){status="match";action=`Matches the job title — keep it in your headline.`}
+    else if(sameStem){status="match";action=`Matches (you wrote “${vform}”, the job says “${forms[0]}” — same word, ATS reads them as one).`}
     else if(rn>0){status="match";action=rn===1?`Appears once in your resume. If it's only in Skills, also use “${k}” in a bullet with a result, e.g. what you built and the number it moved.`:`Used ${rn}× — good.`}
-    else if(syn){status="wording";action=`You wrote “${syn}”. The job says “${k}”. Use the job's exact phrase in Skills and in the bullet where you did it, since ATS matches exact wording.`}
+    else if(syn){status="wording";action=`You wrote “${syn}”. The job says “${forms[0]}”. Use the job's exact phrase in Skills and in the bullet where you did it, since ATS matches exact wording.`}
     else if(ev){status="elsewhere";action=`You HAVE this — it's just not in this resume. Bring back ${ev}. Write “${k}” word-for-word in that bullet and in Skills.`}
     else if(rel.length){status="related";action=`Not on your resume, but you have ${rel.map(x=>"“"+x+"”").join(", ")}. If you've genuinely used ${k} (course, project, job), add “${k}” to Skills and one bullet. If not, don't add it — mention ${rel[0]} as transferable in your cover letter.`}
     else{status="missing";action=req?`Required here and not on your resume. Add it only if you have real experience. Otherwise this is a true gap: expect it to cost points with the ATS and the recruiter.`:`Preferred only. Skip it unless you've genuinely used it. It won't block you on its own.`}
