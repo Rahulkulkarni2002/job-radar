@@ -75,7 +75,6 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 <!-- JOBS -->
 <section id="jobs">
   <div class="seg fam" id="famSeg" role="tablist" aria-label="Role family">
-    <button data-f="top">🏆 Top 20 of the day <span class="cnt"></span></button>
     <button data-f="all" class="on">All <span class="cnt"></span></button>
     <button data-f="ds">🔬 Data Scientist &amp; similar <span class="cnt"></span></button>
     <button data-f="da">📊 Data Analyst &amp; similar <span class="cnt"></span></button>
@@ -197,7 +196,7 @@ function roleKind(j){if(j._kind)return j._kind;const t=j.title+" "+(j.jd||"");
   const tech=new Set((t.match(TECH_RX)||[]).map(x=>x.toLowerCase()));if(/\bR\b/.test(t))tech.add("R");
   const comm=new Set((t.match(COMM_RX)||[]).map(x=>x.toLowerCase().slice(0,8)));const r=tech.size/Math.max(tech.size+comm.size,1);
   j._kind=TECH_TITLE.test(j.title)||(tech.size>=6&&r>=.5)?"technical":(tech.size<=3||r<=.35||(NONTECH_TITLE.test(j.title)&&r<.45))?"non-technical":"balanced";return j._kind}
-let KIND=S.get("kind","all"),FAM=S.get("fam","all"),COMPANY="",ALLCOS=[];
+let KIND=S.get("kind","all"),FAM=(S.get("fam","all")==="top"?"all":S.get("fam","all")),COMPANY="",ALLCOS=[];
 const FAM_LABEL={ds:"🔬 Data Scientist",da:"📊 Data Analyst",ba:"💼 Business Analyst",ai:"🤖 AI Analyst",ot:"📈 Finance & Other Analyst"};
 function famOf(j){return j.family||"da"}
 // ---------- skill-by-skill ATS analysis ----------
