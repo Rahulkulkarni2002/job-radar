@@ -334,10 +334,12 @@ def simplify():
             if not us(loc) or not relevant(x["title"]): continue
             out.append(job(x["company_name"], x["title"], x["url"], datetime.date.fromtimestamp(x["date_posted"]).isoformat(), loc, "", "Simplify new-grad"))
     return out
+CAMPUS = r"university grad|new grad|new college grad|early career|campus|graduate program|class of 2027|2027 (grad|graduate)|recent graduate|entry[- ]level"
 def greenhouse(slug, name):
     out = []
     for j in get(f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true").get("jobs", []):
         posted = (j.get("first_published") or j.get("updated_at") or "")[:10]
+        if re.search(CAMPUS, j["title"].lower()) and (j.get("updated_at") or "")[:10] > posted: posted = j["updated_at"][:10]   # evergreen grad roles get reposted (Pinterest "Master's University Grad DS")
         loc = (j.get("location") or {}).get("name", "")
         if posted and age(posted) <= MAX_AGE and relevant(j["title"]) and us(loc):
             out.append(job(name, j["title"], j["absolute_url"], posted, loc, strip(j.get("content")), "Greenhouse"))
