@@ -137,6 +137,14 @@ def years_required(txt):
     the preference word is in the SAME clause (within ~90 chars, no clause break) or it sits under a Preferred/Bonus heading."""
     t = (txt or "").lower()
     for w, n in WORDNUM.items(): t = re.sub(r"\b" + w + r"\b(?=\s*(\(\d+\)\s*)?\+?\s*(or more )?(years?|yrs?))", str(n), t)
+    t = re.sub(r"\b(\d{1,2})\s*\(\s*\d{1,2}\s*\)", r"\1", t)                          # "five (5) years" -> "5 years"
+    t = re.sub(r"\bno\s*\(\s*(\d{1,2})\s*\)", r"\1", t)                                  # "no (0) years" -> "0 years"
+    # degree-dependent alternatives ("5 yrs with a Bachelor's, 3 with a Master's, 0 with a Doctorate"): he has a Master's -> use that one
+    for sent in re.split(r"(?<=[.;•])\s+", t):                                          # one clause per degree: "..., or ..."
+        if "master" in sent and re.search(r"bachelor|doctor|ph\.?d", sent):
+            for cl in re.split(r",\s*(?:or\s+)?|\bor\b", sent):
+                mm = re.search(r"(\d{1,2})\s*\+?\s*(?:years?|yrs?)", cl)
+                if "master" in cl and mm: return int(mm.group(1))
     best = None
     pat = r"(\d{1,2})\s*(?:\+|plus|or more)\s*\)?\s*(?:years?|yrs?)\b|(\d{1,2}\s*(?:-|–|to)\s*\d{1,2})\s*\+?\s*(?:years?|yrs?)\b|(\d{1,2})\s*(?:years?|yrs?)['’]\s+\w|(\d{1,2})\s*(?:years?|yrs?)\s+(?:of|or|in|as|at|working|within|doing|leading|managing|building|across|experience|professional|relevant|related)\b|(?:minimum|at least)\s+(?:of\s+)?(\d{1,2})\s*(?:years?|yrs?)"
     for m in re.finditer(pat, t):

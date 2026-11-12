@@ -31,6 +31,8 @@ CASES = [
  ("years", "Medical College: Minimum required experience: 5 years in a healthcare finance or financial environment Preferred Education: Master's", 5),
  ("years", "Primient: Bachelor's degree in related field preferred 3- 5 years of relevant systems experience", 5),
  ("years", "Home Depot: Minimum Qualifications: must be eighteen years of age or older. Preferred Qualifications: 3+ years of experience in business intelligence", None),
+ ("years", "KLA: Minimum of five (5) years of relevant experience with a Bachelor's degree, three (3) years of relevant experience with a Master's degree, or no (0) years of relevant experience with a Doctorate.", 3),
+ ("years", "Bachelor's degree and 4+ years of experience, or Master's degree and 2+ years of experience.", 2),
  ("years", "Ideally 3+ years in analytics. 1+ years of SQL required.", 1),
  ("senior", "Zoox: As a Senior Financial Analyst supporting Marketing and Commercial, you will partner with key stakeholders", True),
  ("senior", "As a Data Analyst, you will partner with senior leaders across Finance.", False),
