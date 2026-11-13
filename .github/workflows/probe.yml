@@ -1,0 +1,34 @@
+name: Probe companies
+on:
+  workflow_dispatch:
+    inputs:
+      companies:
+        description: "Comma-separated company keywords (e.g. airbnb,workday,linkedin,broadcom)"
+        required: true
+        default: "airbnb,workday,linkedin,broadcom"
+permissions:
+  contents: write
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Probe
+        env:
+          COMPANIES: ${{ github.event.inputs.companies }}
+        run: python scraper/probe.py "$COMPANIES"
+      - name: Publish
+        run: |
+          git config user.name "job-radar-bot"
+          git config user.email "job-radar-bot@users.noreply.github.com"
+          git add docs/data/probe.json
+          git diff --cached --quiet || git commit -m "Company probe $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git pull --rebase -X theirs origin main || true
+          git push
