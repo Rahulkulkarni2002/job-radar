@@ -1,0 +1,596 @@
+{
+ "companies": [
+  "airbnb",
+  "workday",
+  "linkedin",
+  "broadcom"
+ ],
+ "n": 65,
+ "jobs": [
+  {
+   "company": "Walmart",
+   "title": "Senior Data Analyst",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 2,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Data-Analyst_R-2673918",
+   "verdict": "KEPT: fit 92, asks 2 yrs, gaps ['compliance']"
+  },
+  {
+   "company": "Airbnb",
+   "title": "Senior Data Scientist, People Analytics & Research",
+   "location": "Remote - USA",
+   "posted": "2026-10-19",
+   "years": 5,
+   "url": "https://careers.airbnb.com/positions/8301515?gh_jid=8301515",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Airbnb",
+   "title": "Manager, Engineering, Dev AI",
+   "location": "United States",
+   "posted": "2026-10-22",
+   "years": null,
+   "url": "https://careers.airbnb.com/positions/8316130?gh_jid=8316130",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Airbnb",
+   "title": "Principal, Strategic Finance & Analytics",
+   "location": "United States",
+   "posted": "2026-10-27",
+   "years": 10,
+   "url": "https://careers.airbnb.com/positions/8329612?gh_jid=8329612",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Airbnb",
+   "title": "Senior Machine Learning Engineer, Relevance",
+   "location": "United States",
+   "posted": "2026-11-03",
+   "years": 5,
+   "url": "https://careers.airbnb.com/positions/8351417?gh_jid=8351417",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Airbnb",
+   "title": "Staff, Advanced Analytics",
+   "location": "United States",
+   "posted": "2026-11-04",
+   "years": 10,
+   "url": "https://careers.airbnb.com/positions/8331899?gh_jid=8331899",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Airbnb",
+   "title": "Advanced Analytics Intern",
+   "location": "United States",
+   "posted": "2026-11-11",
+   "years": null,
+   "url": "https://careers.airbnb.com/positions/8380007?gh_jid=8380007",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Airbnb",
+   "title": "Consumer Insights Lead",
+   "location": "United States",
+   "posted": "2026-11-12",
+   "years": 10,
+   "url": "https://careers.airbnb.com/positions/8356835?gh_jid=8356835",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Artefact",
+   "title": "Jr, AI and Data Consulting",
+   "location": "135 W 26th Street, New York, NY 10001",
+   "posted": "2026-10-15",
+   "years": null,
+   "url": "https://job-boards.greenhouse.io/artefactlinkedin/jobs/8893475002",
+   "verdict": "posted 29 days ago (> 15)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Core Distributed Systems Database Engineer",
+   "location": "USA-CA - Promontory D",
+   "posted": "2026-10-24",
+   "years": 8,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/external_career/job/USA-CA---Promontory-D/Platform-Engineer---VCF-Networking_R027365",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Core Distributed Systems Database Engineer",
+   "location": "USA-CA - Promontory D",
+   "posted": "2026-10-24",
+   "years": 8,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/External_Career/job/USA-CA---Promontory-D/Platform-Engineer---VCF-Networking_R027365",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Electrical Hardware & AI Integration Engineer",
+   "location": "USA-Colorado-Fort Collins-4380 Ziegler Road",
+   "posted": "2026-10-29",
+   "years": null,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/external_career/job/USA-Colorado-Fort-Collins-4380-Ziegler-Road/Electrical-Hardware---AI-Integration-Engineer_R025609",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Principal AI Development Engineer",
+   "location": "USA-California-San Jose-1320 Ridder Park Drive",
+   "posted": "2026-10-29",
+   "years": 12,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/external_career/job/USA-California-San-Jose-1320-Ridder-Park-Drive/Principal-AI-Development-Engineer_R025622",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Electrical Hardware & AI Integration Engineer",
+   "location": "USA-Colorado-Fort Collins-4380 Ziegler Road",
+   "posted": "2026-10-29",
+   "years": null,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/External_Career/job/USA-Colorado-Fort-Collins-4380-Ziegler-Road/Electrical-Hardware---AI-Integration-Engineer_R025609",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Principal AI Development Engineer",
+   "location": "USA-California-San Jose-1320 Ridder Park Drive",
+   "posted": "2026-10-29",
+   "years": 12,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/External_Career/job/USA-California-San-Jose-1320-Ridder-Park-Drive/Principal-AI-Development-Engineer_R025622",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Financial Analyst - Semiconductor Business Units",
+   "location": "USA-CA Irvine Alton Parkway Bldg 2",
+   "posted": "2026-11-07",
+   "years": 5,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/external_career/job/USA-CA-Irvine-Alton-Parkway-Bldg-2/Financial-Analyst---Semiconductor-Business-Units_R027752",
+   "verdict": "needs 5+ years"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Financial Analyst - Semiconductor Business Units",
+   "location": "USA-CA Irvine Alton Parkway Bldg 2",
+   "posted": "2026-11-07",
+   "years": 5,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/External_Career/job/USA-CA-Irvine-Alton-Parkway-Bldg-2/Financial-Analyst---Semiconductor-Business-Units_R027752",
+   "verdict": "needs 5+ years"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Staff Machine Learning & Silicon Yield Engineer",
+   "location": "USA-AZ-Chandler-North Juniper Drive",
+   "posted": "2026-11-10",
+   "years": 6,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/external_career/job/USA-AZ-Chandler-North-Juniper-Drive/R-D-Engineer-Hardware-4_R027591-1",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Staff Machine Learning & Silicon Yield Engineer",
+   "location": "USA-AZ-Chandler-North Juniper Drive",
+   "posted": "2026-11-10",
+   "years": 6,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/External_Career/job/USA-AZ-Chandler-North-Juniper-Drive/R-D-Engineer-Hardware-4_R027591-1",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Staff AI Systems Thermal Engineer",
+   "location": "USA-CA San Jose Innovation Drive",
+   "posted": "2026-11-12",
+   "years": 6,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/external_career/job/USA-CA-San-Jose-Innovation-Drive/Staff-AI-Systems-Thermal-Engineer_R027820",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Broadcom (VMware)",
+   "title": "Staff AI Systems Thermal Engineer",
+   "location": "USA-CA San Jose Innovation Drive",
+   "posted": "2026-11-12",
+   "years": 6,
+   "url": "https://broadcom.wd1.myworkdayjobs.com/en-US/External_Career/job/USA-CA-San-Jose-Innovation-Drive/Staff-AI-Systems-Thermal-Engineer_R027820",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Senior Manager - Marketing Measurement Strategy and Testing",
+   "location": "Omaha, NE, USA",
+   "posted": "2026-10-19",
+   "years": 8,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000156418089",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Staff Engineer, Data Center",
+   "location": "Manassas, VA, USA",
+   "posted": "2026-10-20",
+   "years": 5,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000156658712",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "AI Architect - SaaS GTM Tech & Analytics | IC4",
+   "location": "Sunnyvale, CA, USA",
+   "posted": "2026-10-21",
+   "years": 5,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000156778549",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Principal Product Manager - AI Content Understanding & Feed Relevance",
+   "location": "Sunnyvale, CA, USA",
+   "posted": "2026-10-23",
+   "years": 8,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000157559344",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Principal Staff Software Engineer - Data Lake Infrastructure",
+   "location": "Mountain View, CA, USA",
+   "posted": "2026-10-26",
+   "years": 10,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000157870369",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Staff Product Security Engineer - AI",
+   "location": "Sunnyvale, CA, USA",
+   "posted": "2026-10-29",
+   "years": 5,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000158569569",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Senior Data Scientist",
+   "location": "Sunnyvale, CA, USA",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000158829379",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Senior Technical Risk & Compliance Analyst - SOX Compliance",
+   "location": "Mountain View, CA, USA",
+   "posted": "2026-11-02",
+   "years": 7,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000159185088",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "AI Applications Manager, Go-To-Market Enablement",
+   "location": "Sunnyvale, CA, USA",
+   "posted": "2026-11-03",
+   "years": 2,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000159503379",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Sr. Digital Marketing Manager II, Web Platform Optimization, SEO & AI Search",
+   "location": "San Francisco, CA, USA",
+   "posted": "2026-11-03",
+   "years": 7,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000159452642",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Staff Product Designer, Search and Conversational AI",
+   "location": "San Francisco, CA, USA",
+   "posted": "2026-11-03",
+   "years": 8,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000159440744",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Principal Staff Software Engineer, Data Infrastructure",
+   "location": "Mountain View, CA, USA",
+   "posted": "2026-11-04",
+   "years": 10,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000159688362",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Sr. AI Engineering Manager, Ads AI",
+   "location": "Mountain View, CA, USA",
+   "posted": "2026-11-05",
+   "years": 7,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000159942579",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Senior Data Center Asset Management Engineer (Hillsboro, OR)",
+   "location": "Hillsboro, OR, USA",
+   "posted": "2026-11-09",
+   "years": 3,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000160739109",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Lead Account Executive, Large Customer, Financial Services - LinkedIn Marketing Solutions",
+   "location": "Chicago, IL, USA",
+   "posted": "2026-11-12",
+   "years": 7,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000161370549",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "LinkedIn",
+   "title": "Lead Account Executive, Large Customer, Financial Services - LinkedIn Marketing Solutions",
+   "location": "New York, NY, USA",
+   "posted": "2026-11-12",
+   "years": 7,
+   "url": "https://jobs.smartrecruiters.com/LinkedIn3/744000161370449",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "(USA) Senior Manager, Advanced Analytics",
+   "location": "(USA) Crossman Integrity Building CA SUNNYVALE Home Office",
+   "posted": "2026-10-15",
+   "years": 6,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/USA-Crossman-Integrity-Building-CA-SUNNYVALE-Home-Office/XMLNAME--USA--Senior-Manager--Advanced-Analytics_R-2617338-1",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior, Data Analyst",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 4,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior--Data-Analyst_R-2670415",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Analyst",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 2,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Data-Analyst_R-2689689-2",
+   "verdict": "requires a skill outside your set: nosql"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Analyst",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 2,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Data-Analyst_R-2678761",
+   "verdict": "requires a skill outside your set: ssis, ssrs"
+  },
+  {
+   "company": "Walmart",
+   "title": "Data Scientist III",
+   "location": "Los Angeles, CA",
+   "posted": "2026-10-30",
+   "years": 2,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Los-Angeles-CA/Data-Scientist-III_R-2674005",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Scientist",
+   "location": "Hoboken, NJ",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Hoboken-NJ/Senior-Data-Scientist_R-2673972",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Scientist",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Data-Scientist_R-2672667",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Scientist",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Data-Scientist_R-2678120",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Staff Product Manager \u2013 Finance Technology",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Staff-Product-Manager---Finance-Technology_R-2674060",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Scientist",
+   "location": "San Bruno, CA",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/San-Bruno-CA/Senior-Data-Scientist_R-2643146",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Scientist",
+   "location": "Sunnyvale, CA",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Sunnyvale-CA/Senior-Data-Scientist_R-2674619",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Staff Data Scientist",
+   "location": "Sunnyvale, CA",
+   "posted": "2026-10-30",
+   "years": 4,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Sunnyvale-CA/Staff-Data-Scientist_R-2679275",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Manager, Advanced Analytics",
+   "location": "San Bruno, CA",
+   "posted": "2026-10-30",
+   "years": 4,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/San-Bruno-CA/Senior-Manager--Advanced-Analytics_R-2674015-1",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Scientist",
+   "location": "Sunnyvale, CA",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Sunnyvale-CA/Senior-Data-Scientist_R-2674214",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Staff, Data Engineer",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 4,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Staff--Data-Engineer_R-2670414-2",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Manager, Advanced Analytics",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 4,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Manager--Advanced-Analytics_R-2540805-1",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Engineer",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Data-Engineer_R-2678805",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Principal, Data Scientist",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 5,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Principal--Data-Scientist_R-2672575",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Engineer",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Data-Engineer_R-2672383-2",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Data Engineer III",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 2,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Data-Engineer-III_R-2674056",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Principal Data Engineer",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 7,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Principal-Data-Engineer_R-2674010",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Data Engineer III",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 2,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Data-Engineer-III_R-2673947",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Staff Data Engineer",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 4,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Staff-Data-Engineer_R-2672528",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Staff Data Engineer",
+   "location": "Sunnyvale, CA",
+   "posted": "2026-10-30",
+   "years": 4,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Sunnyvale-CA/Staff-Data-Engineer_R-2686745-1",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Data Scientist \u2013 Supply Chain Optimization",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 1,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Data-Scientist---Supply-Chain-Optimization_R-2674049-2",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Manager, Advanced Analytics",
+   "location": "Bentonville, AR",
+   "posted": "2026-10-30",
+   "years": 3,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Bentonville-AR/Senior-Manager--Advanced-Analytics_R-2674065",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "(USA) Staff, Product Manager - WMC Data Foundation",
+   "location": "(USA) BELLEVUE SKYLINE OFFICE WA BELLEVUE Home Office",
+   "posted": "2026-11-07",
+   "years": 9,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/USA-BELLEVUE-SKYLINE-OFFICE-WA-BELLEVUE-Home-Office/XMLNAME--USA--Staff--Product-Manager---WMC-Data-Foundation_R-2699546",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "Walmart",
+   "title": "Senior Analyst, Process Improvement",
+   "location": "Sunnyvale, CA",
+   "posted": "2026-11-10",
+   "years": 5,
+   "url": "https://walmart.wd504.myworkdayjobs.com/en-US/Non-WorkdayInternal/job/Sunnyvale-CA/Senior-Analyst--Process-Improvement_R-2640259",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  }
+ ]
+}
