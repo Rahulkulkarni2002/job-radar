@@ -608,9 +608,12 @@ def h1b_table():
     if counts: json.dump(counts, open(cache, "w"))
     elif cache.exists(): counts = json.load(open(cache))
     return counts
-H1B_ALIAS = {"gen digital": "nortonlifelock", "gen": "nortonlifelock", "x": "twitter", "meta": "facebook", "alphabet": "google"}   # renamed companies (filings are under the old name)
+H1B_ALIAS = {"gen digital": "nortonlifelock", "gen": "nortonlifelock", "x": "twitter", "meta": "meta platforms", "facebook": "meta platforms", "alphabet": "google", "youtube": "google"}
+# Large, well-documented H-1B sponsors missing from the cached LCA table (conservative floor, marks them "strong")
+KNOWN_SPONSORS = {"walmart": 1000, "wal mart": 1000, "sam s club": 1000, "jpmorgan chase": 1000, "jp morgan": 1000, "jpmorgan": 1000, "ibm": 1000, "tesla": 500, "intuit": 300}   # renamed companies (filings are under the old name)
 def h1b_lookup(table, company):
     n = norm_co(company); n = H1B_ALIAS.get(n, n)
+    if n in KNOWN_SPONSORS: return KNOWN_SPONSORS[n]
     if not n or not table: return None
     if n in table: return table[n]
     first = n.split()[0] if n.split() else n
