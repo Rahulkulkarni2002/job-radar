@@ -253,12 +253,19 @@ function expComp(jd){const yoe=+S.get("yoe",2);let need=0,pref=0;
 const SOFT_T=["communicat","stakeholder management","stakeholders","cross-functional","collaboration","presentation","leadership","problem solving","attention to detail","storytelling","time management","analytical","accuracy","prioritiz","customer focus","enthusiasm","detail oriented","teamwork","adaptab","initiative","organiz","curiosity","critical thinking","independent"];
 function softComp(resume,jd){const j=jd.toLowerCase(),r=resume.toLowerCase(),want=SOFT_T.filter(x=>j.includes(x));return want.length?want.filter(x=>r.includes(x)).length/want.length:1}
 function analyze(resume,jd,jdTitle){const wantF=formsIn(jd),haveF=formsIn(resume),want=new Set(wantF.keys()),have=new Set(haveF.keys());if(want.size<3)return null;const sents=sentencesOf(jd);const items=[];
-  want.forEach(k=>{const fs=[...wantF.get(k)];const ss=sents.filter(x=>fs.some(f=>RX[f].test(" "+x.toLowerCase()+" ")));const req=ss.length?ss.some(x=>!PREF_RX.test(x)):true;
+  const PREF_HDR_RX=/preferred (qualifications|skills|experience|education)|nice[- ]to[- ]haves?|bonus points|pluses|what (would|could|will) set you apart/i,REQ_HDR_RX=/(required|minimum|basic) (qualifications|education|skills|experience)|requirements:|what you('ll| will)? (need|bring)|who you are/i;
+  let cur=false;const prefSec=new Map();sents.forEach(x=>{const p=PREF_HDR_RX.exec(x),r=REQ_HDR_RX.exec(x);if(p&&(!r||p.index>=r.index))cur=true;else if(r)cur=false;prefSec.set(x,cur)});
+  const MAJOR=/\b(degree|bachelor|master|major|field of study|b\.?s\.?|m\.?s\.?)\b/i,DEGREE_FIELDS=new Set(["computer science","math","statistics","economics","engineering","finance","business analytics"]);
+  const MINE_RX=/\b(python|sql|excel|tableau|snowflake|databricks|spark|pyspark|pandas)\b/i,ALT_RX=/\b(or|and\/or|e\.g\.|such as|similar|equivalent|comparable)\b/i;
+  want.forEach(k=>{const fs=[...wantF.get(k)];const ss=sents.filter(x=>fs.some(f=>RX[f].test(" "+x.toLowerCase()+" ")));const req=ss.length?ss.some(x=>!PREF_RX.test(x)&&!prefSec.get(x)):true;
     const forms=[...wantF.get(k)];const n=Math.max(1,ss.length),rn=forms.reduce((a,f)=>a+countTerm(resume,f),0);const vform=have.has(k)&&rn===0?[...haveF.get(k)][0]:null;const syn=vform||(SYN[k]||[]).find(x=>have.has(x)),rel=(RELATED[k]||[]).filter(x=>have.has(x));
+    if(DEGREE_FIELDS.has(k)&&ss.length&&ss.every(x=>MAJOR.test(x))&&!(have.has(k)))return;   // a degree major, scored under Education
+    const altMet=!have.has(k)&&ss.some(x=>ALT_RX.test(x)&&MINE_RX.test(x)&&MINE_RX.test(resume));
     const pri=req&&n>=2?"H":req?"M":"L";let status,action;
     const stem=x=>x.toLowerCase().split(/\s+/).map(w=>w.replace(/(ing|es|s|e|ed)$/,"")).join(" ");const sameStem=vform&&forms.some(f=>stem(f)===stem(vform));
     const ev=evidenceFor(k);
-    if(TITLE_TERMS.has(k)&&rn===0){status="title";action=k.startsWith("data scien")?`This is the job's field/title, not a skill to list. Put “Data Scientist” as the headline under your name and describe your ML projects (churn, uplift, forecasting) as data science work.`:`This is the job title. Use “${k.replace(/\b\w/g,c=>c.toUpperCase())}” as the headline under your name — ATS weighs title match heavily.`}
+    if(altMet){status="match";action=`Either/or: the job accepts “${forms[0]}” OR a tool you already have (Python/SQL…). You meet it — don't add ${forms[0]}.`}
+    else if(TITLE_TERMS.has(k)&&rn===0){status="title";action=k.startsWith("data scien")?`This is the job's field/title, not a skill to list. Put “Data Scientist” as the headline under your name and describe your ML projects (churn, uplift, forecasting) as data science work.`:`This is the job title. Use “${k.replace(/\b\w/g,c=>c.toUpperCase())}” as the headline under your name — ATS weighs title match heavily.`}
     else if(rn>0&&TITLE_TERMS.has(k)){status="match";action=`Matches the job title — keep it in your headline.`}
     else if(sameStem){status="match";action=`Matches (you wrote “${vform}”, the job says “${forms[0]}” — same word, ATS reads them as one).`}
     else if(rn>0){status="match";action=rn===1?`Appears once in your resume. If it's only in Skills, also use “${k}” in a bullet with a result, e.g. what you built and the number it moved.`:`Used ${rn}× — good.`}
