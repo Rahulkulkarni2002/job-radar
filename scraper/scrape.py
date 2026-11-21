@@ -55,8 +55,13 @@ NOT_FIT = r"architect|engineer|engineering|research scientist|materials|chemist|
 # "Sr." analyst titles that are really entry level (Capital One "Sr. Business Analyst" = Sr. Associate, the MS-grad hire).
 # They pass the title gate; the main loop keeps them ONLY if the JD's required years are <= 2.
 TITLE_INFLATED = r"^(sr\.?|senior) (business|data|financial|risk|marketing|credit|pricing|product) analyst\b"
+# Beginner AI / agent builder titles ("AI Engineer, New Grad", "Associate GenAI Developer"...). Kept ONLY with an entry marker
+# in the title; the usual rules (years, sponsorship, OPT relatedness, required skills he lacks) still apply afterwards.
+AGENT_TITLE = r"\b(ai|a\.i\.|genai|gen ai|generative ai|llm|agents?|agentic|applied ai|conversational ai|ai/ml|ml/ai)\b.{0,30}\b(engineer|developer|builder)\b|forward[- ]deployed"
+AGENT_ENTRY = r"new (college )?grad|graduate|university|early career|entry|junior|\bjr\b|associate|\b(i|1)\s*$|\b(i|1)\b\s*[-,(]|2026|2027"
 def relevant(t):
     t = t.lower()
+    if re.search(AGENT_TITLE, t) and re.search(AGENT_ENTRY, t) and not re.search(r"senior|\bsr\b|staff|principal|lead|manager|intern|\bii\b|\biii\b|summer|2028|phd", t): return True
     if re.search(TITLE_INFLATED, t.strip()) and not re.search(r"\b(ii|iii|lead|manager|principal|staff)\b", t): return True
     if re.search(TITLE_EXCLUDE, t): return False
     if re.search(ALWAYS, t) or (re.search(AI_TITLE, t) and not re.search(r"engineer|architect|scientist, ml|researcher, ml|annotator|rater|trainer|tutor|writer", t)): return True
@@ -723,6 +728,8 @@ def main():
         f, hits, hard = fit(j["title"], j["jd"])
         j["ai"] = bool(re.search(AI_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai|genai|generative ai|llms?|artificial intelligence|machine learning)\b", j["jd"].lower())) >= 6
         j["family"] = family(j["title"], j["jd"], j["ai"])
+        _jl = j["jd"].lower()
+        j["agent"] = bool(re.search(AGENT_TITLE, j["title"].lower())) or len(re.findall(r"\b(ai agents?|agentic|llms?|large language models?|rag|retrieval[- ]augmented|genai|generative ai|prompt engineering|langchain|langgraph|vector (database|search|store)s?|embeddings)\b", _jl)) >= 3
         if not family_gate(j["family"], f, hits):
             if f < 25 or not (set(hits) & {"SQL", "Python", "Excel", "Tableau"}): drop("section fit too low", j); continue
             stretch.append("partial skill fit")

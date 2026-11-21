@@ -7,6 +7,12 @@ import sys as _s; _s.path.insert(0, str(pathlib.Path(__file__).parent)); from re
 RG = lambda t, gaps: _RG(t, gaps, [], ns["TERM_RX"], ns["_section_is_preferred"])
 Y, D, NS, TP, DOM, ENG, REL = ns["years_required"], ns["degree_problem"], ns["no_sponsorship"], ns["timing_problem"], ns["domain_problem"], ns["engineering_problem"], ns["relevant"]
 CASES = [
+ ("title_ok", "AI Engineer, New Grad", True),
+ ("title_ok", "Associate Generative AI Developer", True),
+ ("title_ok", "Senior AI Engineer", False),
+ ("title_ok", "AI Engineer", False),
+ ("title_ok", "Forward Deployed Engineer - New Grad 2026", True),
+ ("title_ok", "Staff LLM Engineer", False),
  ("years", "State Street: Strong experience (6 + years) in Product Analysis.", 6),
  ("years", "NVIDIA: for more than 25 years. What we need to see: * 8+ years in management consulting at a strategy firm.", 8),
  ("years", "Vercel: About you: 8+ years in Sales Strategy & Operations, Revenue Operations, or GTM Strategy at a high-growth company, with SQL preferred; able to", 8),
