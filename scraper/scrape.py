@@ -137,10 +137,16 @@ def senior_in_jd(title, jd):
         or re.search(r",\s*(senior|principal) associate\b", j, re.I)
     return m.group(0)[:80] if m else None
 
-def years_required(txt):
-    """Strictest REQUIRED years of experience. Works on whitespace-collapsed JD text: a number is 'preferred' only if
+def years_required(txt, include_pref=False):
+    """include_pref=True: years STATED anywhere (required or preferred) - used for the entry-level filter.
+    Strictest REQUIRED years of experience. Works on whitespace-collapsed JD text: a number is 'preferred' only if
     the preference word is in the SAME clause (within ~90 chars, no clause break) or it sits under a Preferred/Bonus heading."""
     t = (txt or "").lower()
+    t = re.sub(r"\b(\w+)-years?\b", r"\1 year", t)                                             # "one-year" -> "one year"
+    t = re.sub(r"minimum years of (?:work |relevant |related )?experience\s*:\s*(\d{1,2})", r"\1 years of experience required.", t)   # Home Depot form
+    t = re.sub(r"preferred years of (?:work |relevant |related )?experience\s*:\s*(\d{1,2})", r"preferred: \1 years of experience.", t)
+    t = re.sub(r"(\d{1,2})\s*(years?|yrs?)\s*[–—-]\s*(?:years of )?experience", r"\1 years of experience", t)   # "2 Years – Experience in..."
+    t = re.sub(r"less than (\d{1,2})\s*(years?|yrs?)", lambda m: f"{max(int(m.group(1)) - 1, 0)} years of", t)   # "less than 2 years" -> up to 1
     for w, n in WORDNUM.items(): t = re.sub(r"\b" + w + r"\b(?=\s*(\(\d+\)\s*)?\+?\s*(or more )?(years?|yrs?))", str(n), t)
     t = re.sub(r"\b(\d{1,2})\s*\(\s*\d{1,2}\s*\)", r"\1", t)                          # "five (5) years" -> "5 years"
     t = re.sub(r"(?<![\w+])\+\s*(\d{1,2})\s*(?=years?|yrs?)", r"\1+ ", t)                 # "+5 years" -> "5+ years"
@@ -161,16 +167,17 @@ def years_required(txt):
         else: n = int(g)
         if n >= 15: continue
         pre = t[max(0, m.start() - 25):m.start()]
-        if re.search(r"\b(for|over|more than|than|nearly|almost|since|past|within the (last|past)|history of|founded|age|aged|old)\s*$", pre): continue
+        if re.search(r"\b(for|over|more than|than|nearly|almost|since|past|within the (last|past)|history of|founded|age|aged|old)\s*$", pre) \
+           and not (re.search(r"(more than|over)\s*$", pre) and re.match(r"[^.;]{0,40}\bexperience", t[m.end():m.end() + 60])): continue   # "more than 12 years of pertinent experience" counts
         ctx = t[max(0, m.start() - 160):m.end() + 160]
-        if re.search(r"years old|years of age|warranty|contract term|vesting|anniversar", ctx): continue
+        if re.search(r"years old|years of age|warranty|contract term\b|vesting|anniversar", ctx): continue
         # same clause only: from the previous clause break to the next one, capped at ~90 chars each side
         left = t[max(0, m.start() - 90):m.start()]; right = t[m.end():m.end() + 90]
         left = re.split(r"[.;:!?•·]|\s\*\s|\s-\s", left)[-1]; right = re.split(r"[.,;:!?•·]|\s\*\s", right)[0]
         _l = re.sub(r"\b(preferred|desired|a plus)\s*$", "", left[-45:])          # "degree preferred 3-5 years": that 'preferred' belongs to the degree
         _r = re.split(r"\bpreferred (education|qualifications?|skills|experience|requirements)|" + PREF_HDR, right)[0]   # "...5 years in finance preferred education:" = next heading
-        if re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|is a plus", _l + " " + _r): continue   # only words close by: flattened bullets ("degree, preferably in X ... field 6+ years") must not leak
-        if _section_is_preferred(t, m.start()): continue
+        if not include_pref and re.search(r"prefer|nice to have|a plus|bonus|ideally|desired|is a plus", _l + " " + _r): continue   # only words close by: flattened bullets ("degree, preferably in X ... field 6+ years") must not leak
+        if not include_pref and _section_is_preferred(t, m.start()): continue
         best = n if best is None else max(best, n)
     if best is not None: return best
     if re.search(r"new grad|recent graduate|entry[- ]level|university graduate|early career|\bcampus (hire|hiring|recruit\w*|program)|0-?\s?[12] years", t): return 0
@@ -335,7 +342,7 @@ def job(company, title, url, posted, loc, txt, source, comp=None):
     txt = txt or ""
     sp = "no" if (re.search(NO_SPONSOR, txt, re.I) or no_sponsorship(txt)) else "yes" if re.search(SPONSOR_OK, txt, re.I) else "unknown"
     return {"id": hashlib.sha1(url.encode()).hexdigest()[:12], "company": company.strip(), "title": title.strip(), "url": url,
-            "posted": posted, "location": (loc or "").strip()[:80], "salary": salary(txt, comp), "years": years_required(txt),
+            "posted": posted, "location": (loc or "").strip()[:80], "salary": salary(txt, comp), "years": years_required(txt), "years_any": years_required(txt, True),
             "sponsor_jd": sp, "source": source, "jd": txt[:8000]}
 
 # ---------------- sources ----------------

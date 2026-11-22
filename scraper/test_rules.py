@@ -7,6 +7,17 @@ import sys as _s; _s.path.insert(0, str(pathlib.Path(__file__).parent)); from re
 RG = lambda t, gaps: _RG(t, gaps, [], ns["TERM_RX"], ns["_section_is_preferred"])
 Y, D, NS, TP, DOM, ENG, REL = ns["years_required"], ns["degree_problem"], ns["no_sponsorship"], ns["timing_problem"], ns["domain_problem"], ns["engineering_problem"], ns["relevant"]
 CASES = [
+ ("years", "stop work notifications, contract terminations, or cost impact studies. What you Bring: 8+ years of experience as a Program Financial Analyst", 8),
+ ("years", "Minimum Qualifications: 2 Years – Experience in Supply Chain/Customer Service. Preferred Qualifications: 4 Years – Years of Experience in Supply Chain", 2),
+ ("years", "Minimum Years of Work Experience: 2 Preferred Years of Work Experience: No additional years", 2),
+ ("years", "Minimum Years of Work Experience: 0 Preferred Years of Work Experience: No additional", 0),
+ ("years", "NVIDIA: More than 12 years of pertinent experience in business systems analysis", 12),
+ ("years", "For more than 25 years we have led the industry. 1+ years in SQL.", 1),
+ ("years", "Founded more than 30 years ago, we build software. Entry level role.", 0),
+ ("years", "Work Experience: Typically less than 2 years with bachelor's or equivalent.", 1),
+ ("years", "at least one-year of statistical programming experience in analytic work", 1),
+ ("yany", "Preferred Qualifications: 3+ years of experience in SQL, Tableau preferred", 3),
+ ("yany", "Bachelor's degree required. 2-5 years of finance experience preferred.", 5),
  ("title_ok", "AI Engineer, New Grad", True),
  ("title_ok", "Associate Generative AI Developer", True),
  ("title_ok", "Senior AI Engineer", False),
@@ -95,7 +106,7 @@ CASES = [
 ]
 fails = 0
 for kind, text, want in CASES:
-    got = {"years": lambda t: Y(t), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "roleexp": lambda t: bool(ns["role_experience_problem"](t)), "reqgap": lambda t: RG(t[0], t[1]), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)
+    got = {"years": lambda t: Y(t), "yany": lambda t: Y(t, True), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "roleexp": lambda t: bool(ns["role_experience_problem"](t)), "reqgap": lambda t: RG(t[0], t[1]), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)
     ok = got == want; fails += not ok
     print(("PASS " if ok else "FAIL ") + f"{kind:7} expected {want!s:5} got {got!s:5} | {str(text)[:80]}")
 print(f"{len(CASES) - fails}/{len(CASES)} rule tests passed")
