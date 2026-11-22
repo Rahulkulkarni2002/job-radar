@@ -200,6 +200,9 @@ def no_sponsorship(t):
         visa = re.search(VISA, l) or re.search(r"\b(OPT|CPT)\b", s)   # OPT/CPT only in capitals (not "opt out")
         if visa and re.search(NEG, l): return s.strip()[:160]
         if re.search(r"security clearance|active clearance|ts/sci|secret clearance|u\.?s\.? citizenship", l): return s.strip()[:160]
+    tl = (t or "").lower()                                   # ITAR / export control: must be a "U.S. person" (citizen, green card, refugee, asylee) -> F-1/H-1B can't
+    m = re.search(r"refugee under 8 u\.?s\.?c|(itar|export control\w*|ear\b).{0,300}u\.?s\.? persons?\b|u\.?s\.? persons?\b.{0,300}(itar|export control)", tl)
+    if m: return "export-control (ITAR) role: must be a U.S. person"
     return None
 MON = {m: i for i, m in enumerate(["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
 SEASON = {"spring": 5, "summer": 7, "fall": 12, "autumn": 12, "winter": 12}
@@ -334,6 +337,17 @@ def engineering_problem(jd):
     """Hardware / systems-engineering roles: requires 2+ of C++/Rust/CUDA/FPGA/compilers/silicon... (not an analytics job)."""
     hits = {m.group(0).lower() for m in re.finditer(SYSTEMS, (jd or "").lower())}
     return sorted(hits) if len(hits) >= 2 else None
+
+def perm_posting(jd):
+    """Notices posted only to satisfy a green-card (PERM / labor certification) filing - not a job you can win."""
+    return bool(re.search(r"(in connection with|filed in connection with|for purposes of|pursuant to)\s+(a |an )?(perm|labor certification|permanent labor)|this (notice|posting) is (being )?(posted|provided|filed)\b.{0,80}(perm|labor certification)|application for (alien|permanent) (employment|labor) certification", (jd or "").lower()))
+
+STAFFING = r"\b(brillio|cognizant|infosys|tata consultancy|tcs|wipro|hcl|tech mahindra|capgemini|ltimindtree|mphasis|emonics|igate|syntel|virtusa|hexaware|collabera|randstad|robert half|teksystems|insight global|kforce|apex systems|kelly services|adecco|manpower|aerotek|cybercoders|dice|judge group|mindlance|ust global|ust|ntt data|genpact|igniteit|synechron|ascendion|lancesoft|pyramid consulting|diverse lynx|sparksoft|infobahn|stellent|compunnel|axelon)\b"
+def staffing_firm(company, jd):
+    """Staffing agencies, bench / body-shop consultancies (work for 'our client', C2C/W2 consultants on the bench)."""
+    if re.search(STAFFING, (company or "").lower()): return True
+    t = (jd or "").lower()[:3000]
+    return bool(re.search(r"\b(our client|one of our clients|for a client of ours|bench (sales|marketing)|w2 consultant|c2c|corp[- ]to[- ]corp|h1b transfer)\b", t)) and bool(re.search(r"staffing|consult|recruit|placement|talent solutions", (company + " " + t[:600]).lower()))
 
 def part_time(title, jd):
     return bool(re.search(r"part[- ]time|adjunct|lecturer|\bper diem\b|\bprn\b|seasonal|temporary|\btemp\b|internship|\b(10|15|19) hours", (title + " " + (jd or "")[:1500]).lower())) and not re.search(r"\bfull[- ]time\b", title.lower())
@@ -712,7 +726,9 @@ def main():
         if role_experience_problem(j["jd"]): drop("requires data-scientist-title / publication experience", j); continue   # Amazon basic quals etc.
         if j["years"] is not None and j["years"] > 4: drop("needs > 4 years", j); continue
         if j["years"] == 4: stretch.append("asks 4 years")
-        if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only", j); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
+        if j["sponsor_jd"] == "no": drop("won't sponsor / citizens only", j); continue
+        if perm_posting(j["jd"]): drop("green-card (PERM) notice, not a real opening", j); continue
+        if staffing_firm(j["company"], j["jd"]): drop("staffing / bench / consulting-body-shop firm", j); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
         if timing_problem(j["jd"]): drop("start date / grad window", j); continue             # strict: start date Jan 28-Mar 31 2027 and Dec 2026 grad window
         if degree_problem(j["jd"]): drop("PhD / licence required", j); continue
         if domain_problem(j["jd"]): drop("needs IB / consulting / PE / Big4 experience", j); continue
