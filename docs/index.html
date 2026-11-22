@@ -310,16 +310,13 @@ let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1,USER_SORT=false;let ENT
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
 fetch("data/applied.json?"+Date.now()).then(r=>r.ok?r.json():{applied:{}}).then(a=>{Object.keys(a.applied||{}).forEach(id=>applied.add(id));STATUS=a.status||{};STATUS_KEYS=a.keys||{};APPLIED_KEYS_N=-1;render()}).catch(()=>{});
 fetch("data/companies.json?"+Date.now()).then(r=>r.ok?r.json():[]).then(c=>{ALLCOS=c}).catch(()=>{});
-// ENTRY ONLY (candidate's rule, 2026-11-22): every tab shows only roles asking 0-1 years, or that don't say but have an entry title.
-const EO_ENTRY=/\b(associate|junior|jr\.?|entry[- ]level|new (college )?grad(uate)?|university grad|early career|graduate program|rotational|analyst i|scientist i|analyst 1|scientist 1)\b|\b(I|1)$/i;
-const EO_SENIOR=/\b(senior|sr\.?|lead|manager|principal|staff|ii|iii|iv|director|head)\b/i;
-const EO_INFLATED=/^(sr\.?|senior) (business|data|financial|risk|marketing|credit|pricing|product) analyst\b/i;   // Capital One-style "Sr." = entry hire
-function entryOnly(j){const t=(j.title||"").trim(),y=j.years;
-  if(EO_SENIOR.test(t)&&!(EO_INFLATED.test(t)&&(y===0||y===1)&&!/\b(ii|iii|lead|manager|principal|staff)\b/i.test(t)))return false;
-  return y===0||y===1||(y==null&&EO_ENTRY.test(t))}
+// ENTRY ONLY (candidate's rule, 2026-11-22): judged ONLY from the job description, never the title.
+// Kept: JD asks 0 or 1 year, or JD states no years but says "no experience required / entry level / new grad / recent graduate / 0-1 years".
+const EO_JD=/no (prior |professional |previous )?(work )?experience (is )?(required|necessary|needed)|entry[- ]level|new (college )?grad(uate)?s?\b|recent (college |university )?grad(uate)?s?|early[- ]career|class of 202[67]|0\s*(-|–|to)\s*1\s*years?|less than (1|one) years?|up to (1|one) years?/i;
+function entryOnly(j){const y=j.years;return y===0||y===1||(y==null&&EO_JD.test(j.jd||""))}
 let ALL_LEVELS=S.get("allLevels",false);
 fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{const n0=d.jobs.length;if(!ALL_LEVELS)d.jobs=d.jobs.filter(entryOnly);DATA=d;const m=document.getElementById("meta");
-  m.innerHTML=`${ALL_LEVELS?d.jobs.length+" open roles (all levels)":"<b>🎓 Entry level only</b>: "+d.jobs.length+" of "+n0+" roles ask 0–1 years"} · updated ${d.updated} · ${d.boards} company career sites scanned ~every 1–3 h · <a href="#" id="lvlToggle">${ALL_LEVELS?"show entry level only":"show all levels"}</a>`;
+  m.innerHTML=`${ALL_LEVELS?d.jobs.length+" open roles (all levels)":"<b>🎓 Entry level only</b>: "+d.jobs.length+" of "+n0+" roles whose job description asks 0–1 years (titles ignored)"} · updated ${d.updated} · ${d.boards} company career sites scanned ~every 1–3 h · <a href="#" id="lvlToggle">${ALL_LEVELS?"show entry level only":"show all levels"}</a>`;
   document.getElementById("lvlToggle").onclick=e=>{e.preventDefault();S.set("allLevels",!ALL_LEVELS);location.reload()};fillPicker();render()})
   .catch(()=>document.getElementById("meta").textContent="Could not load jobs.json");
 const rkey=j=>(j.company+"|"+j.title).toLowerCase().replace(/[^a-z0-9|]+/g," ").trim();let APPLIED_KEYS=new Set(),APPLIED_KEYS_N=-1;
