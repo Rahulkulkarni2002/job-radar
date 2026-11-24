@@ -3,7 +3,8 @@
 ## At a glance
 
 - **Question:** how is revenue trending, which products, countries and customers drive it, and where can it grow?
-- **Data:** 804,824 cleaned transactions from a UK online gift retailer, December 2009 to December 2011. All amounts are in pounds (£).
+- **Data:** 804,824 cleaned transactions from a UK online gift retailer, December 2009 to December 2011.
+- **Currency:** the data is in pounds (£). £1 was worth about $1.57 on average over this period, so total revenue of £17.6M is about $27.6M.
 - **How:** 14 SQL queries (joins, CTEs, window functions) in DuckDB, cross-checked in pandas, and a Tableau dashboard.
 - **Main findings:**
   - Sales jump every September (+36% and +48%) and drop every January (-21% and -36%).
