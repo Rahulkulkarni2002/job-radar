@@ -113,7 +113,7 @@ A list of 3,349 customers is too long to act on, so I narrowed it down. First I 
 
 The highest risk customers overall spend very little, so they are not where the money is. So I looked only at the customers who spend the most. I kept the top 25 percent of current customers by spend, which is 1,464 high value customers bringing in 85.2 percent of the spend, then ranked those by risk and took the 20 percent with the highest risk.
 
-**That gives 292 high value customers, who spent about 882 thousand pounds in the last 12 months. They are the list a business would contact first.** Their average risk of leaving is 48.5 percent, against 4.1 percent for the high value customers with the lowest risk.
+**That gives 292 high value customers, who spent about 882 thousand pounds in the last 12 months. They are the list a business would contact first.** The model gives them an average risk of 48.5 percent, so it expects about half of them to stop buying in the next 90 days.
 
 These predictions cannot be checked, because the data ends there. The evidence for trusting them is the test on big spenders above, where the customers flagged the same way left about 10 times more often than the ones the model scored as low risk.
 
