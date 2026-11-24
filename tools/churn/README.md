@@ -6,7 +6,8 @@ Live app: https://customer-churn-prediction-rahul.streamlit.app/
 
 - **What it does:** predicts which customers of an online retailer will stop buying in the next 90 days, so the business knows who to contact first.
 - **Data:** two years of sales, about 804,000 transactions and 5,855 customers.
-- **Best model:** Random Forest, chosen after comparing four algorithms. Tested on customers it had never seen, it caught 85.5 percent of those who stopped buying.
+- **Best model:** Random Forest, chosen after comparing four algorithms. Out of every 100 customers who really stopped buying, it caught about 86.
+- **Tested on big spenders:** on a past period, the big spenders it flagged left about 10 times more often than the ones it called safe (46 percent against 5 percent).
 - **The result:** a contact list of 292 high value customers, worth about 882 thousand pounds a year, who are most likely to stop buying in the next 90 days.
 - **Built end to end:** 10 models tracked in MLflow, a FastAPI endpoint, and a live Streamlit app.
 
@@ -44,6 +45,13 @@ Then I expanded to the full seven feature set described above and tried Logistic
 
 I also tried combining models into a voting ensemble, first with three models and then with four, including Random Forest. The four model ensemble ended up performing almost identically to the three model version, which told me Random Forest wasn't adding much new information on top of what the other models were already capturing.
 
+**How to read the numbers below:**
+
+- **Accuracy:** out of every 100 customers, how many the model got right, leaving or staying.
+- **Recall:** out of every 100 customers who really left, how many the model caught.
+- **F1 score:** one score that combines recall with how often the model's flags were right. Closer to 1 is better.
+- **AUC:** how well the model puts risky customers above safe ones. 0.5 is a coin flip and 1.0 is perfect.
+
 **Here's the honest comparison across everything I tried, measured on the same held out test set (1,171 customers).**
 
 | Model | Features | Accuracy | Recall | F1 score |
@@ -74,11 +82,22 @@ Everything above uses one snapshot, where the churn label and the features come 
 | Neural Network (MLP) | 75.0% | 83.7% | 0.791 | 0.816 |
 | **Random Forest** | **76.2%** | **85.5%** | **0.803** | 0.818 |
 
-**Random Forest was again the best, on accuracy, recall and F1.** All four models are close, which told me the features matter more than the choice of algorithm. Without Recency the same Random Forest drops to 72.1 percent accuracy, so Recency is the strongest signal.
+**Random Forest was again the best, on accuracy, recall and F1.** In plain words, out of every 100 customers who really stopped buying it caught about 86, and out of every 100 customers it flagged about 76 really left. All four models are close, which told me the features matter more than the choice of algorithm. Without Recency the same Random Forest drops to 72.1 percent accuracy, so Recency is the strongest signal.
+
+### How accurate it is on big spenders
+
+The final result is a list of big spenders at risk, so before trusting it I tested the same method on the past, where the real outcome is known. I copied how the model would really be used. I trained it on an earlier period, with a cutoff of 12 June 2011, then scored every customer at the main cutoff and looked only at the big spenders, the top 25 percent by spend.
+
+| Group | Customers | Really stopped buying |
+|---|---|---|
+| The 20% of big spenders the model called riskiest | 263 | 122 (46%) |
+| The 20% of big spenders the model called safest | 263 | 12 (5%) |
+
+**The big spenders it flagged left about 10 times more often than the ones it called safe.** So the model ranks big spenders by risk well.
 
 ### Predicting the next 90 days
 
-The comparison above trained and tested the model on a period where the answers were known. The next step uses the model for its real purpose, predicting a period that is not in the data. I trained the final Random Forest on all 5,258 customers, then scored every one of the 5,855 current customers as of the last day of data, 9 December 2011. The model predicts that 3,349 of them, 57 percent, will stop buying in the following 90 days.
+The steps above trained and tested the model on a period where the answers were known. The next step uses the model for its real purpose, predicting a period that is not in the data. I trained the final Random Forest on all 5,258 customers, then scored every one of the 5,855 current customers as of the last day of data, 9 December 2011. The model predicts that 3,349 of them, 57 percent, will stop buying in the following 90 days.
 
 ### The result in numbers of customers
 
@@ -96,7 +115,7 @@ The riskiest customers overall spend very little, so they are not where the mone
 
 **That gives 292 high value customers, who spent about 882 thousand pounds in the last 12 months. They are the list a business would contact first.** Their average risk of leaving is 48.5 percent, against 4.1 percent for the safest high value customers.
 
-These predictions cannot be checked, because the data ends there. The evidence for trusting them is the model comparison above, where on customers the model had never seen it caught 85.5 percent of those who stopped buying.
+These predictions cannot be checked, because the data ends there. The evidence for trusting them is the test on big spenders above, where the customers flagged the same way left about 10 times more often than the ones the model called safe.
 
 ## Experiment tracking
 
@@ -124,7 +143,7 @@ To run the app on your own computer, install the packages with `pip install -r r
 
 ## Files in this repository
 
-churn.ipynb contains the full analysis. Part 1 is my first approach. Part 2 trains the forward looking model, predicts the next 90 days for current customers, shows the result in numbers of customers, and tracks the models in MLflow.
+churn.ipynb contains the full analysis. Part 1 is my first approach. Part 2 trains the forward looking model, tests it on big spenders, predicts the next 90 days for current customers, shows the result in numbers of customers, and tracks the models in MLflow.
 
 main.py is the FastAPI application serving the forward looking model, meant to be run locally with uvicorn.
 
