@@ -5,12 +5,12 @@
 - **Question:** how is revenue trending, which products, countries and customers drive it, and where can it grow?
 - **Data:** 804,824 cleaned transactions from a UK online gift retailer, December 2009 to December 2011.
 - **Currency:** the data is in pounds (£). £1 was worth about $1.57 on average over this period, so total revenue of £17.6M is about $27.6M.
-- **How:** 14 SQL queries (joins, CTEs, window functions) in DuckDB, cross-checked in pandas, and a Tableau dashboard.
+- **How:** 15 SQL queries (joins, CTEs, window functions) in DuckDB, cross-checked in pandas, and a Tableau dashboard.
 - **Main findings:**
   - Sales jump every September (+36% and +48%) and drop every January (-21% and -36%).
   - Underneath the seasons, revenue is flat: January to November 2011 was 0.4% above 2010.
   - 91% of 2011 revenue came from customers who had bought before.
-  - Only about 1 in 5 new customers buys again the next month.
+  - 74% of new customers come back, but only 1 in 5 does so the next month.
   - The top 10% of customers bring in 64% of revenue.
 
 ## Live Dashboard
@@ -51,11 +51,11 @@ Each number was built in SQL against the cleaned data, checked a second way wher
 
 **8. Returning customers are most of the business.** They brought in 81.7% of revenue in 2010 and 91.1% in 2011, while new customers per month fell from 250 to 440 in early 2010 to 100 to 220 in 2011. Caution: the data starts in December 2009, so some early "new" customers were probably existing ones.
 
-**9. Most new customers do not come back.** About 1 in 5 buys again the next month (20.5%), and about 1 in 6 is still buying a year later (16.7%). The first repeat purchase is where most customers are lost.
+**9. New customers come back, but slowly.** Of the customers who joined in 2010, 73.8% bought again in a later month. But only about 1 in 5 buys again the very next month (20.5%), and a year on about 1 in 6 is buying in any given month (16.7%). Customers return months apart.
 
 **10. Revenue is concentrated.** The top 10% of customers (586 people) bring in 63.8% of revenue. The bottom half together bring in 6.5%.
 
-**What this adds up to:** the business lives on repeat customers and is not growing. Existing customers keep buying, but fewer new ones arrive and 4 in 5 of them never return. The clearest opportunity is a follow-up offer in the weeks after a first order.
+**What this adds up to:** the business lives on repeat customers and is not growing. Existing customers keep coming back, but months apart, and fewer new ones are arriving. The clearest opportunities are bringing customers back sooner and winning more new ones.
 
 ## The SQL
 
@@ -81,7 +81,7 @@ All queries are in the notebook and collected in [`queries.sql`](queries.sql).
 
 ## Files
 - `sales_kpi_analysis.ipynb`: the full analysis, with notes on every finding
-- `queries.sql`: the 14 SQL queries on their own
+- `queries.sql`: the 15 SQL queries on their own
 - `cleaning_script.py`: the data cleaning logic
 - `monthly_revenue.csv`, `top_products_revenue.csv`, `top_products_quantity.csv`, `country_revenue.csv`, `aov_by_country.csv`: the tables behind the dashboard
 - `requirements.txt`: the Python packages needed

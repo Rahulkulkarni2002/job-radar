@@ -228,6 +228,23 @@ WHERE First_Month >= '2010-01-01'
 GROUP BY First_Month
 ORDER BY First_Month;
 
+-- Question 4: share of new customers who ever came back
+WITH customer_months AS (
+    SELECT
+        "Customer ID" AS Customer_ID,
+        DATE_TRUNC('month', MIN(InvoiceDate)) AS First_Month,
+        COUNT(DISTINCT DATE_TRUNC('month', InvoiceDate)) AS Months_With_Orders
+    FROM retail
+    GROUP BY "Customer ID"
+)
+SELECT
+    COUNT(*) AS New_Customers_In_2010,
+    SUM(CASE WHEN Months_With_Orders > 1 THEN 1 ELSE 0 END) AS Came_Back,
+    ROUND(SUM(CASE WHEN Months_With_Orders > 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) AS Pct_Came_Back
+FROM customer_months
+WHERE First_Month >= '2010-01-01'
+  AND First_Month <= '2010-12-01';
+
 -- Question 5: How concentrated is revenue among customers?
 WITH customer_totals AS (
     SELECT
