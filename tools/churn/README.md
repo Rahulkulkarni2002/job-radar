@@ -6,9 +6,8 @@ Live app: https://customer-churn-prediction-rahul.streamlit.app/
 
 - **What it does:** predicts which customers of an online retailer will stop buying in the next 90 days, so the business knows who to contact first.
 - **Data:** two years of sales, about 804,000 transactions and 5,855 customers.
-- **Best model:** Random Forest, chosen after comparing four algorithms. On customers it had never seen it caught 85.5 percent of those who went on to stop buying.
-- **Proof it works:** tested on a past period, 46.4 percent of the high value customers it flagged really did stop buying.
-- **The output:** a contact list of 292 high value customers, worth about 882 thousand pounds a year, who are most likely to stop buying in the 90 days after the data ends.
+- **Best model:** Random Forest, chosen after comparing four algorithms. Tested on customers it had never seen, it caught 85.5 percent of those who stopped buying.
+- **The result:** a contact list of 292 high value customers, worth about 882 thousand pounds a year, who are most likely to stop buying in the next 90 days.
 - **Built end to end:** 10 models tracked in MLflow, a FastAPI endpoint, and a live Streamlit app.
 
 ## What this project is
@@ -77,42 +76,27 @@ Everything above uses one snapshot, where the churn label and the features come 
 
 **Random Forest was again the best, on accuracy, recall and F1.** All four models are close, which told me the features matter more than the choice of algorithm. Without Recency the same Random Forest drops to 72.1 percent accuracy, so Recency is the strongest signal.
 
-### Checking that the result is real
+### Predicting the next 90 days
 
-I checked for overfitting. Random Forest scored 76.6 percent accuracy on the training customers and 76.2 percent on the held out customers, so it is not memorising.
+The comparison above trained and tested the model on a period where the answers were known. The next step uses the model for its real purpose, predicting a period that is not in the data. I trained the final Random Forest on all 5,258 customers, then scored every one of the 5,855 current customers as of the last day of data, 9 December 2011. The model predicts that 3,349 of them, 57 percent, will stop buying in the following 90 days.
 
-I also ran a stricter test, training the Random Forest at an earlier cutoff, 12 June 2011, and testing it on all 5,258 customers at the later cutoff. The AUC was 0.79, close to the 0.82 above, so the ranking of customers by churn risk holds up on a later period. An AUC of 0.5 is a coin flip and 1.0 is perfect. Accuracy dropped to 70 percent, level with a simple rule that flags anyone with no purchase in 90 days, and the reason is seasonality. In the summer period 67.8 percent of customers went quiet, but before Christmas only 56.4 percent did, so a model trained on summer flags too many customers in autumn. The honest conclusion is that the model is useful for ranking customers by risk, and the cut off for calling someone churned needs to be reset for the season.
+### The result in numbers of customers
 
-### What the result means in customers
+A list of 3,349 customers is too long to act on, so I narrowed it down. First I ranked all 5,855 current customers by risk and split them into five equal groups.
 
-Of the 1,052 held out customers, 594 really stopped buying. The model caught 508 of them, which is 85.5 percent, with 164 false alarms and 86 missed. The simple rule caught 494 with 191 false alarms, so the model finds 14 more leavers with 27 fewer false alarms. That is a real but modest gain.
-
-The model is more useful for ranking. I ranked all 5,258 customers by predicted risk, using the model trained on the earlier period, and split them into five equal groups of about 1,052 customers each.
-
-| Risk group | Customers | Stopped buying | Share of prior year spend |
+| Risk group | Customers | Average risk of leaving | Share of last year's spend |
 |---|---|---|---|
-| Riskiest 20% | 1,052 | 85.8% | 1.2% |
-| High | 1,051 | 74.9% | 4.4% |
-| Middle | 1,052 | 63.2% | 9.4% |
-| Low | 1,051 | 41.8% | 14.7% |
-| Safest 20% | 1,052 | 16.5% | 70.2% |
+| Riskiest 20% | 1,171 | 87% | 0.4% |
+| High | 1,171 | 74% | 3.9% |
+| Middle | 1,171 | 56% | 9.3% |
+| Low | 1,171 | 41% | 13.8% |
+| Safest 20% | 1,171 | 14% | 72.6% |
 
-The ranking works, but the riskiest group spends very little, so it is not where the money is. So I narrowed it down to the customers who spend the most.
+The riskiest customers overall spend very little, so they are not where the money is. So I looked only at the customers who spend the most. I kept the top 25 percent of current customers by spend, which is 1,464 high value customers bringing in 85.2 percent of the spend, then ranked those by risk and took the riskiest 20 percent.
 
-**The model is most valuable among high value customers.** I got to this group in two steps. First I kept the top 25 percent of the 5,258 customers by spend, which is 1,315 high value customers. They bring in 82.6 percent of revenue, and 21.1 percent of them stopped buying. Then I ranked those 1,315 by risk score and took the riskiest 20 percent, which is 263 customers.
+**That gives 292 high value customers, who spent about 882 thousand pounds in the last 12 months. They are the list a business would contact first.** Their average risk of leaving is 48.5 percent, against 4.1 percent for the safest high value customers.
 
-| Group | Customers | Stopped buying |
-|---|---|---|
-| Riskiest 20% of high value customers | 263 | 46.4% (122 customers) |
-| Safest 20% of high value customers | 263 | 4.6% (12 customers) |
-
-**So among the customers who bring in most of the money, the riskiest group is about 10 times more likely to leave than the safest group.** Those 263 riskiest customers spent about 854 thousand pounds in the prior year, and they are the ones worth contacting first.
-
-### The contact list for the next 90 days
-
-Everything above tested the model on a period that had already happened, so I could check its predictions. The last step uses the model for its real purpose, predicting a period that is not in the data. I trained the final Random Forest on all 5,258 customers, then scored every one of the 5,855 current customers as of the last day of data, 9 December 2011, to predict who will stop buying in the following 90 days.
-
-I narrowed it down the same way as before. Of the 1,464 high value customers, the riskiest 20 percent are 292 customers, who spent about 882 thousand pounds in the last 12 months. **Those 292 customers are the list a business would contact first.** These predictions cannot be checked, because the data ends there. The evidence for trusting them is the test above, where 46.4 percent of the high value customers flagged the same way really did stop buying.
+These predictions cannot be checked, because the data ends there. The evidence for trusting them is the model comparison above, where on customers the model had never seen it caught 85.5 percent of those who stopped buying.
 
 ## Experiment tracking
 
@@ -130,7 +114,7 @@ I made this choice deliberately after thinking about whether I actually needed t
 
 ## What I'd do differently with more time
 
-I would train on several cutoff dates across the year and add seasonal features, since the stricter test showed that churn rates change a lot between summer and the weeks before Christmas. After that I would test whether features like product categories or country give the more complex models a real advantage over Random Forest. I would also connect the deployed app to the MLflow tracked model files instead of retraining at startup, since that is closer to how a real production system works.
+I would train on several cutoff dates across the year and add seasonal features, since buying patterns change between summer and the weeks before Christmas. I would also wait for the next 90 days of data and check how many of the 292 customers on the contact list really did stop buying. After that I would test whether features like product categories or country give the more complex models a real advantage over Random Forest. I would also connect the deployed app to the MLflow tracked model files instead of retraining at startup, since that is closer to how a real production system works.
 
 ## How to run this yourself
 
@@ -140,7 +124,7 @@ To run the app on your own computer, install the packages with `pip install -r r
 
 ## Files in this repository
 
-churn.ipynb contains the full analysis. Part 1 is my first approach. Part 2 is the forward looking model, the checks, the results in numbers of customers, the contact list for the next 90 days, and the MLflow tracking.
+churn.ipynb contains the full analysis. Part 1 is my first approach. Part 2 trains the forward looking model, predicts the next 90 days for current customers, shows the result in numbers of customers, and tracks the models in MLflow.
 
 main.py is the FastAPI application serving the forward looking model, meant to be run locally with uvicorn.
 
