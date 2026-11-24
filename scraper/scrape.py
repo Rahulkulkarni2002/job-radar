@@ -59,11 +59,21 @@ TITLE_INFLATED = r"^(sr\.?|senior) (business|data|financial|risk|marketing|credi
 # in the title; the usual rules (years, sponsorship, OPT relatedness, required skills he lacks) still apply afterwards.
 AGENT_TITLE = r"\b(ai|a\.i\.|genai|gen ai|generative ai|llm|agents?|agentic|applied ai|conversational ai|ai/ml|ml/ai)\b.{0,30}\b(engineer|developer|builder)\b|forward[- ]deployed"
 AGENT_ENTRY = r"new (college )?grad|graduate|university|early career|entry|junior|\bjr\b|associate|\b(i|1)\s*$|\b(i|1)\b\s*[-,(]|2026|2027"
+# Business-side (non-technical) beginner titles that have no "analyst"/"data" word in them: business / revenue / sales operations,
+# rotational and graduate programs, associate consultants, strategy / finance / operations associates (added 2026-11-24, candidate
+# asked for non-tech roles too). They only pass the TITLE gate here; years, sponsorship, OPT relatedness and skill fit still apply.
+BIZ_TITLE = (r"\b(business|biz|strategy|strategic|revenue|sales|marketing|product|customer|finance|financial|commercial|supply chain|people|gtm|go-to-market|growth) (operations|ops)\b"
+             r"|\brotational\b|(leadership|graduate|analyst|associate|finance|operations|business|management) (development )?program\b|development program|management trainee"
+             r"|associate consultant|consulting (analyst|associate)|business consultant"
+             r"|\b(strategy|operations|finance|business|planning|procurement|supply chain|pricing|merchandising|category|investment|treasury|product|program|project|marketing|growth|partnerships) associate\b"
+             r"|\bassociate,? (strategy|operations|finance|business|planning|product|program|marketing|growth)\b|chief of staff associate|business development (analyst|associate)")
+BIZ_NOT = r"warehouse|\bstore\b|retail|cashier|teller|call center|contact center|customer service|front desk|reception|janitor|\bcook\b|server\b|legal|paralegal|dental|medical|pharmac|veterinar|real estate agent|insurance agent|loan officer|driver|technician|mechanic|field service|production associate|manufacturing associate|assembly"
 def relevant(t):
     t = t.lower()
     if re.search(AGENT_TITLE, t) and re.search(AGENT_ENTRY, t) and not re.search(r"senior|\bsr\b|staff|principal|lead|manager|intern|\bii\b|\biii\b|summer|2028|phd", t): return True
     if re.search(TITLE_INFLATED, t.strip()) and not re.search(r"\b(ii|iii|lead|manager|principal|staff)\b", t): return True
     if re.search(TITLE_EXCLUDE, t): return False
+    if re.search(BIZ_TITLE, t) and not re.search(BIZ_NOT, t): return True
     if re.search(ALWAYS, t) or (re.search(AI_TITLE, t) and not re.search(r"engineer|architect|scientist, ml|researcher, ml|annotator|rater|trainer|tutor|writer", t)): return True
     return bool(re.search(CORE, t)) and not re.search(NOT_FIT, t)
 SKILLS = r"\b(sql|python|tableau|power bi|excel|statistic\w*|analytics|forecast\w*|machine learning|data analysis|dashboards?|modeling|pandas|snowflake|databricks|looker|a/b test\w*|regression)\b"
@@ -300,7 +310,7 @@ MIN_FIT = int(os.environ.get("MIN_FIT", 45))
 # ---------- role families (sections on the site) with family-specific fit gates ----------
 FAM_DS = r"data scien|decision scien|applied scien|machine learning (scientist|engineer|analyst)|\bml scientist|quantitative (analyst|scientist|researcher)|\bquant\b|statistician|research scientist"
 FAM_DA = r"data analyst|analytics (analyst|engineer|associate|specialist|consultant)|advanced analytics|business intelligence|\bbi\b|insights?|reporting analyst|product analyst|marketing analyst|people analytics|data (associate|operations|ops|quality)|analytics$|analyst, analytics|research data analyst|data & analytics"
-FAM_BA = r"business analyst|business operations|business systems analyst|strategy|operations analyst|ops analyst|consult|program analyst|process analyst|project analyst|go-to-market|sales operations|growth analyst|associate"
+FAM_BA = r"rotational|development program|graduate program|management trainee|revenue operations|marketing operations|product operations|business analyst|business operations|business systems analyst|strategy|operations analyst|ops analyst|consult|program analyst|process analyst|project analyst|go-to-market|sales operations|growth analyst|associate"
 FAM_OT = r"fp&a|financial (analyst|planning)|finance analyst|pricing|planning analyst|risk|credit|investment|treasury|budget|forecasting|actuarial|market analyst|market intelligence|research analyst|revenue|compensation|supply|procurement|portfolio|economist|underwrit|analyst"
 def family(title, jd, is_ai):
     t = title.lower()
