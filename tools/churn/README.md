@@ -7,7 +7,7 @@ Live app: https://customer-churn-prediction-rahul.streamlit.app/
 - **What it does:** predicts which customers of an online retailer will stop buying in the next 90 days, so the business knows who to contact first.
 - **Data:** two years of sales, about 804,000 transactions and 5,855 customers.
 - **Best model:** Random Forest, chosen after comparing four algorithms. Out of every 100 customers who really stopped buying, it caught about 86.
-- **Tested on big spenders:** on a past period, the big spenders it flagged left about 10 times more often than the ones it called safe (46 percent against 5 percent).
+- **Tested on big spenders:** on a past period, the big spenders it flagged left about 10 times more often than the ones it scored as low risk (46 percent against 5 percent).
 - **The result:** a contact list of 292 high value customers, worth about 882 thousand pounds a year, who are most likely to stop buying in the next 90 days.
 - **Built end to end:** 10 models tracked in MLflow, a FastAPI endpoint, and a live Streamlit app.
 
@@ -50,7 +50,7 @@ I also tried combining models into a voting ensemble, first with three models an
 - **Accuracy:** out of every 100 customers, how many the model got right, leaving or staying.
 - **Recall:** out of every 100 customers who really left, how many the model caught.
 - **F1 score:** one score that combines recall with how often the model's flags were right. Closer to 1 is better.
-- **AUC:** how well the model puts risky customers above safe ones. 0.5 is a coin flip and 1.0 is perfect.
+- **AUC:** how well the model puts risky customers above low risk ones. 0.5 is a coin flip and 1.0 is perfect.
 
 **Here's the honest comparison across everything I tried, measured on the same held out test set (1,171 customers).**
 
@@ -90,10 +90,10 @@ The final result is a list of big spenders at risk, so before trusting it I test
 
 | Group | Customers | Really stopped buying |
 |---|---|---|
-| The 20% of big spenders the model called riskiest | 263 | 122 (46%) |
-| The 20% of big spenders the model called safest | 263 | 12 (5%) |
+| The 20% of big spenders with the highest risk scores | 263 | 122 (46%) |
+| The 20% of big spenders with the lowest risk scores | 263 | 12 (5%) |
 
-**The big spenders it flagged left about 10 times more often than the ones it called safe.** So the model ranks big spenders by risk well.
+**The big spenders it flagged left about 10 times more often than the ones it scored as low risk.** Low risk does not mean no risk, and 5 percent leaving is about what the model expected. So the model ranks big spenders by risk well.
 
 ### Predicting the next 90 days
 
@@ -105,17 +105,17 @@ A list of 3,349 customers is too long to act on, so I narrowed it down. First I 
 
 | Risk group | Customers | Average risk of leaving | Share of last year's spend |
 |---|---|---|---|
-| Riskiest 20% | 1,171 | 87% | 0.4% |
+| Highest risk 20% | 1,171 | 87% | 0.4% |
 | High | 1,171 | 74% | 3.9% |
 | Middle | 1,171 | 56% | 9.3% |
 | Low | 1,171 | 41% | 13.8% |
-| Safest 20% | 1,171 | 14% | 72.6% |
+| Lowest risk 20% | 1,171 | 14% | 72.6% |
 
-The riskiest customers overall spend very little, so they are not where the money is. So I looked only at the customers who spend the most. I kept the top 25 percent of current customers by spend, which is 1,464 high value customers bringing in 85.2 percent of the spend, then ranked those by risk and took the riskiest 20 percent.
+The highest risk customers overall spend very little, so they are not where the money is. So I looked only at the customers who spend the most. I kept the top 25 percent of current customers by spend, which is 1,464 high value customers bringing in 85.2 percent of the spend, then ranked those by risk and took the 20 percent with the highest risk.
 
-**That gives 292 high value customers, who spent about 882 thousand pounds in the last 12 months. They are the list a business would contact first.** Their average risk of leaving is 48.5 percent, against 4.1 percent for the safest high value customers.
+**That gives 292 high value customers, who spent about 882 thousand pounds in the last 12 months. They are the list a business would contact first.** Their average risk of leaving is 48.5 percent, against 4.1 percent for the high value customers with the lowest risk.
 
-These predictions cannot be checked, because the data ends there. The evidence for trusting them is the test on big spenders above, where the customers flagged the same way left about 10 times more often than the ones the model called safe.
+These predictions cannot be checked, because the data ends there. The evidence for trusting them is the test on big spenders above, where the customers flagged the same way left about 10 times more often than the ones the model scored as low risk.
 
 ## Experiment tracking
 
