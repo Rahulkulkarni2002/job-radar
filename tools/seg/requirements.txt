@@ -1,0 +1,9 @@
+pandas
+numpy
+duckdb
+scikit-learn
+matplotlib
+statsmodels
+prophet
+xgboost
+jupyter
