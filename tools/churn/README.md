@@ -53,20 +53,6 @@ I also tried combining models into a voting ensemble, first with three models an
 
 In the end I chose Random Forest as the model I actually deploy, not because it's the most complex option, but because it matched or beat every more complicated alternative, including the ensembles, while being much simpler to actually put into production. That felt like the right tradeoff for a real deployed system rather than chasing a marginal, possibly noisy improvement from added complexity.
 
-## Experiment tracking
-
-I used MLflow to track all six models I trained, logging the parameters, accuracy, precision, recall, and F1 score for each one, along with saving the actual trained model files. I ran into a couple of real environment issues along the way, MLflow initially refused to save the XGBoost and neural network models because of a security check on untrusted object types, which I resolved by using XGBoost's own dedicated logging function and explicitly marking the specific neural network internal type as trusted. I also had the MLflow web dashboard fail to show my logged runs for a while, which turned out to be a mismatch between where the tracking data was actually saved and where the dashboard was looking, not a problem with my actual training code. I confirmed this directly using MLflow's Python client rather than just trusting the browser, and found all my runs were genuinely saved correctly the whole time.
-
-## Building the API
-
-I built a FastAPI application that loads and trains the Random Forest model once when the server starts, then exposes a predict endpoint that takes in a customer's Frequency, Monetary, and Tenure, calculates the same engineered features used in training, and returns both a churn prediction and the underlying probability. I added input validation so that invalid input, like a Frequency of zero which would cause a divide by zero error when calculating average order value, returns a clean error message instead of crashing the server. I tested this using FastAPI's automatic interactive documentation page and confirmed both the validation and the actual predictions work correctly.
-
-## The deployed app
-
-For the live, publicly deployed version, I built a self contained Streamlit application rather than running the API and the interface as two separate connected services. The model is trained once and cached using Streamlit's caching decorator, so it doesn't retrain on every single interaction. Someone visiting the live app can type in a customer's order count, total spend, and how long they've been a customer, click a button, and immediately see a churn prediction along with the probability behind it.
-
-I made this choice deliberately after thinking about whether I actually needed two separate running services for this to be a real, legitimate applied ML project. The FastAPI version still exists in this repository and demonstrates that I can build a real API that other software could call, but for the version anyone can actually visit and use right now, a single self contained app was simpler to deploy and just as complete from a user's perspective.
-
 ## Going further, predicting who will leave next
 
 Everything above uses one snapshot, where the churn label and the features come from the same two year window. That finds customers who have already gone quiet. A business needs to know who is about to leave, so I rebuilt the problem to look forward. I picked a cutoff date, 10 September 2011, which is 90 days before the data ends. Every feature is built only from what happened before that date, and churn means the customer made no purchase in the 90 days after it. That gave me 5,258 customers, and 56.4 percent of them did not buy again in the next 90 days. Because Recency is now measured at the cutoff, before the label period starts, it is a fair feature here and I added it to the same seven features.
@@ -84,9 +70,9 @@ Everything above uses one snapshot, where the churn label and the features come 
 
 ### Checking that the result is real
 
-I checked for overfitting. Random Forest scored 76.6 percent accuracy on the training customers and 76.2 percent on the held out customers, so it is not memorising. Five fold cross validation gave an AUC of 0.797, between 0.793 and 0.802 on every fold, so about 0.80 is the honest AUC.
+I checked for overfitting. Random Forest scored 76.6 percent accuracy on the training customers and 76.2 percent on the held out customers, so it is not memorising.
 
-I also ran a stricter test, training the models at an earlier cutoff, 12 June 2011, and testing them on all 5,258 customers at the later cutoff. The AUC held at about 0.79 to 0.80 for every model, so the ranking of customers by churn risk is stable over time. Accuracy dropped to about 70 percent, level with a simple rule that flags anyone with no purchase in 90 days, and the reason is seasonality. In the summer training window 67.8 percent of customers went quiet, but before Christmas only 56.4 percent did, so a model trained on summer flags too many customers in autumn. The honest conclusion is that the model is useful for ranking customers by risk, and the cut off for calling someone churned needs to be reset for the season.
+I also ran a stricter test, training the Random Forest at an earlier cutoff, 12 June 2011, and testing it on all 5,258 customers at the later cutoff. The AUC was 0.79, close to the 0.82 above, so the ranking of customers by churn risk holds up on a later period. An AUC of 0.5 is a coin flip and 1.0 is perfect. Accuracy dropped to 70 percent, level with a simple rule that flags anyone with no purchase in 90 days, and the reason is seasonality. In the summer period 67.8 percent of customers went quiet, but before Christmas only 56.4 percent did, so a model trained on summer flags too many customers in autumn. The honest conclusion is that the model is useful for ranking customers by risk, and the cut off for calling someone churned needs to be reset for the season.
 
 ### What the result means in customers
 
@@ -106,11 +92,23 @@ The ranking works, but the riskiest group spends very little, so it is not where
 
 **The model is most valuable among high value customers.** The top 25 percent of customers by spend, 1,315 customers, bring in 82.6 percent of revenue, and 21.1 percent of them stopped buying. Within that group the model's riskiest 20 percent, 263 customers who spent about 854 thousand pounds in the prior year, stopped buying 46.4 percent of the time, against 4.6 percent for its safest 20 percent. Those are the customers worth contacting first.
 
-The API and the live app above still use the snapshot Random Forest. Moving them to this forward looking model is the next step.
+## Experiment tracking
+
+I used MLflow to track all ten models I trained, the six from my first approach and the four forward looking ones, logging the parameters, accuracy, precision, recall, and F1 score for each one, along with saving the actual trained model files. I ran into a couple of real environment issues along the way, MLflow initially refused to save the XGBoost and neural network models because of a security check on untrusted object types, which I resolved by using XGBoost's own dedicated logging function and explicitly marking the specific internal types as trusted. I also had the MLflow web dashboard fail to show my logged runs for a while, which turned out to be a mismatch between where the tracking data was actually saved and where the dashboard was looking, not a problem with my actual training code. I confirmed this directly using MLflow's Python client rather than just trusting the browser, and found all my runs were genuinely saved correctly the whole time.
+
+## Building the API
+
+I built a FastAPI application that trains the forward looking Random Forest once when the server starts, then exposes a predict endpoint that takes in a customer's Frequency, Monetary, Tenure, and Recency, calculates the same engineered features used in training, and returns both a churn prediction and the probability that the customer stops buying in the next 90 days. I added input validation so that invalid input, like a Frequency of zero which would cause a divide by zero error when calculating average order value, returns a clean error message instead of crashing the server. I tested this using FastAPI's automatic interactive documentation page and confirmed both the validation and the actual predictions work correctly.
+
+## The deployed app
+
+For the live, publicly deployed version, I built a self contained Streamlit application rather than running the API and the interface as two separate connected services. It uses the same forward looking Random Forest as the notebook and the API. The model is trained once and cached using Streamlit's caching decorator, so it doesn't retrain on every single interaction. Someone visiting the live app can type in a customer's order count, total spend, tenure, and days since their last order, click a button, and immediately see how likely that customer is to stop buying in the next 90 days.
+
+I made this choice deliberately after thinking about whether I actually needed two separate running services for this to be a real, legitimate applied ML project. The FastAPI version still exists in this repository and demonstrates that I can build a real API that other software could call, but for the version anyone can actually visit and use right now, a single self contained app was simpler to deploy and just as complete from a user's perspective.
 
 ## What I'd do differently with more time
 
-The first thing I would do is move the live app and the API from the snapshot model to the forward looking model, so the deployed version answers the real business question. I would also train on several cutoff dates across the year and add seasonal features, since the strictest test showed that churn rates change a lot between summer and the weeks before Christmas. After that I would test whether features like product categories or country give the more complex models a real advantage, and I would connect the deployed app to the MLflow tracked model files instead of retraining at startup, since that is closer to how a real production system works.
+I would train on several cutoff dates across the year and add seasonal features, since the stricter test showed that churn rates change a lot between summer and the weeks before Christmas. After that I would test whether features like product categories or country give the more complex models a real advantage over Random Forest. I would also connect the deployed app to the MLflow tracked model files instead of retraining at startup, since that is closer to how a real production system works.
 
 ## How to run this yourself
 
@@ -120,13 +118,13 @@ To run the app on your own computer, install the packages with `pip install -r r
 
 ## Files in this repository
 
-churn.ipynb contains the full analysis, from loading the data through training and comparing the models, then the forward looking version and the results in numbers of customers.
+churn.ipynb contains the full analysis. Part 1 is my first approach, Part 2 is the forward looking model, the results in numbers of customers, and the MLflow tracking.
 
-main.py is the FastAPI application, meant to be run locally with uvicorn.
+main.py is the FastAPI application serving the forward looking model, meant to be run locally with uvicorn.
 
 app.py is the original two service version of the Streamlit app that calls the FastAPI endpoint over the network, kept here to show that architecture works.
 
-streamlit_app.py is the self contained version actually deployed live, with the model built directly into the app.
+streamlit_app.py is the self contained version actually deployed live, with the forward looking model built directly into the app.
 
 requirements.txt lists the Python packages the live app needs, and requirements-notebook.txt lists the ones needed to run the notebook.
 
