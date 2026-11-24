@@ -1,8 +1,0 @@
-bank_name,bank_type,roe_pct,roa_pct,leverage,roe_at_typical_leverage,points_from_leverage,rank_by_roe,rank_by_roa
-JPMorgan Chase,Universal bank,15.43,1.27,12.18,14.96,0.47,1,2
-Morgan Stanley,Investment bank,12.47,1.05,11.89,12.37,0.1,2,3
-Goldman Sachs,Investment bank,12.4,0.92,13.58,10.84,1.56,3,5
-Capital One,Card lender,10.54,1.37,7.59,16.14,-5.6,4,1
-Wells Fargo,Universal bank,10.49,0.97,10.77,11.43,-0.94,5,4
-Bank of America,Universal bank,10.04,0.89,11.24,10.48,-0.44,6,6
-Citigroup,Universal bank,7.11,0.61,11.78,7.19,-0.08,7,7
