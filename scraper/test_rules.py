@@ -129,6 +129,16 @@ CASES = [
  ("timing", "Candidates graduating in December 2026 are encouraged to apply.", False),
  ("timing", "We sponsor visas. Start date: February 2027. Open to students graduating between December 2026 and May 2027.", False),
 ]
+GEO = [("Dubai, United Arab Emirates", "AE"), ("Abu Dhabi, UAE", "AE"), ("San Diego, CA", "US"), ("Remote - United States", "US"),
+       ("London, United Kingdom", None), ("Bengaluru, India", None), ("Dubai", "AE"), ("New York, NY", "US"), ("Toronto, Canada", None)]
+for loc, want in GEO:
+    got = "AE" if ns["uae"](loc) else "US" if ns["us"](loc) else None
+    assert got == want, f"geo FAIL {loc!r}: expected {want} got {got}"
+assert ns["job"]("X", "Data Analyst", "http://x/1", "2026-11-20", "Dubai, UAE", "SQL and Excel.", "t")["region"] == "AE"
+assert ns["job"]("X", "Data Analyst", "http://x/2", "2026-11-20", "Austin, TX", "SQL and Excel.", "t")["region"] == "US"
+assert __import__("re").search(ns["UAE_NATIONALS"], "This position is open to UAE Nationals only.", 2)
+assert not __import__("re").search(ns["UAE_NATIONALS"], "Join our Dubai analytics team. Visa and relocation provided.", 2)
+print("geo tests passed:", len(GEO) + 4)
 fails = 0
 for kind, text, want in CASES:
     got = {"years": lambda t: Y(t), "perm": lambda t: ns["perm_posting"](t), "yany": lambda t: Y(t, True), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "roleexp": lambda t: bool(ns["role_experience_problem"](t)), "reqgap": lambda t: RG(t[0], t[1]), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)
