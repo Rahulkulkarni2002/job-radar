@@ -1,0 +1,1713 @@
+{
+"rows": [
+{
+"ats": "greenhouse",
+"board": "careem",
+"company": "Careem",
+"all": 12,
+"uae": 6,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "greenhouse",
+"board": "tamara",
+"company": "Tamara",
+"all": 36,
+"uae": 9,
+"uae_relevant": 1,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "greenhouse",
+"board": "deliveroo",
+"company": "Deliveroo",
+"all": 195,
+"uae": 16,
+"uae_relevant": 2,
+"le15d": 1,
+"le45d": 1
+},
+{
+"ats": "greenhouse",
+"board": "wise",
+"company": "Wise",
+"all": 18,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "greenhouse",
+"board": "binance",
+"company": "Binance",
+"all": 225,
+"uae": 51,
+"uae_relevant": 8,
+"le15d": 2,
+"le45d": 8
+},
+{
+"ats": "greenhouse",
+"board": "okx",
+"company": "OKX",
+"all": 384,
+"uae": 2,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "greenhouse",
+"board": "bybit",
+"company": "Bybit",
+"all": 162,
+"uae": 57,
+"uae_relevant": 2,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "greenhouse",
+"board": "kaizengaming",
+"company": "Kaizen Gaming",
+"all": 33,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "greenhouse",
+"board": "agoda",
+"company": "Agoda",
+"all": 336,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "lever",
+"board": "oliverwyman",
+"company": "Oliver Wyman",
+"all": 2,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "lever",
+"board": "binance",
+"company": "Binance",
+"all": 4,
+"uae": 1,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "lever",
+"board": "crypto",
+"company": "Crypto.com",
+"all": 93,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "lever",
+"board": "zeta",
+"company": "Zeta",
+"all": 33,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "ashby",
+"board": "ziina",
+"company": "Ziina",
+"all": 11,
+"uae": 11,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "ashby",
+"board": "deliveroo",
+"company": "Deliveroo",
+"all": 13,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "ashby",
+"board": "leantech",
+"company": "Lean Technologies",
+"all": 8,
+"uae": 4,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "ashby",
+"board": "rain",
+"company": "Rain",
+"all": 47,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "smartrecruiters",
+"board": "deliveryhero",
+"company": "Delivery Hero",
+"all": 796,
+"uae": 48,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "smartrecruiters",
+"board": "namshi",
+"company": "Namshi",
+"all": 6,
+"uae": 6,
+"uae_relevant": 1,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "smartrecruiters",
+"board": "fenix",
+"company": "Fenix",
+"all": 9,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "smartrecruiters",
+"board": "wise",
+"company": "Wise",
+"all": 419,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "smartrecruiters",
+"board": "binance",
+"company": "Binance",
+"all": 4,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+},
+{
+"ats": "smartrecruiters",
+"board": "almosafer",
+"company": "Almosafer",
+"all": 10,
+"uae": 0,
+"uae_relevant": 0,
+"le15d": 0,
+"le45d": 0
+}
+],
+"titles": [
+{
+"company": "Careem",
+"title": "Account Manager I",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-10-09",
+"relevant": false
+},
+{
+"company": "Careem",
+"title": "Account Manager II - Shops",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Careem",
+"title": "Quality Specialist",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-08",
+"relevant": false
+},
+{
+"company": "Careem",
+"title": "Sales Executive",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-10-09",
+"relevant": false
+},
+{
+"company": "Careem",
+"title": "Senior Operations Associate - Shops",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-07-22",
+"relevant": false
+},
+{
+"company": "Careem",
+"title": "Senior Strategy and Care Transformation Manager  ",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-09-14",
+"relevant": false
+},
+{
+"company": "Tamara",
+"title": "Accountant",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-09-09",
+"relevant": false
+},
+{
+"company": "Tamara",
+"title": "Associate Data Scientist - Builders Program - (Emirati National)",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-04-27",
+"relevant": true
+},
+{
+"company": "Tamara",
+"title": " Financial Reporting specialist",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-09-27",
+"relevant": false
+},
+{
+"company": "Tamara",
+"title": "Government Compliance Advisor (Emirati National)",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-10-25",
+"relevant": false
+},
+{
+"company": "Tamara",
+"title": "Instore Operations Intern",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-23",
+"relevant": false
+},
+{
+"company": "Tamara",
+"title": "Merchant Acquisition Specialist",
+"loc": "Sharjah",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Tamara",
+"title": "Senior Channel Partnerships Manager",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-10-21",
+"relevant": false
+},
+{
+"company": "Tamara",
+"title": "Tamara Builders Program ",
+"loc": "Riyadh Saudi Arabia,   Dubai United Arab Emirates ",
+"posted": "2026-10-05",
+"relevant": false
+},
+{
+"company": "Tamara",
+"title": "Tamara Internship Program ",
+"loc": "Riyadh Saudi Arabia, Dubai United Arab Emirates ",
+"posted": "2026-10-04",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Business Development Manager - Abu Dhabi",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-09-23",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Business Development Manager - Dubai",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-10-12",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Commercial Account Executive (UAE National)",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-06",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Commercial Account Executive (UAE National)",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-19",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Corporate Account Manager - Deliveroo for Work",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-10-28",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Corporate Commercial Manager, Abu Dhabi",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-09-18",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Emiratisation Talent Pool",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-09-18",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Head of New Verticals Business Planning and Performance",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-16",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Key Account Manager - Restaurants",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-09-18",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Marketing Executive, CRM and Ops, UAE",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-10-19",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Mid Market Account Manager - Abu Dhabi",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-18",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Rider Engagement Associate - UAE National ",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-04",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Sales Operations Analyst - UAE National",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-09-18",
+"relevant": true
+},
+{
+"company": "Deliveroo",
+"title": "Senior Operations Associate - Grocery",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-10-09",
+"relevant": false
+},
+{
+"company": "Deliveroo",
+"title": "Site Operations Associate (UAE National)",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-16",
+"relevant": true
+},
+{
+"company": "Deliveroo",
+"title": "SMB Account Executive",
+"loc": "Dubai, United Arab Emirates",
+"posted": "2026-11-10",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Audit Manager",
+"loc": "United Arab Emirates",
+"posted": "2026-10-19",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - Ads Implementation",
+"loc": "Hong Kong; India; Malaysia; Taiwan; United Arab Emirates",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - Affiliate BD",
+"loc": "Kazakhstan; Singapore; United Arab Emirates; United Kingdom",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - Brand Design",
+"loc": "Australia; Malaysia; Singapore; United Arab Emirates",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - Brand KOL",
+"loc": "United Arab Emirates",
+"posted": "2026-11-12",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - Compliance Training (AI) ",
+"loc": "Australia; Bahrain; Hong Kong; New Zealand; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-11-10",
+"relevant": true
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - Internal Audit (Technology)",
+"loc": "Hong Kong; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - Public Relations",
+"loc": "United Arab Emirates",
+"posted": "2026-10-29",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - TradFI Business Development",
+"loc": "Hong Kong; Malaysia; United Arab Emirates",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program- VIP & Institutional Sales",
+"loc": "United Arab Emirates",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Binance Accelerator Program - VIP Sales",
+"loc": "Brazil; Colombia; Mexico; United Arab Emirates; United Kingdom",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Card Fraud & Chargeback Risk Strategist (Issuing Risk)",
+"loc": "Australia; Hong Kong; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-11-12",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Case Investigation Specialist - 1yr contract ",
+"loc": "United Arab Emirates",
+"posted": "2026-11-23",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Clearing CS Specialist",
+"loc": "Jordan; United Arab Emirates",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Control Monitoring & Testing (CMAT) Analyst  - 1 Year Contractor",
+"loc": "Australia; Hong Kong; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-11-23",
+"relevant": true
+},
+{
+"company": "Binance",
+"title": "Deputy Regulatory Compliance Officer - ADGM",
+"loc": "United Arab Emirates",
+"posted": "2026-11-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Enterprise Wide Risk Assessment (EWRA) Analyst (1 year contractor)",
+"loc": "United Arab Emirates; United Kingdom",
+"posted": "2026-10-30",
+"relevant": true
+},
+{
+"company": "Binance",
+"title": "Enterprise Wide Risk Assessment (EWRA) Specialist",
+"loc": "United Arab Emirates",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Fraud & AML Investigation Analyst (Geofencing) \u2014 12-Month Contract",
+"loc": "Australia; Hong Kong; New Zealand; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-11-01",
+"relevant": true
+},
+{
+"company": "Binance",
+"title": "Full Stack Engineer (Web,Frontend Oriented) \u2014 AI Facial Recognition, Identity & Security (Fully Remote)",
+"loc": "Australia; Hong Kong; New Zealand; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-10-18",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Global Head of Sanctions",
+"loc": "Singapore; United Arab Emirates",
+"posted": "2026-11-18",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Head of Compliance Programs, Training & External Assurance",
+"loc": "Singapore; United Arab Emirates",
+"posted": "2026-11-24",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Incident Manager",
+"loc": "Finland; Hong Kong; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-11-19",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Internal Controls Specialist/ Manager (12 months Contract)",
+"loc": "Hong Kong; Singapore; United Arab Emirates",
+"posted": "2026-10-28",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Investigative Attorney (1 year contract)",
+"loc": "Hong Kong; Singapore; United Arab Emirates; United Kingdom; United States",
+"posted": "2026-10-22",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "KYB Compliance Analyst (1 year contractor)",
+"loc": "Australia; Hong Kong; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-11-02",
+"relevant": true
+},
+{
+"company": "Binance",
+"title": "Legal Project Manager",
+"loc": "Hong Kong; Singapore; United Arab Emirates",
+"posted": "2026-11-12",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "MLRO - ADGM",
+"loc": "United Arab Emirates",
+"posted": "2026-11-09",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "OTC Trader",
+"loc": "Hong Kong; United Arab Emirates",
+"posted": "2026-10-20",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Policy & Change Management Analyst - (12-Month Contract)",
+"loc": "Bahrain; India; United Arab Emirates",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "PR KOL Specialist - MENA",
+"loc": "United Arab Emirates",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Product Communications Specialist",
+"loc": "United Arab Emirates",
+"posted": "2026-10-21",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Product Counsel \u2013 Equities & Tokenized Securities",
+"loc": "Hong Kong; Singapore; United Arab Emirates",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Product Lead Counsel",
+"loc": "Hong Kong; Singapore; United Arab Emirates; United Kingdom",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Regulatory Governance Manager",
+"loc": "United Arab Emirates; United Kingdom",
+"posted": "2026-11-04",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Regulatory Legal Counsel -  US Monitorships",
+"loc": "Singapore; United Arab Emirates; United Kingdom; United States",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Research Analyst- Equity Capital Markets",
+"loc": "Hong Kong; Malaysia; Singapore; United Arab Emirates",
+"posted": "2026-10-14",
+"relevant": true
+},
+{
+"company": "Binance",
+"title": "Risk Analyst (SQL), Fraud Prevention",
+"loc": "Australia; Hong Kong; Singapore; Taiwan; United Arab Emirates",
+"posted": "2026-10-19",
+"relevant": true
+},
+{
+"company": "Binance",
+"title": "Sanctions Investigator (1 year contractor) - MENA",
+"loc": "Bahrain; Kuwait; Qatar; Saudi Arabia; United Arab Emirates",
+"posted": "2026-10-22",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Sanctions Operations Analyst (1 year contract)",
+"loc": "Argentina; Hong Kong; Singapore; United Arab Emirates",
+"posted": "2026-11-05",
+"relevant": true
+},
+{
+"company": "Binance",
+"title": "Senior Corporate Legal Counsel",
+"loc": "Hong Kong; Singapore; United Arab Emirates; United Kingdom",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Senior Legal Operations Executive (fully remote!)",
+"loc": "Hong Kong; Singapore; United Arab Emirates; United Kingdom",
+"posted": "2026-11-20",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Senior OTC Sales Trader",
+"loc": "United Arab Emirates",
+"posted": "2026-10-30",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Senior Product Strategy Manager",
+"loc": "Ireland; Malta; Spain; United Arab Emirates; United Kingdom",
+"posted": "2026-10-12",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Senior Regulatory Manager, Global MLRO",
+"loc": "Singapore; United Arab Emirates",
+"posted": "2026-10-23",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Senior Risk Strategist, Market Manipulation (Trading Risk)",
+"loc": "Australia; Hong Kong; Singapore; United Arab Emirates",
+"posted": "2026-10-23",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Senior Talent Acquisition Specialist (Executive Hiring)",
+"loc": "Hong Kong; Singapore; United Arab Emirates",
+"posted": "2026-10-24",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Social Media Manager",
+"loc": "Singapore; United Arab Emirates",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Social Media Specialist",
+"loc": "Singapore; United Arab Emirates",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "User Growth & Lifecycle Marketing Manager",
+"loc": "Bahrain; Saudi Arabia; United Arab Emirates",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "VIP & Institutional Sales - MENA",
+"loc": "United Arab Emirates",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "OKX",
+"title": "Affiliate Business Development Manager - MENA",
+"loc": "Dubai, United Arab Emirates; Remote Roles - EMEA",
+"posted": "2026-05-20",
+"relevant": false
+},
+{
+"company": "OKX",
+"title": "Senior Talent Acquisition Manager",
+"loc": "Dubai, United Arab Emirates; EMEA; Remote Roles - EMEA",
+"posted": "2026-11-04",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "AI Agent Architect",
+"loc": "Abu Dhabi, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-11-13",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Animator Intern",
+"loc": "Abu Dhabi, UAE; APAC - Remote",
+"posted": "2026-09-11",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Asset/Wallet Operations",
+"loc": "Abu Dhabi, UAE; Europe - Remote; Hong Kong SAR",
+"posted": "2026-11-06",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Blockchain Expert ",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-05-06",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Card & Pay Partnerships Specialist",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-11-12",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Card Risk Strategy Specialist",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Chief Risk Officer (ADGM, Broker Dealer)",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-06-18",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Chief Risk Officer (ADGM, RIE &RCH)",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-06-18",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Compliance Operations Expert ",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-10-06",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Digital Copywriter",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-04",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Employee Experience Director",
+"loc": "Abu Dhabi, UAE; APAC - Remote; Dubai, UAE; Europe - Remote; Kuala Lumpur, Malaysia; UK - Remote",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Finance Lead/ Senior Finance Specialist",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-04",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Head of Platform Product",
+"loc": "Abu Dhabi, UAE; Dubai, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-08-06",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Head of Technology Recruitment",
+"loc": "Abu Dhabi, UAE; APAC - Remote; Dubai, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-11-11",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Institutional Relationship Manager",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-08-02",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Internal Audit Lead",
+"loc": "Abu Dhabi, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-10-06",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Lead Backend Development Engineer",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-16",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Lead Backend Engineer, Trading Risk",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-10-19",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Marketing Campaign Lead",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-09-16",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Paid Media Creative Expert",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Principal AI Product Expert",
+"loc": "Abu Dhabi, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-09-30",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "(Principal) Backend Development Engineer",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-11-09",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Principal Backend Development Engineer",
+"loc": "Abu Dhabi, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-11-16",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Principal Backend Development Engineer",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-16",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Principal Backend Development Engineer (C++)",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-10-28",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Principal Backend Development Engineer(C++)",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-08-27",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Principal Backend Development Engineer(C++)",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-10-02",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Principal Frontend Engineer",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-23",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Product Design Lead",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-08-26",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Product Manager, Growth Intelligence",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-11-04",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Regional Sales Lead",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-13",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Relationship Manager",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-05-14",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Risk Control Principal Product Specialist",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Risk Operations Lead",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-07-05",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "RWA Product Manager",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-10-16",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Security Compliance Engineer",
+"loc": "Dubai, UAE",
+"posted": "2026-11-16",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Security Management  Engineer",
+"loc": "Dubai, UAE",
+"posted": "2026-11-16",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Security Operations Engineer",
+"loc": "Dubai, UAE",
+"posted": "2026-11-15",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Business Intelligence Manager",
+"loc": "Abu Dhabi, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-10-12",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Compliance Operations Specialist",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-09",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Data Analyst",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-10-02",
+"relevant": true
+},
+{
+"company": "Bybit",
+"title": "Senior Data Analyst - Growth/Marketing",
+"loc": "Abu Dhabi, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-06-26",
+"relevant": true
+},
+{
+"company": "Bybit",
+"title": "Senior Growth Product Manager - User Activation",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-07-15",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Learning & Development Director",
+"loc": "Abu Dhabi, UAE; APAC - Remote; Dubai, UAE; Europe - Remote; Kuala Lumpur, Malaysia; UK - Remote",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Principal Site Reliability Engineer (Chaos Engineering)",
+"loc": "Abu Dhabi, UAE; Hong Kong SAR; Kuala Lumpur, Malaysia",
+"posted": "2026-08-07",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Product Design Specialist",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Product Manager \u2013 Trading & Onchain",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-10-07",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Risk Strategy Analyst",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-05-02",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Social Media Specialist",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-06-23",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Trading Risk Control Specialist",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-01",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior User Reach & Lifecycle Manager",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-10-16",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior VIP Relationship Manager (MENA)",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-10-06",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Senior Workplace Operations Manager",
+"loc": "Abu Dhabi, UAE; Dubai, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Social Lead",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-12",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Technical Branding & Operations Specialist",
+"loc": "Abu Dhabi, UAE; Kuala Lumpur, Malaysia",
+"posted": "2026-11-24",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "Trading Risk Control Lead- Regulated Risk",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Bybit",
+"title": "User Operations Lead",
+"loc": "Abu Dhabi, UAE",
+"posted": "2026-11-20",
+"relevant": false
+},
+{
+"company": "Binance",
+"title": "Law Enforcement Specialist \u2013 UAE",
+"loc": "UAE, Dubai",
+"posted": "2026-08-19",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Backend Engineer, Payments Platform",
+"loc": "Dubai ",
+"posted": "2026-08-12",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Senior Full-Stack Engineer (Web)",
+"loc": "Dubai ",
+"posted": "2025-10-28",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Brand Marketing Manager",
+"loc": "Dubai ",
+"posted": "2026-03-05",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Senior Platform Engineer (Infrastructure)",
+"loc": "Dubai ",
+"posted": "2026-04-21",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Platform Engineer (Developer Enablement)",
+"loc": "Dubai ",
+"posted": "2026-04-21",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Senior Content Designer ",
+"loc": "Dubai ",
+"posted": "2026-05-05",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "CRM & Lifecycle Specialist",
+"loc": "Dubai ",
+"posted": "2026-10-19",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Full-Stack Engineer (Internal Tools)",
+"loc": "Dubai ",
+"posted": "2026-08-11",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Product Designer",
+"loc": "Dubai ",
+"posted": "2026-06-12",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Senior Backend Engineer, Payments Experience",
+"loc": "Dubai ",
+"posted": "2026-08-12",
+"relevant": false
+},
+{
+"company": "Ziina",
+"title": "Head of Internal Audit ",
+"loc": "Dubai ",
+"posted": "2026-10-26",
+"relevant": false
+},
+{
+"company": "Lean Technologies",
+"title": "Talent Acquisition Manager",
+"loc": "Dubai, United Arab Emirates ",
+"posted": "2026-11-03",
+"relevant": false
+},
+{
+"company": "Lean Technologies",
+"title": "Senior Software Engineer",
+"loc": "Dubai, United Arab Emirates ",
+"posted": "2026-11-02",
+"relevant": false
+},
+{
+"company": "Lean Technologies",
+"title": "Staff Engineer",
+"loc": "Dubai, United Arab Emirates ",
+"posted": "2026-11-10",
+"relevant": false
+},
+{
+"company": "Lean Technologies",
+"title": "Software Engineering Manager",
+"loc": "Dubai, United Arab Emirates ",
+"posted": "2026-11-09",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Manager Marketing - Growth",
+"loc": "Dubai UAE",
+"posted": "2026-11-25",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Director Special Projects & Performance - MENA",
+"loc": "Dubai UAE",
+"posted": "2026-11-25",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Coordinator Sales - Local Shops - UAE National",
+"loc": "Dubai UAE",
+"posted": "2026-11-24",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Coordinator Sales - Local Shops - UAE National ",
+"loc": "Dubai UAE",
+"posted": "2026-11-24",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Manager Sales Performance",
+"loc": "Dubai UAE",
+"posted": "2026-11-24",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Coordinator Sales - Local Shops - Emirati Talent",
+"loc": "Dubai UAE",
+"posted": "2026-11-23",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist FinTech - Payment Acceptance",
+"loc": "Dubai UAE",
+"posted": "2026-11-23",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Manager Special Projects & Performance - MENA",
+"loc": "Dubai UAE",
+"posted": "2026-11-20",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Software Engineer l - Backend (DMarts Network Management)",
+"loc": "Dubai UAE",
+"posted": "2026-11-20",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Engineering Manager",
+"loc": "Dubai UAE",
+"posted": "2026-11-19",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Software Engineer ll - Backend (DMarts Network Management)",
+"loc": "Dubai UAE",
+"posted": "2026-11-19",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Senior Software Engineer - Backend (DMarts Network Management)",
+"loc": "Dubai UAE",
+"posted": "2026-11-19",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Strategic Accounts & Partnerships - MENA",
+"loc": "Dubai UAE",
+"posted": "2026-11-18",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Director Supply Chain, tMart UAE",
+"loc": "Dubai UAE",
+"posted": "2026-11-17",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Digital Media",
+"loc": "Dubai UAE",
+"posted": "2026-11-16",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Data Science Manager - Applied AI",
+"loc": "Dubai UAE",
+"posted": "2026-11-15",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Assortment Performance",
+"loc": "Dubai UAE",
+"posted": "2026-11-12",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Account Manager - Arabic Speaker / Malayalam Speaker",
+"loc": "Abu Dhabi UAE",
+"posted": "2026-11-12",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Specialist Payroll (Greek Speaker) ",
+"loc": "Dubai UAE",
+"posted": "2026-11-05",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Strategic Accounts & Partnerships - MENA",
+"loc": "Dubai UAE",
+"posted": "2026-11-03",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Manager - Agency & Large Customer Ad Partnerships",
+"loc": "Dubai UAE",
+"posted": "2026-10-30",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Manager Communications",
+"loc": "Dubai UAE",
+"posted": "2026-10-28",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Manager Data Science (Dark Stores Intelligence)",
+"loc": "Dubai UAE",
+"posted": "2026-10-27",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Fleet",
+"loc": "Dubai UAE",
+"posted": "2026-10-21",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Manager Data Analytics - Logistics",
+"loc": "Dubai UAE",
+"posted": "2026-10-20",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Strategy & Special Projects",
+"loc": "Dubai UAE",
+"posted": "2026-10-15",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Customer Service Advisor - instashop",
+"loc": "Dubai UAE",
+"posted": "2026-10-14",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Product Manager - Talent & Culture",
+"loc": "Dubai UAE",
+"posted": "2026-10-13",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Marketing - Growth",
+"loc": "Dubai UAE",
+"posted": "2026-10-12",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Manager, Strategy and Performance",
+"loc": "Dubai UAE",
+"posted": "2026-10-05",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Product Designer ",
+"loc": "Dubai UAE",
+"posted": "2026-09-23",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Operations / Sales / HR - UAE National (Family Book)",
+"loc": "Dubai UAE",
+"posted": "2026-09-22",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Marketing CRM",
+"loc": "Dubai UAE",
+"posted": "2026-08-20",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Assistant Manager Logistics Operations",
+"loc": "Dubai UAE",
+"posted": "2026-08-17",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Data Scientist (AI & ML)",
+"loc": "Dubai UAE",
+"posted": "2026-08-12",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Store Leadership",
+"loc": "Dubai UAE",
+"posted": "2026-08-12",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "IT Engineering Manager \u2014 Endpoint, SaaS",
+"loc": "Dubai UAE",
+"posted": "2026-08-06",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Manager Brand",
+"loc": "Dubai UAE",
+"posted": "2026-08-03",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Emirati Future Talent Pool ",
+"loc": "Dubai UAE",
+"posted": "2026-07-06",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Admin / Coordinator (UAE National)",
+"loc": "Dubai UAE",
+"posted": "2026-07-01",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Manager Engineering",
+"loc": "Dubai UAE",
+"posted": "2026-06-12",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Build Your Future with talabat \u2013 Emirati Student Program",
+"loc": "Dubai UAE",
+"posted": "2026-04-07",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Software Engineer - Emirati Nationals Only",
+"loc": "Dubai UAE",
+"posted": "2026-03-24",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Engineering  Manager",
+"loc": "Dubai UAE",
+"posted": "2026-03-16",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Sr. Specialist Customer Experience Strategy",
+"loc": "Dubai UAE",
+"posted": "2026-01-29",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Senior Software Engineer- Backend",
+"loc": "Dubai UAE",
+"posted": "2026-01-21",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Software Engineer II -Backend",
+"loc": "Dubai UAE",
+"posted": "2026-01-21",
+"relevant": false
+},
+{
+"company": "Delivery Hero",
+"title": "Picker",
+"loc": "Dubai UAE",
+"posted": "2025-12-24",
+"relevant": false
+},
+{
+"company": "Namshi",
+"title": "Stylist",
+"loc": "Dubai UAE",
+"posted": "2017-12-05",
+"relevant": false
+},
+{
+"company": "Namshi",
+"title": "Buying Assistant",
+"loc": "Dubai UAE",
+"posted": "2017-10-31",
+"relevant": false
+},
+{
+"company": "Namshi",
+"title": "Senior Retoucher",
+"loc": "Dubai UAE",
+"posted": "2017-10-11",
+"relevant": false
+},
+{
+"company": "Namshi",
+"title": "Shoot Coordinator",
+"loc": "Dubai UAE",
+"posted": "2017-10-11",
+"relevant": false
+},
+{
+"company": "Namshi",
+"title": "Stylist",
+"loc": "Dubai UAE",
+"posted": "2017-10-11",
+"relevant": false
+},
+{
+"company": "Namshi",
+"title": "Search Engine Marketing Analyst",
+"loc": "Dubai UAE",
+"posted": "2017-09-03",
+"relevant": true
+}
+]
+}
