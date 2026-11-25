@@ -139,6 +139,10 @@ assert ns["job"]("X", "Data Analyst", "http://x/2", "2026-11-20", "Austin, TX", 
 assert __import__("re").search(ns["UAE_NATIONALS"], "This position is open to UAE Nationals only.", 2)
 assert not __import__("re").search(ns["UAE_NATIONALS"], "Join our Dubai analytics team. Visa and relocation provided.", 2)
 print("geo tests passed:", len(GEO) + 4)
+_re = __import__("re")
+assert ns["maxage"]("Dubai, United Arab Emirates") == ns["MAX_AGE_AE"] and ns["maxage"]("New York, NY") == ns["MAX_AGE"]
+assert _re.search(ns["UAE_NATIONALS_TITLE"], "Sales Operations Analyst - UAE National", 2) and _re.search(ns["UAE_NATIONALS_TITLE"], "Associate Data Scientist (Emirati National)", 2)
+assert not _re.search(ns["UAE_NATIONALS_TITLE"], "Data Analyst, UAE", 2)
 fails = 0
 for kind, text, want in CASES:
     got = {"years": lambda t: Y(t), "perm": lambda t: ns["perm_posting"](t), "yany": lambda t: Y(t, True), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "roleexp": lambda t: bool(ns["role_experience_problem"](t)), "reqgap": lambda t: RG(t[0], t[1]), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)

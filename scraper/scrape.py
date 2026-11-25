@@ -118,6 +118,9 @@ UAE = r"\b(dubai|abu dhabi|sharjah|ajman|ras al[- ]khaimah|united arab emirates|
 UAE_NATIONALS = r"uae nationals? only|emirati nationals? only|open to (uae|emirati) nationals|for (uae|emirati) nationals|must be (a |an )?(uae|emirati) national|emirati(s)? only|emirati[sz]ation (role|position|hire|program)|nafis"
 def uae(loc): return bool(re.search(UAE, loc or "", re.I))
 def geo(loc): return us(loc) or uae(loc)
+MAX_AGE_AE = int(os.environ.get("MAX_AGE_AE_DAYS", 45))   # UAE roles stay open longer and there are far fewer of them
+def maxage(loc): return MAX_AGE_AE if (uae(loc) and not us(loc)) else MAX_AGE
+UAE_NATIONALS_TITLE = r"\b(uae|emirati) nationals?\b|emirati[sz]ation|\bnafis\b"
 def age(d): return (TODAY - datetime.date.fromisoformat(d)).days
 def money(x):
     x = x.replace(",", "").replace(" ", "").lower()
@@ -396,7 +399,7 @@ def greenhouse(slug, name):
         posted = (j.get("first_published") or j.get("updated_at") or "")[:10]
         if re.search(CAMPUS, j["title"].lower()) and (j.get("updated_at") or "")[:10] > posted: posted = j["updated_at"][:10]   # evergreen grad roles get reposted (Pinterest "Master's University Grad DS")
         loc = (j.get("location") or {}).get("name", "")
-        if posted and age(posted) <= MAX_AGE and relevant(j["title"]) and geo(loc):
+        if posted and age(posted) <= maxage(loc) and relevant(j["title"]) and geo(loc):
             out.append(job(name, j["title"], j["absolute_url"], posted, loc, strip(j.get("content")), "Greenhouse"))
     return out
 def lever(slug, name):
@@ -404,7 +407,7 @@ def lever(slug, name):
     for j in get(f"https://api.lever.co/v0/postings/{slug}?mode=json"):
         posted = datetime.date.fromtimestamp(j["createdAt"] / 1000).isoformat()
         loc = (j.get("categories") or {}).get("location", "") or ""
-        if age(posted) <= MAX_AGE and relevant(j["text"]) and geo(loc):
+        if age(posted) <= maxage(loc) and relevant(j["text"]) and geo(loc):
             txt = (j.get("descriptionPlain") or "") + " " + " ".join(strip(l.get("content")) for l in j.get("lists", [])) + " " + (j.get("additionalPlain") or "")
             sr = j.get("salaryRange") or {}
             comp = f"${sr['min']/1000:.0f}K – ${sr['max']/1000:.0f}K" if sr.get("min") and sr.get("max") and sr.get("interval", "per-year-salary") == "per-year-salary" else None
@@ -415,7 +418,7 @@ def ashby(slug, name):
     for j in get(f"https://api.ashbyhq.com/posting-api/job-board/{slug}?includeCompensation=true").get("jobs", []):
         posted = (j.get("publishedAt") or "")[:10]
         loc = (j.get("location") or "") + (" Remote" if j.get("isRemote") else "")
-        if posted and age(posted) <= MAX_AGE and relevant(j["title"]) and geo(loc):
+        if posted and age(posted) <= maxage(loc) and relevant(j["title"]) and geo(loc):
             comp = (j.get("compensation") or {}).get("compensationTierSummary") or None
             out.append(job(name, j["title"], j["jobUrl"], posted, loc, j.get("descriptionPlain", ""), "Ashby", comp))
     return out
@@ -425,8 +428,8 @@ def workday(board, name, mws=False):
     else:
         tenant, wd, site = board.split("|"); base = f"https://{tenant}.{wd}.myworkdayjobs.com"; job_base = f"{base}/en-US/{site}"
     out, seen_paths = [], set()
-    for q in ("analyst", "business analyst", "data", "analytics"):
-        for off in range(0, 100, 20):                 # read up to 100 results per search (big employers have hundreds)
+    for q in ("analyst", "business analyst", "data", "analytics", "dubai"):
+        for off in range(0, 40 if q == "dubai" else 100, 20):                 # read up to 100 results per search (big employers have hundreds)
             try:
                 d = get(f"{base}/wday/cxs/{tenant}/{site}/jobs", data=json.dumps({"appliedFacets": {}, "limit": 20, "offset": off, "searchText": q}).encode())
             except urllib.error.HTTPError as e:
@@ -442,7 +445,7 @@ def workday(board, name, mws=False):
                 p = (j.get("postedOn") or "").lower()
                 n = 0 if "today" in p else 1 if "yesterday" in p else (99 if "30+" in p else int((re.findall(r"\d+", p) or [99])[0]))
                 loc = j.get("locationsText", "")
-                if n > MAX_AGE or not relevant(j["title"]) or (not geo(loc) and "locations" not in loc.lower()): continue
+                if n > maxage(loc) or not relevant(j["title"]) or (not geo(loc) and "locations" not in loc.lower()): continue
                 try: info = get(f"{base}/wday/cxs/{tenant}/{site}{path}").get("jobPostingInfo", {})
                 except Exception: info = {}
                 loc2 = info.get("location") or loc
@@ -458,7 +461,7 @@ def smartrecruiters(slug, name):
         posted = (j.get("releasedDate") or "")[:10]
         l = j.get("location") or {}
         loc = ", ".join(filter(None, [l.get("city"), l.get("region"), "USA" if l.get("country") == "us" else "UAE" if l.get("country") == "ae" else l.get("country")]))
-        if posted and age(posted) <= MAX_AGE and relevant(j["name"]) and l.get("country") in ("us", "ae"):
+        if posted and age(posted) <= maxage(loc) and relevant(j["name"]) and l.get("country") in ("us", "ae"):
             try: txt = " ".join(strip(s.get("text")) for s in get(f"https://api.smartrecruiters.com/v1/companies/{slug}/postings/{j['id']}").get("jobAd", {}).get("sections", {}).values())
             except Exception: txt = ""
             out.append(job(name, j["name"], f"https://jobs.smartrecruiters.com/{slug}/{j['id']}", posted, loc, txt, "SmartRecruiters"))
@@ -488,7 +491,7 @@ def oracle(board, name):
         items = get(url).get("items", [])
         for r in (items[0].get("requisitionList", []) if items else []):
             posted = (r.get("PostedDate") or "")[:10]; loc = r.get("PrimaryLocation") or ""
-            if not posted or age(posted) > MAX_AGE or not relevant(r.get("Title", "")) or not (us(loc + " " + (r.get("PrimaryLocationCountry") or "")) or r.get("PrimaryLocationCountry") == "AE" or uae(loc)): continue
+            if not posted or age(posted) > maxage(loc) or not relevant(r.get("Title", "")) or not (us(loc + " " + (r.get("PrimaryLocationCountry") or "")) or r.get("PrimaryLocationCountry") == "AE" or uae(loc)): continue
             try:
                 det = get(f"https://{host}/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails?expand=all&onlyData=true&finder=ById;Id=%22{r['Id']}%22,siteNumber={site}")["items"][0]
                 txt = strip(" ".join(det.get(k) or "" for k in ("ExternalDescriptionStr", "ExternalResponsibilitiesStr", "ExternalQualificationsStr")))
@@ -502,7 +505,7 @@ def workable(slug, name):
     for r in d.get("results", []):
         posted = (r.get("published") or "")[:10]; l = r.get("location") or {}
         loc = ", ".join(filter(None, [l.get("city"), l.get("region"), l.get("country")]))
-        if not posted or age(posted) > MAX_AGE or not relevant(r.get("title", "")) or not (l.get("countryCode") in ("US", "AE") or geo(loc)): continue
+        if not posted or age(posted) > maxage(loc) or not relevant(r.get("title", "")) or not (l.get("countryCode") in ("US", "AE") or geo(loc)): continue
         try:
             det = get(f"https://apply.workable.com/api/v2/accounts/{slug}/jobs/{r['shortcode']}")
             txt = strip((det.get("description") or "") + " " + (det.get("requirements") or ""))
@@ -747,7 +750,7 @@ def main():
         if j["years"] is not None and j["years"] > 4: drop("needs > 4 years", j); continue
         if j["years"] == 4: stretch.append("asks 4 years")
         ae = j.get("region") == "AE"
-        if ae and re.search(UAE_NATIONALS, j["jd"], re.I): drop("UAE nationals only", j); continue
+        if ae and (re.search(UAE_NATIONALS, j["jd"], re.I) or re.search(UAE_NATIONALS_TITLE, j["title"], re.I)): drop("UAE nationals only", j); continue
         if not ae and j["sponsor_jd"] == "no": drop("won't sponsor / citizens only", j); continue
         if not ae and perm_posting(j["jd"]): drop("green-card (PERM) notice, not a real opening", j); continue
         if staffing_firm(j["company"], j["jd"]): drop("staffing / bench / consulting-body-shop firm", j); continue              # strict: never list jobs that won't sponsor (incl. OPT/CPT exclusions)
