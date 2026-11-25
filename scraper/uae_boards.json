@@ -1,0 +1,34 @@
+{
+"greenhouse": {
+"careem": "Careem",
+"tamara": "Tamara",
+"deliveroo": "Deliveroo",
+"wise": "Wise",
+"binance": "Binance",
+"okx": "OKX",
+"bybit": "Bybit",
+"kaizengaming": "Kaizen Gaming",
+"agoda": "Agoda"
+},
+"lever": {
+"oliverwyman": "Oliver Wyman",
+"binance": "Binance",
+"crypto": "Crypto.com",
+"zeta": "Zeta"
+},
+"ashby": {
+"ziina": "Ziina",
+"deliveroo": "Deliveroo",
+"leantech": "Lean Technologies",
+"rain": "Rain"
+},
+"smartrecruiters": {
+"deliveryhero": "Delivery Hero",
+"namshi": "Namshi",
+"fenix": "Fenix",
+"wise": "Wise",
+"binance": "Binance",
+"almosafer": "Almosafer"
+},
+"workable": {}
+}
