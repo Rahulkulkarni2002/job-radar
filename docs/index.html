@@ -67,7 +67,7 @@ textarea{width:100%;min-height:160px}.drop{border:2px dashed var(--line);border-
 <body>
 <header><div class="wrap top">
   <div><h1>Job Radar</h1><div class="meta"><span id="meta">Loading…</span> · <span title="Site version">v 2026-11-02b</span></div></div>
-  <div class="tabs"><button class="tab" data-t="today">✅ Ready to apply</button><button class="tab" data-t="entry">🎓 Entry level</button><button class="tab" data-t="pure">🌱 Pure entry</button><button class="tab" data-t="ai">🤖 AI roles</button><button class="tab" data-t="dubai">🇦🇪 Dubai</button><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="cos">Companies</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
+  <div class="tabs"><button class="tab" data-t="today">✅ Ready to apply</button><button class="tab" data-t="entry">🎓 Entry level</button><button class="tab" data-t="ai">🤖 AI roles</button><button class="tab" data-t="dubai">🇦🇪 Dubai</button><button class="tab on" data-t="jobs">Jobs</button><button class="tab" data-t="cos">Companies</button><button class="tab" data-t="ats">ATS check</button><button class="tab" data-t="me">My profile</button></div>
 </div></header>
 
 <div class="wrap"><div id="dateBar" style="margin-top:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13px"></div></div>
@@ -459,9 +459,13 @@ function entryList(){const now=new Date(),today=localDay(now);
     return (j.fit||0)>=70&&(j.fit_core??0)>=50};   // candidate: only good matches
   const list=DATA.jobs.filter(ok).map(rowData);list.forEach(r=>{r.capx=CAP_EXEMPT.test(r.j.company)});
   for(let i=list.length-1;i>=0;i--){if(Math.round(list[i].chance/.09*100)<22)list.splice(i,1)}   // no very-long-shots (universities/hospitals kept: no lottery)
+  // merged with the old "Pure entry" tab: roles whose JD itself asks 0 years / says new grad, even with a lower fit
+  {const have=new Set(list.map(r=>r.j.id)),seenT=new Set(list.map(r=>(r.j.title||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()));
+   DATA.jobs.filter(j=>pureEntry(j)&&!isApplied(j)&&!isDismissed(j)&&daysAgo(j.posted)<=15&&(j.fit||0)>=45&&!have.has(j.id))
+     .forEach(j=>{const k=(j.title||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();if(seenT.has(k))return;seenT.add(k);const r=rowData(j);r.capx=CAP_EXEMPT.test(j.company);list.push(r)})}
   list.sort((a,b)=>(foundDay(b.j)===today)-(foundDay(a.j)===today)||(b.capx-a.capx)||((b.j.fit||0)-(a.j.fit||0)));
   const fresh=list.filter(r=>foundDay(r.j)===today).length;
-  document.getElementById("hint").innerHTML=`<b>🎓 Entry level — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${list.length} role${list.length===1?"":"s"} asking 0–1 years or with an entry title (I / Associate / Junior / New grad) · sponsors H-1B · posted ≤ 15 days · no different-world gaps${fresh?` · <b>${fresh} new today</b> (shown first)`:""}. <span class="muted">🏛 Cap-exempt = university/hospital: can sponsor H-1B without the lottery.</span>`;
+  document.getElementById("hint").innerHTML=`<b>🎓 Entry level — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${list.length} role${list.length===1?"":"s"} asking 0–1 years, with an entry title (I / Associate / Junior / New grad), or whose job description says new grad / no experience needed · sponsors H-1B · posted ≤ 15 days · no different-world gaps${fresh?` · <b>${fresh} new today</b> (shown first)`:""}. <span class="muted">🏛 Cap-exempt = university/hospital: can sponsor H-1B without the lottery.</span>`;
   return list}
 // ---------- 🤖 AI roles: beginner jobs that use LLMs / agents / RAG / GenAI (his proof: Omni RAG agent, churn FastAPI, uplift) ----------
 const AGENT_RX=/\b(ai agents?|agentic|llms?|large language models?|rag|retrieval[- ]augmented|genai|generative ai|prompt engineering|langchain|langgraph|vector (database|search|store)s?|embeddings)\b/gi;
