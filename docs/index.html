@@ -306,7 +306,7 @@ function chanceWhy(j,atsScore){const yoe=+S.get("yoe",2),need=S.get("needSpon",t
   return{p:Math.min(p,.5),why}}
 function chance(j,atsScore){return chanceWhy(j,atsScore).p}
 // ---------- data ----------
-let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1,USER_SORT=false;let ENTRY_MODE=false,AI_MODE=false,PURE_MODE=false,DUBAI_MODE=false;let DATA_AE=[];let DUBAI_EXTRA={jobs:[]};fetch("data/dubai_extra.json?"+Date.now()).then(r=>r.json()).then(d=>{DUBAI_EXTRA=d;if(DUBAI_MODE)render()}).catch(()=>{});const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false,SHOW_APPLIED=false,STATUS={},STATUS_KEYS={},TODAY_MODE=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
+let DATA={jobs:[]},RESUME="",sortKey="chance",sortDir=-1,USER_SORT=false;let ENTRY_MODE=false,AI_MODE=false,PURE_MODE=false,DUBAI_MODE=false;let DATA_AE=[];let DATA_RAW=[];let DUBAI_EXTRA={jobs:[]};fetch("data/dubai_extra.json?"+Date.now()).then(r=>r.json()).then(d=>{DUBAI_EXTRA=d;if(DUBAI_MODE)render()}).catch(()=>{});const applied=new Set(S.get("applied",[]));const DISMISSED=S.get("dismissed",{});let SHOW_HIDDEN=false,SHOW_APPLIED=false,STATUS={},STATUS_KEYS={},TODAY_MODE=false;const JOBATS={};const ATS_TTL=30*1000;try{["jr_resume","jr_resumeName","jr_jobAts"].forEach(k=>localStorage.removeItem(k))}catch(e){}
 const lastVisit=S.get("lastVisit",null);S.set("lastVisit",new Date().toISOString());
 fetch("data/applied.json?"+Date.now()).then(r=>r.ok?r.json():{applied:{}}).then(a=>{Object.keys(a.applied||{}).forEach(id=>applied.add(id));STATUS=a.status||{};STATUS_KEYS=a.keys||{};APPLIED_KEYS_N=-1;render()}).catch(()=>{});
 fetch("data/companies.json?"+Date.now()).then(r=>r.ok?r.json():[]).then(c=>{ALLCOS=c}).catch(()=>{});
@@ -326,7 +326,7 @@ const ITAR_RX=/refugee under 8 u\.?s\.?c|(itar|export control\w*).{0,300}u\.?s\.
 function sponsorOK(j){if(j.region==="AE")return true;return j.sponsor_jd!=="no"&&(j.sponsor_jd==="yes"||(j.h1b_approvals||0)>=1)&&!ITAR_RX.test(j.jd||"")}
 function entryOnly(j){const y=eoYears(j);return (y==null||y<=2)&&sponsorOK(j)&&!OUTSOURCING_RX.test(j.company||"")}   // y==null: JD states no number -> badged
 let ALL_LEVELS=S.get("allLevels",false);
-fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{const n0=d.jobs.length;if(!ALL_LEVELS)d.jobs=d.jobs.filter(entryOnly);DATA_AE=d.jobs.filter(j=>j.region==="AE");d.jobs=d.jobs.filter(j=>j.region!=="AE");DATA=d;const m=document.getElementById("meta");
+fetch("data/jobs.json?"+Date.now()).then(r=>r.json()).then(d=>{const n0=d.jobs.length;DATA_RAW=d.jobs.filter(j=>j.region!=="AE");if(!ALL_LEVELS)d.jobs=d.jobs.filter(entryOnly);DATA_AE=d.jobs.filter(j=>j.region==="AE");d.jobs=d.jobs.filter(j=>j.region!=="AE");DATA=d;const m=document.getElementById("meta");
   m.innerHTML=`${ALL_LEVELS?d.jobs.length+" open roles (all levels)":"<b>Your 4 rules</b>: "+d.jobs.length+" of "+n0+" roles · JD asks 0–2 yrs (titles ignored) · H-1B filing record · real employer (no staffing/ITAR) · 🆕 = posted ≤ 48 h"} · updated ${d.updated} · ${d.boards} company career sites scanned ~every 1–3 h · <a href="#" id="lvlToggle">${ALL_LEVELS?"show entry level only":"show all levels"}</a>`;
   document.getElementById("lvlToggle").onclick=e=>{e.preventDefault();S.set("allLevels",!ALL_LEVELS);location.reload()};fillPicker();render()})
   .catch(()=>document.getElementById("meta").textContent="Could not load jobs.json");
@@ -476,14 +476,14 @@ function aiList(){const now=new Date();
     if(!(AGENT_TITLE_RX.test(t)||agentHits(j)>=3))return false;                     // the job is really about LLMs / agents / GenAI
     if(/\b(senior|sr\.?|lead|manager|principal|staff|ii|iii|director)\b/i.test(t))return false;
     if(j.years!=null&&j.years>1)return false;if(j.sponsor_jd==="no")return false;          // beginner: asks 0-1 years (or doesn't say)
-    if(j.sponsor_jd!=="yes"&&!((j.h1b_approvals||0)>=1))return false;
+    // AI tab only: young AI companies with no H-1B filing history are shown (labelled), because the record is unknown, not a refusal
     if(daysAgo(j.posted)>15||j.contract||/\bcontract/i.test(t)||j.opt==="weak")return false;
     const gaps=[...(j.missing||[]),...(j.close||[]).map(x=>x[0])].filter(g=>HARD_GAPS.has(g)&&g!=="sap");if(gaps.length)return false;   // no different-world gaps
     return (j.fit||0)>=50};
-  const list=DATA.jobs.filter(ok).map(rowData);
+  const list=DATA_RAW.filter(j=>!OUTSOURCING_RX.test(j.company||"")&&!ITAR_RX.test(j.jd||"")).filter(ok).map(rowData);
   list.forEach(r=>{r.ag=agentHits(r.j)});
   list.sort((a,b)=>(daysAgo(a.j.posted)-daysAgo(b.j.posted))||((b.j.fit||0)-(a.j.fit||0)));
-  document.getElementById("hint").innerHTML=`<b>🤖 AI roles — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${list.length} beginner role${list.length===1?"":"s"} that use LLMs / AI agents / RAG / GenAI · asks 0–1 years or states none · sponsors H-1B · posted ≤ 15 days · no different-world gaps. Newest first, then best fit. <b>Send your Data Scientist – AI resume</b> (Omni RAG agent leads it). <span class="muted">“AI Engineer” jobs appear only when the title says New grad / Junior / Associate / I.</span>`;
+  document.getElementById("hint").innerHTML=`<b>🤖 AI roles — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${list.length} beginner role${list.length===1?"":"s"} that use LLMs / AI agents / RAG / GenAI · asks 0–1 years or states none · posted ≤ 15 days · no different-world gaps. Newest first, then best fit. <b>Send your Data Scientist – AI resume</b> (Omni RAG agent leads it). <b>Companies marked “H-1B: no record” are young firms with no filing history: ask the recruiter about sponsorship before spending time on the application.</b> <span class="muted">“AI Engineer” jobs appear only when the title says New grad / Junior / Associate / I.</span>`;
   return list}
 // ---------- 🌱 Pure entry: the JD itself asks 0 years, or says new grad / recent graduate / entry level / no experience (titles ignored) ----------
 const PURE_JD=/no (prior |professional |previous )?(work )?experience (is )?(required|necessary|needed)|entry[- ]level|new (college )?grad(uate)?s?\b|recent (college |university )?grad(uate)?s?|early[- ]career|class of 202[67]|university graduate|graduating (in|by|between)/i;
