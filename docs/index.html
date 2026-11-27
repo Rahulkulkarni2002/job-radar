@@ -475,15 +475,15 @@ function aiList(){const now=new Date();
   const ok=j=>{const t=j.title||"";if(isApplied(j)||isDismissed(j))return false;
     if(!(AGENT_TITLE_RX.test(t)||agentHits(j)>=3))return false;                     // the job is really about LLMs / agents / GenAI
     if(/\b(senior|sr\.?|lead|manager|principal|staff|ii|iii|director)\b/i.test(t))return false;
-    if(j.years!=null&&j.years>2)return false;if(j.sponsor_jd==="no")return false;          // beginner: asks 0-2 years (or doesn't say)
+    if(j.years!=null&&j.years>1)return false;if(j.sponsor_jd==="no")return false;          // beginner: asks 0-1 years (or doesn't say)
     if(j.sponsor_jd!=="yes"&&!((j.h1b_approvals||0)>=1))return false;
     if(daysAgo(j.posted)>15||j.contract||/\bcontract/i.test(t)||j.opt==="weak")return false;
     const gaps=[...(j.missing||[]),...(j.close||[]).map(x=>x[0])].filter(g=>HARD_GAPS.has(g)&&g!=="sap");if(gaps.length)return false;   // no different-world gaps
-    return (j.fit||0)>=55&&(j.fit_core??0)>=40};
-  const list=DATA.jobs.filter(ok).map(rowData).filter(r=>Math.round(r.chance/.09*100)>=15);
+    return (j.fit||0)>=50};
+  const list=DATA.jobs.filter(ok).map(rowData);
   list.forEach(r=>{r.ag=agentHits(r.j)});
-  list.sort((a,b)=>((b.j.stretch||[]).length?0:1)-((a.j.stretch||[]).length?0:1)||(isFamous(b.j)-isFamous(a.j))||(b.ag-a.ag)||((b.j.fit||0)-(a.j.fit||0)));
-  document.getElementById("hint").innerHTML=`<b>🤖 AI roles — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${list.length} beginner role${list.length===1?"":"s"} that use LLMs / AI agents / RAG / GenAI · asks 0–2 years · sponsors H-1B · posted ≤ 15 days · no different-world gaps. Famous companies and no-stretch roles first. <b>Send your Data Scientist – AI resume</b> (Omni RAG agent leads it). <span class="muted">“AI Engineer” jobs appear only when the title says New grad / Junior / Associate / I.</span>`;
+  list.sort((a,b)=>(daysAgo(a.j.posted)-daysAgo(b.j.posted))||((b.j.fit||0)-(a.j.fit||0)));
+  document.getElementById("hint").innerHTML=`<b>🤖 AI roles — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${list.length} beginner role${list.length===1?"":"s"} that use LLMs / AI agents / RAG / GenAI · asks 0–1 years or states none · sponsors H-1B · posted ≤ 15 days · no different-world gaps. Newest first, then best fit. <b>Send your Data Scientist – AI resume</b> (Omni RAG agent leads it). <span class="muted">“AI Engineer” jobs appear only when the title says New grad / Junior / Associate / I.</span>`;
   return list}
 // ---------- 🌱 Pure entry: the JD itself asks 0 years, or says new grad / recent graduate / entry level / no experience (titles ignored) ----------
 const PURE_JD=/no (prior |professional |previous )?(work )?experience (is )?(required|necessary|needed)|entry[- ]level|new (college )?grad(uate)?s?\b|recent (college |university )?grad(uate)?s?|early[- ]career|class of 202[67]|university graduate|graduating (in|by|between)/i;
