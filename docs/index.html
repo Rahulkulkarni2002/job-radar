@@ -566,7 +566,7 @@ document.getElementById("rows").onclick=async e=>{const b=e.target.closest("butt
   if(b.dataset.det){const pj=JOBATS[b.dataset.det];if(pj&&pj.text){RESUME_VIEW=pj;}document.getElementById("jobPick").value=b.dataset.det;document.getElementById("jdText").value="";show("ats");runATS();return}
   if(b.dataset.ats){RESUME_VIEW=null;document.getElementById("jobPick").value=b.dataset.ats;document.getElementById("jdText").value="";show("ats");runATS()}};
 function show(t){ENTRY_MODE=(t==="entry");AI_MODE=(t==="ai");PURE_MODE=(t==="pure");DUBAI_MODE=(t==="dubai");TODAY_MODE=(t==="today"||t==="entry"||t==="ai"||t==="pure"||t==="dubai");document.getElementById("jobs").classList.toggle("ready-mode",TODAY_MODE);if(TODAY_MODE){const tab=t;t="jobs";document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===tab));["jobs","cos","ats","me"].forEach(x=>document.getElementById(x).hidden=x!=="jobs");render();window.scrollTo(0,0);return}document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("on",b.dataset.t===t));["jobs","cos","ats","me"].forEach(s=>document.getElementById(s).hidden=s!==t);if(t==="cos")renderCos();if(t==="jobs")render();window.scrollTo(0,0)}
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>show(b.dataset.t));
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{S.set("tab",b.dataset.t);show(b.dataset.t)});   // remember the tab so a reload stays on it
 // ---------- dates (all shown in YOUR local time) ----------
 function localDay(d){return d.toLocaleDateString("en-CA")}               // YYYY-MM-DD in local time
 function foundDay(j){const t=j.first_seen?new Date(j.first_seen.replace(/Z?$/,"Z")):new Date(j.posted+"T12:00:00");return localDay(t)}
@@ -593,7 +593,7 @@ function fillCompanies(){const sel=document.getElementById("coType"),cur=sel.val
   sel.innerHTML='<option value="all">All companies ('+list.length+')</option><option value="yc">🟧 YC startups only</option><optgroup label="Companies with roles that fit you">'+
     list.map(([c,n])=>`<option value="co:${h(c)}">${h(c)} (${n})</option>`).join("")+"</optgroup>";
   if([...sel.options].some(o=>o.value===cur))sel.value=cur}
-function fillPicker(){fillCompanies();fillFoundDays();renderDateBar();if(!window.__opened){window.__opened=1;show("today")}const sel=document.getElementById("jobPick");DATA.jobs.filter(j=>j.jd).forEach(j=>{const o=document.createElement("option");o.value=j.id;o.textContent=`${j.company} — ${j.title}`;sel.appendChild(o)})}
+function fillPicker(){fillCompanies();fillFoundDays();renderDateBar();if(!window.__opened){window.__opened=1;const t0=S.get("tab","today");show(document.querySelector('.tab[data-t="'+t0+'"]')?t0:"today")}const sel=document.getElementById("jobPick");DATA.jobs.filter(j=>j.jd).forEach(j=>{const o=document.createElement("option");o.value=j.id;o.textContent=`${j.company} — ${j.title}`;sel.appendChild(o)})}
 // resume upload
 const drop=document.getElementById("drop"),file=document.getElementById("file");drop.onclick=()=>file.click();
 drop.ondragover=e=>{e.preventDefault()};drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0])};file.onchange=()=>file.files[0]&&readFile(file.files[0]);
