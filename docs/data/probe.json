@@ -1,150 +1,52 @@
 {
  "companies": [
-  "adobe",
-  "solace",
-  "ramp",
-  "replit",
-  "netic",
-  "goaly",
-  "atlassian",
-  "nuvo",
-  "empire state"
+  "uipath"
  ],
- "n": 15,
+ "n": 5,
  "jobs": [
   {
-   "company": "Goaly",
-   "title": "Founding Senior Applied AI Engineer",
-   "location": "Palo Alto, CA, USA",
-   "posted": "2026-11-10",
-   "years": 5,
-   "url": "https://jobs.ashbyhq.com/goaly/70f6bbdd-e300-4a47-9875-ba2dfa4ded18",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Kinetic Systems",
-   "title": "Clinical AI Research Fellowship",
-   "location": "Remote Remote",
-   "posted": "2026-11-13",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/kineticsystems/c05daaa9-531d-4b28-99cb-54af82db65c2",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Netic",
-   "title": "GTM Data Analyst",
-   "location": "San Francisco",
-   "posted": "2026-10-27",
-   "years": 2,
-   "url": "https://jobs.ashbyhq.com/netic/21073800-6406-4c1d-ae5a-22b9f41c3a8d",
-   "verdict": "posted 26 days ago (> 15)"
-  },
-  {
-   "company": "Netic",
-   "title": "Applied AI Engineer",
-   "location": "San Francisco",
-   "posted": "2026-11-19",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/netic/bb664b2a-d4a2-4c58-99c8-107cddcafde2",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Ramp",
-   "title": "GTM Senior Business Systems Analyst, Marketing & Pre-Sales",
-   "location": "New York, NY (HQ) Remote",
-   "posted": "2026-10-23",
-   "years": 5,
-   "url": "https://jobs.ashbyhq.com/ramp/aa433e44-f095-484b-a46a-a330583d84b0",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Ramp",
-   "title": "Research Engineer, Benchmarks & Evaluation",
-   "location": "New York, NY (HQ) Remote",
-   "posted": "2026-11-03",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/ramp/d8925f84-562f-470c-a5bd-4f6c20009361",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Ramp",
-   "title": "Senior Manager, Customer Experience Strategy & Operations",
-   "location": "New York, NY (HQ) Remote",
-   "posted": "2026-11-03",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/ramp/fe280d10-4258-420a-b0bb-0dc9021bd803",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Ramp",
-   "title": "AI Account Executive, Glass",
-   "location": "New York, NY (HQ) Remote",
-   "posted": "2026-11-10",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/ramp/883fbb33-65a9-4ace-97ad-2a1f588020c2",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Ramp",
-   "title": "Risk Strategy Intern",
-   "location": "New York, NY (HQ) Remote",
-   "posted": "2026-11-13",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/ramp/b87e898f-8d8b-447d-b3d5-9073ccf7d109",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Ramp",
-   "title": "Software Engineer, Backend, AI Ventures",
-   "location": "New York, NY (HQ) Remote",
-   "posted": "2026-11-17",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/ramp/3cfbf693-58e3-423f-87a8-a93dbd0839b0",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Ramp",
-   "title": "Research Engineer, Agentic Systems",
-   "location": "Remote (US) Remote",
-   "posted": "2026-11-18",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/ramp/f90d32c1-7c10-4161-8913-075e1b423697",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Replit",
-   "title": "Staff Software Engineer, Financial Infrastructure",
-   "location": "Foster City, CA Remote",
-   "posted": "2026-11-09",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/replit/298db311-7d58-46f5-a6ec-8a10edcb43c2",
-   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
-  },
-  {
-   "company": "Replit",
-   "title": "Business Operations Analyst",
-   "location": "Foster City, CA Remote",
-   "posted": "2026-11-18",
-   "years": 4,
-   "url": "https://jobs.ashbyhq.com/replit/9b211cc2-dcb2-4902-b84f-a5a2d5d0705f",
-   "verdict": "won't sponsor / citizens only"
-  },
-  {
-   "company": "Solace Health",
-   "title": "Data Scientist",
-   "location": "United States Remote",
+   "company": "UiPath",
+   "title": "Principal AI Solutions Architect \u2013 Healthcare (Presales)",
+   "location": "Remote-Texas Remote",
    "posted": "2026-11-02",
-   "years": null,
-   "url": "https://jobs.ashbyhq.com/Solace/9dc2497a-d836-4331-9040-3d9108be8563",
-   "verdict": "posted 20 days ago (> 15)"
+   "years": 8,
+   "url": "https://jobs.ashbyhq.com/uipath/77e4db91-6d9e-49f9-b6a3-ab158b7aa4f2",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
   },
   {
-   "company": "Western Magnetics",
-   "title": "Head of Finance",
-   "location": "South San Francisco",
-   "posted": "2026-11-06",
-   "years": 8,
-   "url": "https://jobs.ashbyhq.com/westmag/3d106b40-934b-4c9e-88d5-b43064f849b3",
+   "company": "UiPath",
+   "title": "Senior Product Marketing Director - Finance and Accounting Solutions",
+   "location": "Remote-Florida Remote",
+   "posted": "2026-11-10",
+   "years": 10,
+   "url": "https://jobs.ashbyhq.com/uipath/885f3ba8-c816-464b-b7c6-77175b750ec1",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "UiPath",
+   "title": "Enterprise Sales Executive (Agentic AI Automation)",
+   "location": "Remote-Manila Remote",
+   "posted": "2026-11-18",
+   "years": 5,
+   "url": "https://jobs.ashbyhq.com/uipath/b900f3a2-88d0-4508-bafa-0406f235d90e",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "UiPath",
+   "title": "Senior Sales Engineer (Agentic AI Automation)",
+   "location": "Remote-Bangkok Remote",
+   "posted": "2026-11-18",
+   "years": null,
+   "url": "https://jobs.ashbyhq.com/uipath/400d1870-c403-4ec4-a165-7b054d0c7397",
+   "verdict": "title not an analyst/data role for you (or senior/engineer title)"
+  },
+  {
+   "company": "UiPath",
+   "title": "Enterprise Account Executive (Agentic AI Automation)",
+   "location": "Remote-Bangkok Remote",
+   "posted": "2026-11-18",
+   "years": 5,
+   "url": "https://jobs.ashbyhq.com/uipath/e0e12d38-b20e-47c9-8910-a4e73723a8b5",
    "verdict": "title not an analyst/data role for you (or senior/engineer title)"
   }
  ]
