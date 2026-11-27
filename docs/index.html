@@ -463,9 +463,9 @@ function entryList(){const now=new Date(),today=localDay(now);
   {const have=new Set(list.map(r=>r.j.id)),seenT=new Set(list.map(r=>(r.j.title||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()));
    DATA.jobs.filter(j=>pureEntry(j)&&!isApplied(j)&&!isDismissed(j)&&daysAgo(j.posted)<=15&&(j.fit||0)>=45&&!have.has(j.id))
      .forEach(j=>{const k=(j.title||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();if(seenT.has(k))return;seenT.add(k);const r=rowData(j);r.capx=CAP_EXEMPT.test(j.company);list.push(r)})}
-  list.sort((a,b)=>(foundDay(b.j)===today)-(foundDay(a.j)===today)||(b.capx-a.capx)||((b.j.fit||0)-(a.j.fit||0)));
+  list.sort((a,b)=>(daysAgo(a.j.posted)-daysAgo(b.j.posted))||((b.j.fit||0)-(a.j.fit||0)));   // newest posting first, then best fit
   const fresh=list.filter(r=>foundDay(r.j)===today).length;
-  document.getElementById("hint").innerHTML=`<b>🎓 Entry level — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${list.length} role${list.length===1?"":"s"} asking 0–1 years, with an entry title (I / Associate / Junior / New grad), or whose job description says new grad / no experience needed · sponsors H-1B · posted ≤ 15 days · no different-world gaps${fresh?` · <b>${fresh} new today</b> (shown first)`:""}. <span class="muted">🏛 Cap-exempt = university/hospital: can sponsor H-1B without the lottery.</span>`;
+  document.getElementById("hint").innerHTML=`<b>🎓 Entry level — ${now.toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"})}</b>: ${list.length} role${list.length===1?"":"s"} asking 0–1 years, with an entry title (I / Associate / Junior / New grad), or whose job description says new grad / no experience needed · sponsors H-1B · posted ≤ 15 days · no different-world gaps · <b>newest first</b>, then best fit${fresh?` · <b>${fresh} new today</b>`:""}. <span class="muted">🏛 Cap-exempt = university/hospital: can sponsor H-1B without the lottery.</span>`;
   return list}
 // ---------- 🤖 AI roles: beginner jobs that use LLMs / agents / RAG / GenAI (his proof: Omni RAG agent, churn FastAPI, uplift) ----------
 const AGENT_RX=/\b(ai agents?|agentic|llms?|large language models?|rag|retrieval[- ]augmented|genai|generative ai|prompt engineering|langchain|langgraph|vector (database|search|store)s?|embeddings)\b/gi;
