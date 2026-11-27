@@ -143,6 +143,8 @@ _re = __import__("re")
 assert ns["maxage"]("Dubai, United Arab Emirates") == ns["MAX_AGE_AE"] and ns["maxage"]("New York, NY") == ns["MAX_AGE"]
 assert _re.search(ns["UAE_NATIONALS_TITLE"], "Sales Operations Analyst - UAE National", 2) and _re.search(ns["UAE_NATIONALS_TITLE"], "Associate Data Scientist (Emirati National)", 2)
 assert not _re.search(ns["UAE_NATIONALS_TITLE"], "Data Analyst, UAE", 2)
+assert ns["perm_posting"]("Must have a Bachelor's Degree or foreign equivalent degree in Data Science and two (2) years of related work experience. Salary: $124,000. 40 hrs/week 100% Telecommuting permitted. Multiple Positions Available. #LI-DNI")
+assert not ns["perm_posting"]("Bachelor's degree or equivalent experience. 2+ years of experience with SQL. Remote work is permitted. We sponsor visas.")
 fails = 0
 for kind, text, want in CASES:
     got = {"years": lambda t: Y(t), "perm": lambda t: ns["perm_posting"](t), "yany": lambda t: Y(t, True), "degree": lambda t: bool(D(t)), "sponsor": lambda t: bool(NS(t)), "timing": lambda t: bool(TP(t)), "domain": lambda t: bool(DOM(t)), "eng": lambda t: bool(ENG(t)), "title_ok": lambda t: bool(REL(t)), "roleexp": lambda t: bool(ns["role_experience_problem"](t)), "reqgap": lambda t: RG(t[0], t[1]), "senior": lambda t: bool(ns["senior_in_jd"]("Financial Analyst", t))}[kind](text)

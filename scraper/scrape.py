@@ -363,7 +363,12 @@ def engineering_problem(jd):
 
 def perm_posting(jd):
     """Notices posted only to satisfy a green-card (PERM / labor certification) filing - not a job you can win."""
-    return bool(re.search(r"(in connection with|filed in connection with|for purposes of|pursuant to)\s+(a |an )?(perm|labor certification|permanent labor)|this (notice|posting) is (being )?(posted|provided|filed)\b.{0,80}(perm|labor certification)|application for (alien|permanent) (employment|labor) certification", (jd or "").lower()))
+    t = (jd or "").lower()
+    if re.search(r"(in connection with|filed in connection with|for purposes of|pursuant to)\s+(a |an )?(perm|labor certification|permanent labor)|this (notice|posting) is (being )?(posted|provided|filed)\b.{0,80}(perm|labor certification)|application for (alien|permanent) (employment|labor) certification", t): return True
+    # PERM-style ads never say "PERM": they use the legal wording of a labor-certification ad (Stripe, Meta, Google ...). Two or more of these = not a real opening.
+    signs = [r"foreign equivalent degree|or foreign equivalent", r"multiple positions available", r"\b40 hrs?\s*/\s*w(ee)?k\b|40 hours per week", r"telecommuting (is )?permitted|telecommuting (may be|is) (permitted|available)",
+             r"#li-dni", r"\(\d\) years? of (related |work )?experience|\b(two|three|four|five|six) \(\d\) years", r"must also have .{0,40}years? of experience in each of the following"]
+    return sum(bool(re.search(x, t)) for x in signs) >= 3
 
 STAFFING = r"\b(brillio|cognizant|infosys|tata consultancy|tcs|wipro|hcl|tech mahindra|capgemini|ltimindtree|mphasis|emonics|igate|syntel|virtusa|hexaware|collabera|randstad|robert half|teksystems|insight global|kforce|apex systems|kelly services|adecco|manpower|aerotek|cybercoders|dice|judge group|mindlance|ust global|ust|ntt data|genpact|igniteit|synechron|ascendion|lancesoft|pyramid consulting|diverse lynx|sparksoft|infobahn|stellent|compunnel|axelon)\b"
 def staffing_firm(company, jd):
